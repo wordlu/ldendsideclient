@@ -79,8 +79,8 @@ const state = {
     },
     {
       //治理集成
-      name: "governance",
-      entry: "http://localhost:8083/apps/governance",
+      name: "systemanage",
+      entry: "http://10.86.24.22:8083/apps/systemanage",
       container: "#Appmicro",
       activeRule: [],
       props:{}
@@ -552,7 +552,7 @@ const actions = {
         }
         // let redirectPath = accessRoutes[0].children[0].path
         // if (!url) url = "/landing/landing"
-        let redirectPath = '/loggerfe/root/index'
+        let redirectPath = '/systemanage/sysmanage'
         accessRoutes.push(
           {
             path: '/',

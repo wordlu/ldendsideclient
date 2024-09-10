@@ -113,9 +113,9 @@ export default {
       // }
 
       // @wodelu: TODO-菜单权限
-      if (window.location.pathname.indexOf("loggerfe") > -1) {
+      // if (window.location.pathname.indexOf("loggerfe") > -1) {
         this.subMenu = [{
-          index: '/loggerfe/root/system_manage',
+          index: '/systemanage/sysmanage',
           title: '概览',
           type: 'elMenuItem',
           policy: "menusceneLibraryProject",
@@ -168,10 +168,10 @@ export default {
           ]
         }
         ]
-      }
-      else {
-        this.subMenu = []
-      }
+      // }
+      // else {
+      //   this.subMenu = []
+      // }
     },
     handleOpen (key, keyPath) {
       // console.log(key, keyPath);
