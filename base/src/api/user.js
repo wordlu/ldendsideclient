@@ -1,6 +1,14 @@
 import request from '@/utils/request'
 import keycloakInfo from '@/utils/setKeycloak'
 
+//获取前端配置
+export function getFrontendConfigs() {
+  return request({
+    url: `http://logger.liangdao.ai.10.86.14.200.nip.io/api/logger/micro_frontend_conf?client=ld-end-side`,
+    method: 'get',
+  })
+}
+
 //登录
 export function login(data) {
   return request({

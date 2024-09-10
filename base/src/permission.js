@@ -33,31 +33,37 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = 'Admin-Token'
   const isToken = Cookies.get('Token')
 
-  await axios.get(`/langs/Menu/zh.json`).then(res=>{
-    i18n.mergeLocaleMessage('zh', res.data)
-  })
-  await axios.get(`/langs/Menu/en.json`).then(res=>{
-    i18n.mergeLocaleMessage('en', res.data)
-  })
-  await axios.get(`/langs/Menu/jp.json`).then(res=>{
-    i18n.mergeLocaleMessage('jp', res.data)
-  })
-
-  await axios.get(`/langs/common/zh.json`).then(res=>{
-    i18n.mergeLocaleMessage('zh', res.data)
-  })
-  await axios.get(`/langs/common/en.json`).then(res=>{
-    i18n.mergeLocaleMessage('en', res.data)
-  })
-  await axios.get(`/langs/common/jp.json`).then(res=>{
-    i18n.mergeLocaleMessage('jp', res.data)
-  })
+  function fetchLangsData() {
+    const langsList = ['Menu', 'common']
+    const locale = ['zh', 'en', 'jp']
+    const apis = langsList.map(it => {
+      const urls = locale.map(item => {
+        return `/langs/${it}/${item}.json`
+      })
+      return urls
+    }).flat()
+    return apis
+  }
+  const apiEndpoints = fetchLangsData()
+  try {
+    const requests = apiEndpoints.map(endpoint => axios.get(endpoint));
+    const responses = await Promise.allSettled(requests);
+    responses.forEach((it, index) => {
+      if (it.status == "fulfilled") {
+        const key = apiEndpoints[index].match(/\/([a-z]{2})\.json$/)[1]
+        i18n.mergeLocaleMessage(key, it.value.data)
+      }
+    })
+  } catch (error) {
+    console.error('多语言文件加载错误：', error);
+  }
 
   if (hasToken && isToken) {
     if (to.path === '/login') {
       next({ path: '/' })
       NProgress.done()
     } else {
+       
       //判断是否获取到权限
       const hasRoles = store.getters.roles && store.getters.roles.length > 0
       if (hasRoles && isToken) {
@@ -91,13 +97,7 @@ router.beforeEach(async(to, from, next) => {
         });
       } else {
         try {
-          // 兼容本地调试，否则会白屏
-          if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            // 在非本地地址上执行特定代码逻辑
-            // 线上本地打开注释都会白屏
-            // await store.dispatch('icons/getIcons')
-            // await store.dispatch('icons/getTags')
-          }
+           
           await store.dispatch('operation/getInfo')
           const systemId = Cookies.get('systemId')
           //获取组件信息
@@ -108,6 +108,8 @@ router.beforeEach(async(to, from, next) => {
           const accessRoutes = await store.dispatch('permission/generateRoutes', asyncRoutes)
           // router.matcher = new Router().matcher
           router.addRoutes(accessRoutes)
+           
+          console.log(...to)
           next({ ...to, replace: true })
         } catch (error) {
           // 清除token 并返回至 login页
