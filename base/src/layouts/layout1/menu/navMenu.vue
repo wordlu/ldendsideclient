@@ -152,14 +152,14 @@ export default {
               policy: "pagesystemanagecollectiontemplates",
             },
             {
-              index: '/loggerfe/configs',
+              index: '/loggerfe/root/configs',
               title: '采集配置',
               policy: "pageloggerfeconfigs",
             },
           ]
         },
         {
-          index: '/loggerfe/index',
+          index: '/loggerfe/root/index',
           title: '采集',
           type: 'elMenuItem',
           policy: "menuloggerfeindex",

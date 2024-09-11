@@ -1,0 +1,50 @@
+/*! 用来定义点云的类型, 后续所有的点云数据块都会按照
+    本数据块定义的格式进行解析, 直到遇到新的点云定义数据块.
+
+    本数据块的作用类似于 pcd 文件中的 header.
+
+    * name: 用来标识点云. 比如 rosbag 文件中 pointcloud2 的 msg topic.
+    * id: 设备编号.
+    * timestamp: 时间戳.
+    * fields: ',' 分割的字符串, 用来定义字段名. 如 "x,y,z" 表示有 x,y,z 三个字段.
+    * types: ',' 分割的字符串, 用来定义各个字段的数据类型. 每个数据类型由 i,u,f(不区分大小写) 和一个代表位数的数字组成.
+        * i 表示有符号整数.
+        * u 表示无符号整数.
+        * f 表示浮点数.
+    如 "f32,f32,f32" 表示三个字段都是 4 字节浮点数.
+    * shape: ',' 分割的字符串, 用来表示数据的维度(可选). 类似于 pcd 文件中的 width, heigh. 相较于 pcd 文件这里的定义更加泛化. 可以超过 2 个维度.如 "1000,500,5". 点云总数为所有维度的乘积. 如果点云是无序的, 则该字段为一个整数, 直接表示总点数.
+    * is_bigendian: 是否为大端存储.
+    * data: 点云数据. 根据 protobuf 定义, bytes 不能超过 2^32 个字节, 即 4G.
+    一般点云数据也不会超过 4G.
+
+    数据示例:
+    {
+        name = "my_lidar";
+        id = 1;
+        timestamp = 2234558;
+        fields = "x,y,z,intensity,rgb";
+        types = "f32,f32,f32,u8,u32";
+        shape = "400,600,10";
+        is_bigendian = 0;
+        data = [2400000*(4+4+4+1+4) 个字节的数组];
+    }
+
+    标识符: "P"
+
+    参考资料 [pcd file format](http://pointclouds.org/documentation/tutorials/pcd_file_format.html).
+    [sensor_msgs/PointCloud2.msg](http://docs.ros.org/en/api/sensor_msgs/html/msg/PointCloud2.html).
+*/
+
+syntax = "proto3";
+package ld_data;
+
+message PointCloud {
+    string name = 1;
+    uint64 id = 2;
+    uint64 timestamp = 3;
+    string fields = 4;
+    string types = 5;
+    string shape = 6;
+    bool is_bigendian = 7;
+    bytes data = 8;
+}
