@@ -5,7 +5,7 @@ const request = axios.create({
   headers: {
     'Content-Type':'application/vnd.api+json'
   },
-	baseURL:`http://dms${window.server.domain}/api/governance-jsonapi/models`,
+	baseURL:`http://logger.liangdao.ai.10.86.14.200.nip.io/api/logger/sys`,
 	timeout: 3600000,
 })
 

@@ -114,64 +114,80 @@ export default {
 
       // @wodelu: TODO-菜单权限
       // if (window.location.pathname.indexOf("loggerfe") > -1) {
-        this.subMenu = [{
-          index: '/systemanage/sysmanage',
-          title: '概览',
-          type: 'elMenuItem',
-          policy: "menusceneLibraryProject",
+        this.subMenu = [
+        {
+          index: '1',
+          title: '系统管理',
+          type: 'elSubmenu',
+          policy: "menuSystemanage",
+          menuItem: [
+            {
+              index: '/systemanage/sysmanage',
+              title: '系统环境',
+              policy: "pagesystemanagesysmanage",
+            },
+            {
+              index: '/systemanage/devices',
+              title: '设备管理',
+              policy: "pagesystemanagedevices",
+            },
+            {
+              index: '/systemanage/drives',
+              title: '设备驱动管理',
+              policy: "pagesystemanagedrives",
+            },
+            {
+              index: '/systemanage/storages',
+              title: '存储管理',
+              policy: "pagesystemanagestorages",
+            },
+            {
+              index: '/systemanage/tags',
+              title: '标签管理',
+              policy: "pagesystemanagetags",
+            },
+            {
+              index: '/systemanage/collectiontemplates',
+              title: '采集模版管理',
+              policy: "pagesystemanagecollectiontemplates",
+            },
+            {
+              index: '/loggerfe/configs',
+              title: '采集配置',
+              policy: "pageloggerfeconfigs",
+            },
+          ]
         },
         {
-          index: '/datastore/storage',
-          title: '存储管理',
+          index: '/loggerfe/index',
+          title: '采集',
           type: 'elMenuItem',
-          policy: "menusceneLibraryProjectdatastore",
+          policy: "menuloggerfeindex",
         },
         {
           index: '3',
-          title: '数据集',
+          title: '监控',
           type: 'elSubmenu',
-          policy: "menusceneLibraryProjectdataasset",
+          policy: "menumonitor",
           menuItem: [
-            // {
-            //   index: '/governance/tasks',
-            //   title: '数据治理',
-            //   policy: "pagesceneLibraryProjectGovernancetasks",
-            // },
             {
-              index: '/sceneLibraryProject/governancetasks',
-              title: '数据治理',
-              policy: "pagesceneLibraryProjectGovernancetasks",
+              index: '/menumonitor/system',
+              title: '系统监控',
+              policy: "pagemenumonitorsystem",
             },
-            // {
-            //   index: `/project/dataSetList/${this.ingressValue}?reqip=${this.ingress}`,
-            //   title: '数据资产',
-            //   policy: "pagesceneLibraryProjectDataassetsearch",
-            // }
-          ]
-        },
-        {
-          index: '4',
-          title: '场景库',
-          type: 'elSubmenu',
-          policy: "menuoperation",
-          menuItem: [
-            // {
-            //   index: `/project/sceneLibList/${this.ingressValue}?reqip=${this.ingress}`,
-            //   title: '场景',
-            //   policy: "pageoperationlines",
-            // },
             {
-              index: '/sceneLibraryProject/tasklists',
-              title: '任务',
-              policy: "pageoperationdispatchs",
-            }
+              index: '/menumonitor/status',
+              title: '状态监控',
+              policy: "pagemenumonitorstatus",
+            },
+            {
+              index: '/menumonitor/logs',
+              title: '日志分析',
+              policy: "pagemenumonitorlogs",
+            },
           ]
         }
-        ]
-      // }
-      // else {
-      //   this.subMenu = []
-      // }
+      ]
     },
     handleOpen (key, keyPath) {
       // console.log(key, keyPath);
@@ -185,8 +201,11 @@ export default {
 </script>
 
 <style lang="scss">
+#dms-navMenu .el-menu-vertical-demo:not(.el-menu--collapse) {
+  min-width: 216px;
+}
 #dms-navMenu {
-  // width: 200px;
+  width: 216px;
   min-height: 400px;
   .el-menu-vertical-demo {
     height: 100%;

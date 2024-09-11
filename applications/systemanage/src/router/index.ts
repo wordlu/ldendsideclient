@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import GovernanceOverview from '../components/Governance/GovOverview/Component.vue'
-import GovernanceTasks from '../components/Governance/GovTask/Component.vue'
-import GovernanceTaskDetail from '../components/Governance/GovTaskDetail/Component.vue'
-import GovernanceTaskCreation from '../components/Governance/GovTaskCreation/Component.vue'
-import GovernanceProposals from '../components/Governance/GovProposal/Component.vue'
-import GovernanceTriggers from '../components/Governance/GovTrigger/Component.vue'
-import GovernanceProposalDetail from '../components/Governance/GovProposalDetail/Component.vue'
+import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
+import SystemanageTasks from '../components/Systemanage/GovTask/Component.vue'
+import SystemanageTaskDetail from '../components/Systemanage/GovTaskDetail/Component.vue'
+import SystemanageTaskCreation from '../components/Systemanage/GovTaskCreation/Component.vue'
+import SystemanageProposals from '../components/Systemanage/GovProposal/Component.vue'
+import SystemanageTriggers from '../components/Systemanage/GovTrigger/Component.vue'
+import SystemanageProposalDetail from '../components/Systemanage/GovProposalDetail/Component.vue'
 import layout from '../layout/Component.vue'
 
 const router = createRouter({
@@ -17,31 +17,27 @@ const router = createRouter({
       children: [
         {
           path: 'sysmanage',
-          component: GovernanceTasks
+          component: SysmanagePage
         },
         {
-          path: 'overview',
-          component: GovernanceOverview
+          path: 'devices',
+          component: SystemanageTasks
         },
         {
-          path: 'taskcreation',
-          component: GovernanceTaskCreation
+          path: 'drives',
+          component: SystemanageTaskCreation
         },
         {
-          path: 'task/:id',
-          component: GovernanceTaskDetail
+          path: 'storages',
+          component: SystemanageTriggers
         },
         {
-          path: 'proposals',
-          component: GovernanceProposals
+          path: 'tags',
+          component: SystemanageTriggers
         },
         {
-          path: 'proposal/:id',
-          component: GovernanceProposalDetail
-        },
-        {
-          path: 'triggers',
-          component: GovernanceTriggers
+          path: 'collectiontemplates',
+          component: SystemanageTriggers
         }
       ]
     }
