@@ -1,11 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
 import SystemanageDevicesPage from '../components/Systemanage/devices/Component.vue'
+import storagesPage from '../components/Systemanage/storages/Component.vue'
 import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
-import SystemanageTaskCreation from '../components/Systemanage/GovTaskCreation/Component.vue'
-import SystemanageProposals from '../components/Systemanage/GovProposal/Component.vue'
+import tagLibListPage from '../components/Systemanage/tagLibrary/taglist.vue'
 import collectiontemplatesPage from '../components/Systemanage/collectiontemplates/Component.vue'
-import SystemanageProposalDetail from '../components/Systemanage/GovProposalDetail/Component.vue'
 import layout from '../layout/Component.vue'
 
 const router = createRouter({
@@ -29,11 +28,11 @@ const router = createRouter({
         },
         {
           path: 'storages',
-          component: collectiontemplatesPage
+          component: storagesPage
         },
         {
           path: 'tags',
-          component: collectiontemplatesPage
+          component: tagLibListPage
         },
         {
           path: 'collectiontemplates',

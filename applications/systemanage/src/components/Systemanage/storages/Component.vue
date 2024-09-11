@@ -2,21 +2,18 @@
   <div class="container">
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
-      <el-breadcrumb-item>采集模版管理</el-breadcrumb-item>
+      <el-breadcrumb-item>存储管理</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">采集模版管理<span class="count">({{ count }})</span></b>
-          </div>
-          <div class="info-btn-group">
-            <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button>
+            <b class="title">数据集<span class="count">({{ count }})</span></b>
           </div>
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索采集模版名称" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="search" class="search-bar" placeholder="搜索数据集名称" @change="change" @input="change" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -32,17 +29,30 @@
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
           :data="data" style="width: 100%">
-          <el-table-column label="" width="80">
-            <template #default="scope">
-              <div v-show="!currentdata.includes(scope.row.id)" style="width: 13px;height: 13px;border-radius: 50%; border: 1px solid #ccc;"></div>
-              <i class="el-icon-success" v-show="currentdata.includes(scope.row.id)" style="color: #ff7900;"></i>
-            </template>
-          </el-table-column>
-          <el-table-column property="name" label="模板名称"  />
-          <el-table-column property="type" label="类型" />
-          <el-table-column property="description" label="描述"/>
+          <el-table-column property="name" label="数据集名称" />
+          <el-table-column property="size" label="数据集规模"/>
+          <el-table-column property="prefix" label="存储位置"/>
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
+          </el-table-column>
+          <el-table-column
+            property="name"
+            label="操作"
+            width="50">
+            <template #default="scope">
+              <el-dropdown @command="(val) => handleCommand(val, scope.row)">
+                <span class="el-dropdown-link">
+                  <el-button @click="handleClick(scope.row)" type="text" size="small" :icon="MoreFilled"></el-button>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
+                    <el-dropdown-item command="导出" :icon="MoreFilled">导出</el-dropdown-item>
+                    <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
           </el-table-column>
         </el-table>
       </div>
@@ -51,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
+import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
 import { findAll } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
@@ -65,29 +75,25 @@ const search = ref('')
 const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
-const currentdata = ref([])
+const activeRow = ref<Row>({})
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
 const nextPage = () => {
-  queryDeviceDrivers(current.value + 1)
+  queryDevice(current.value + 1)
 }
 
 const prevPage = () => {
-  queryDeviceDrivers(current.value - 1)
+  queryDevice(current.value - 1)
 }
 
 onMounted(() => {
-  queryDeviceDrivers(current.value)
+  queryDevice(current.value)
 })
 
-const trigger = () => {
-  // window.history.pushState(null, '', `/loggerfe/configs`)
-}
-
-const queryDeviceDrivers = (page: number) => {
+const queryDevice = (page: number) => {
   try {
     const params = {
       offset: step.value * page,
@@ -95,10 +101,10 @@ const queryDeviceDrivers = (page: number) => {
       sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('/models/viewport-templates', params).then((res: any) => {
+    findAll('/models/datasets', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      data.value = gostore.findAll('viewport-templates')
+      data.value = gostore.findAll('datasets')
       count.value = res.data.meta.count
       current.value = page
       currentmax.value = Math.ceil(count.value / step.value)
@@ -110,24 +116,23 @@ const queryDeviceDrivers = (page: number) => {
   }
 }
 
-const queryCurrentDrivers = () => {
-  try {
-    findAll('/models/viewports', {}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      const datavalue = gostore.findAll('viewports')
-      currentdata.value = datavalue.map(it => it.templateid)
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.log(error)
+
+const change = () => {
+  queryDevice(0)
+}
+
+const handleCommand = (command, row) => {
+  if(command == '数据详情'){
+    console.log(row)
+  }else if(command == '删除'){  
+    console.log(row)
+  }else if(command == '导出'){
+    console.log(row)
   }
 }
 
-
-const change = () => {
-  queryDeviceDrivers(0)
+const handleClick = (e) =>{
+  activeRow.value = e
 }
 
 const formatter = (thistime: any, fmt: string) => {
@@ -154,7 +159,6 @@ const formatter = (thistime: any, fmt: string) => {
   }
   return fmt
 }
-queryCurrentDrivers()
 </script>
 
 <style lang="scss" scoped>
