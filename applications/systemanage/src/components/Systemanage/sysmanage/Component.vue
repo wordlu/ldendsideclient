@@ -78,7 +78,7 @@ const networkInterfaces = ref([])
 
 const queryEnvs = () => {
   try {
-    findAll('envs', {}).then((res: any) => {
+    findAll('/sys/envs', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('envs')
@@ -93,7 +93,7 @@ const queryEnvs = () => {
 
 const queryNetworkInterfaces = () => {
   try {
-    findAll('network-interfaces', {}).then((res: any) => {
+    findAll('/sys/network-interfaces', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('network-interfaces')

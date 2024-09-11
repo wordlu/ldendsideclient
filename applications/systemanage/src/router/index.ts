@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
-import SystemanageTasks from '../components/Systemanage/GovTask/Component.vue'
-import SystemanageTaskDetail from '../components/Systemanage/GovTaskDetail/Component.vue'
+import SystemanageDevicesPage from '../components/Systemanage/devices/Component.vue'
+import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
 import SystemanageTaskCreation from '../components/Systemanage/GovTaskCreation/Component.vue'
 import SystemanageProposals from '../components/Systemanage/GovProposal/Component.vue'
-import SystemanageTriggers from '../components/Systemanage/GovTrigger/Component.vue'
+import collectiontemplatesPage from '../components/Systemanage/collectiontemplates/Component.vue'
 import SystemanageProposalDetail from '../components/Systemanage/GovProposalDetail/Component.vue'
 import layout from '../layout/Component.vue'
 
@@ -21,23 +21,23 @@ const router = createRouter({
         },
         {
           path: 'devices',
-          component: SystemanageTasks
+          component: SystemanageDevicesPage
         },
         {
           path: 'drives',
-          component: SystemanageTaskCreation
+          component: SystemanageDevicesDrivesPage
         },
         {
           path: 'storages',
-          component: SystemanageTriggers
+          component: collectiontemplatesPage
         },
         {
           path: 'tags',
-          component: SystemanageTriggers
+          component: collectiontemplatesPage
         },
         {
           path: 'collectiontemplates',
-          component: SystemanageTriggers
+          component: collectiontemplatesPage
         }
       ]
     }

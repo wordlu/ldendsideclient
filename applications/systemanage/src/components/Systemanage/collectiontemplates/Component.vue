@@ -1,23 +1,22 @@
 <template>
   <div class="container">
     <el-breadcrumb :separator-icon="ArrowRight">
-      <el-breadcrumb-item :to="{ path: '/governance/overview' }">{{$t(`Menu['治理集成']`)}}</el-breadcrumb-item>
-      <el-breadcrumb-item>{{$t(`Menu['治理任务']`)}}</el-breadcrumb-item>
+      <el-breadcrumb-item >系统管理</el-breadcrumb-item>
+      <el-breadcrumb-item>采集模版管理</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">{{$t(`Menu['治理任务']`)}}<span class="count">({{ count }})</span></b>
+            <b class="title">采集模版管理<span class="count">({{ count }})</span></b>
           </div>
           <div class="info-btn-group">
-            <el-button type="info" plain class="info-btn" @click="queryGovTasksData(0)">{{$t(`common['刷新']`)}}</el-button>
-            <el-button type="primary" class="info-btn" @click="trigger">{{$t(`overview['手动触发']`)}}</el-button>
+            <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button>
           </div>
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" :placeholder="$t(`overview['搜索任务名称']`)" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="search" class="search-bar" placeholder="搜索采集模版名称" @change="change" @input="change" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -32,33 +31,19 @@
     <div class="list">
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
-          :data="data" style="width: 100%" 
-          @selection-change="handleSelectionChange" 
-          :show-overflow-tooltip="true">
-          <el-table-column type="selection" width="55" />
-          
-          <el-table-column property="name" :label="$t(`overview['任务名']`)" width="300">
+          :data="data" style="width: 100%">
+          <el-table-column label="" width="80">
             <template #default="scope">
-              <el-button style="text-decoration: underline; color: #606266;" link @click="rowClicked(scope.row)">{{
-                scope.row.name }}</el-button>
+              <div v-show="!currentdata.includes(scope.row.id)" style="width: 13px;height: 13px;border-radius: 50%; border: 1px solid #ccc;"></div>
+              <i class="el-icon-success" v-show="currentdata.includes(scope.row.id)" style="color: #ff7900;"></i>
             </template>
           </el-table-column>
-          <el-table-column property="desc" :label="$t(`overview['任务描述']`)" width="300" />
-          <!-- <el-table-column label="任务标签" width="300">
-            <template #default="scope">
-              <el-button v-for="tag in scope.row.tags" link :key="tag">{{ tag }}</el-button>
-            </template>
-          </el-table-column> -->
-          <el-table-column property="trigger-name" :label="$t(`overview['触发器']`)" width="150" />
-          <el-table-column property="proposal-name" :label="$t(`overview['方案']`)" width="150" />
-          <el-table-column property="status" :label="$t(`common['状态']`)" width="120" />
-          <el-table-column :label="$t(`common['开始时间']`)">
-            <template #default="scope">{{ formatter(scope.row.start, "yyyy-MM-dd hh:mm:ss") }}</template>
+          <el-table-column property="name" label="模板名称"  />
+          <el-table-column property="type" label="类型" />
+          <el-table-column property="description" label="描述"/>
+          <el-table-column label="创建时间">
+            <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
           </el-table-column>
-          <el-table-column :label="$t(`common['结束时间']`)">
-            <template #default="scope">{{ formatter(scope.row.end, "yyyy-MM-dd hh:mm:ss") }}</template>
-          </el-table-column>
-          <el-table-column property="id" label="ID" width="150" />
         </el-table>
       </div>
     </div>
@@ -72,19 +57,7 @@ import { findAll } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable } from 'element-plus'
 
-interface Row {
-  id: string,
-  name: string,
-  desc: string,           // 由触发器打印的描述
-  tags: Array<string>,    // 处理数据关联的采集标签
-  trigger: string,        // 触发器ID
-  reason: string,         // 触发日志, 显示触发原因
-  proposal: string,       // 方案ID
-  status: string,         // 当前任务状态
-  runId: string,          // 对应airflow的runid
-  start: Date,            // 开始执行时间
-  end: Date               // 结束执行时间
-}
+interface Row {}
 
 const count = ref(0)
 const step = ref(10)
@@ -92,38 +65,29 @@ const search = ref('')
 const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
+const currentdata = ref([])
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
 const nextPage = () => {
-  queryGovTasksData(current.value + 1)
+  queryDeviceDrivers(current.value + 1)
 }
 
 const prevPage = () => {
-  queryGovTasksData(current.value - 1)
-}
-
-const handleSelectionChange = (val: Row[]) => {
-  multipleSelection.value = val
-  if (multipleSelection.value.length === 0) isDeleteBtnDisabled.value = true
-  else isDeleteBtnDisabled.value = false
-}
-
-const rowClicked = (row: Row) => {
-  window.history.pushState(null, '', `/governance/task/${row.id}`)
+  queryDeviceDrivers(current.value - 1)
 }
 
 onMounted(() => {
-  queryGovTasksData(current.value)
+  queryDeviceDrivers(current.value)
 })
 
 const trigger = () => {
-  window.history.pushState(null, '', `/governance/taskcreation`)
+  window.history.pushState(null, '', `/loggerfe/configs`)
 }
 
-const queryGovTasksData = (page: number) => {
+const queryDeviceDrivers = (page: number) => {
   try {
     const params = {
       offset: step.value * page,
@@ -131,10 +95,10 @@ const queryGovTasksData = (page: number) => {
       sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('tasks', params).then((res: any) => {
+    findAll('/models/viewport-templates', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      data.value = gostore.findAll('tasks')
+      data.value = gostore.findAll('viewport-templates')
       count.value = res.data.meta.count
       current.value = page
       currentmax.value = Math.ceil(count.value / step.value)
@@ -144,6 +108,26 @@ const queryGovTasksData = (page: number) => {
   } catch (error) {
     console.log(error)
   }
+}
+
+const queryCurrentDrivers = () => {
+  try {
+    findAll('/models/viewports', {}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('viewports')
+      currentdata.value = datavalue.map(it => it.templateid)
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
+const change = () => {
+  queryDeviceDrivers(0)
 }
 
 const formatter = (thistime: any, fmt: string) => {
@@ -170,20 +154,7 @@ const formatter = (thistime: any, fmt: string) => {
   }
   return fmt
 }
-
-const change = () => {
-  queryGovTasksData(0)
-}
-
-const remove = () => {
-  const ids = multipleSelection.value.map(x => x.id)
-  console.log(ids)
-  try {
-
-  } catch (error) {
-    console.log(error)
-  }
-}
+queryCurrentDrivers()
 </script>
 
 <style lang="scss" scoped>
@@ -253,6 +224,7 @@ const remove = () => {
       .info-detail {
         display: flex;
         flex-direction: column;
+        justify-content: center;
 
         .title {
           padding: 4px 0;
