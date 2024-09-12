@@ -109,12 +109,12 @@ const handleSearch = () => {
     line-height: 2rem;
     border-radius: 0.4rem;
     text-align: center;
-    border: 1px solid $color-primary;
+    //border: 1px solid $color-primary;
     margin-bottom: 0.8rem;
     padding: 0 0.4rem;
     cursor: pointer;
     &.selected {
-      background: $color-primary;
+      //background: $color-primary;
     }
   }
   .empty {

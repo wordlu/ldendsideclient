@@ -186,7 +186,7 @@ const handleSave = () => {
   &-path {
     cursor: pointer;
     &:hover {
-      color: $color-primary;
+      // color: $color-primary;
     }
   }
 }
@@ -202,7 +202,7 @@ const handleSave = () => {
     border-radius: 0.5rem;
   }
   .selected {
-    background: $bg-color2;
+    // background: $bg-color2;
   }
   .item {
     display: flex;
@@ -216,11 +216,11 @@ const handleSave = () => {
       margin-right: 4px;
     }
     .use {
-      color: $color-primary;
+      // color: $color-primary;
     }
   }
   .tip {
-    color: $color-err;
+    // color: $color-err;
   }
 }
 .el-dialog__footer {

@@ -1,80 +1,80 @@
-@forward 'element-plus/theme-chalk/src/common/var.scss' with (
-  $fill-color: (
-    '': #021a33,
-    'light': #18314b,
-    'lighter': #2a425b,
-    'extra-light': #191919,
-    'dark': #39393a,
-    'darker': #424243,
-    'blank': #021a33,
-  ),
-  $colors: (
-    'primary': (
-      'base': #fe7901,
-      'light-9': #413933,
-      // 10% 53a8ff
-      // 20% 66b1ff
-      // 30% 79bbff
-      // 40% 8cc5ff
-      // 50% a0cfff
-      // 60% b3d8ff
-      // 70% c6e2ff
-      // 80% d9ecff
-      // 90% ecf5ff,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-    ),
-  ),
-  $bg-color: (
-    '': #021a33,
-    'page': #0a1225,
-    'overlay': #062445,
-  ),
-  $border-color: (
-    '': #39618b,
-    'light': #4c75a0,
-    'lighter': #6084ab,
-    'extra-light': #103863,
-    'dark': #021a33,
-    'darker': #0a1225,
-  ),
-  $menu: (
-    'bg-color': #0a1225,
-    // 'text-color': #fff,
-    // 'active-color': #fff,
-    // 'hover-bg-color': #131417,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-  ),
-  $text-color: (
-    'primary': #fff,
-    'regular': #fff,
-  ),
-  $button: (
-    'border-color': #4c4d4f,
-    'bg-color': #021a33,
-    'hover-bg-color': #0a1225,
-  ),
-  $empty: (
-    // ty-fill-color-0:var(--el-color-black);
-    // 'fill-color-0': getCssVar('color-black'),
-    // 'fill-color-1': #4b4b52,
-    // 'fill-color-2': #36383d,
-    // 'fill-color-3': #1e1e20,
-    // 'fill-color-4': #262629,
-    // 'fill-color-5': #202124,
-    // 'fill-color-6': #212224,
-    // 'fill-color-7': #1b1c1f,
-    // 'fill-color-8': #1c1d1f,
-    // 'fill-color-9': #18181a,
-    'fill-color-1': #143f6d,
-    'fill-color-2': #143f6d,
-    'fill-color-3': #143f6d,
-    'fill-color-4': #143f6d,
-    'fill-color-5': #103863,
-    'fill-color-6': #0c325b,
-    'fill-color-7': #092b50,
-    'fill-color-8': #052343,
-    'fill-color-9': #021a33,
-  ),
-  $table: (
-    'header-bg-color': #18314b,
-  )
-);
-@import '../global.scss';
+// @forward 'element-plus/theme-chalk/src/common/var.scss' with (
+//   $fill-color: (
+//     '': #021a33,
+//     'light': #18314b,
+//     'lighter': #2a425b,
+//     'extra-light': #191919,
+//     'dark': #39393a,
+//     'darker': #424243,
+//     'blank': #021a33,
+//   ),
+//   $colors: (
+//     'primary': (
+//       'base': #fe7901,
+//       'light-9': #413933,
+//       // 10% 53a8ff
+//       // 20% 66b1ff
+//       // 30% 79bbff
+//       // 40% 8cc5ff
+//       // 50% a0cfff
+//       // 60% b3d8ff
+//       // 70% c6e2ff
+//       // 80% d9ecff
+//       // 90% ecf5ff,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+//     ),
+//   ),
+//   $bg-color: (
+//     '': #021a33,
+//     'page': #0a1225,
+//     'overlay': #062445,
+//   ),
+//   $border-color: (
+//     '': #39618b,
+//     'light': #4c75a0,
+//     'lighter': #6084ab,
+//     'extra-light': #103863,
+//     'dark': #021a33,
+//     'darker': #0a1225,
+//   ),
+//   $menu: (
+//     'bg-color': #0a1225,
+//     // 'text-color': #fff,
+//     // 'active-color': #fff,
+//     // 'hover-bg-color': #131417,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+//   ),
+//   $text-color: (
+//     'primary': #fff,
+//     'regular': #fff,
+//   ),
+//   $button: (
+//     'border-color': #4c4d4f,
+//     'bg-color': #021a33,
+//     'hover-bg-color': #0a1225,
+//   ),
+//   $empty: (
+//     // ty-fill-color-0:var(--el-color-black);
+//     // 'fill-color-0': getCssVar('color-black'),
+//     // 'fill-color-1': #4b4b52,
+//     // 'fill-color-2': #36383d,
+//     // 'fill-color-3': #1e1e20,
+//     // 'fill-color-4': #262629,
+//     // 'fill-color-5': #202124,
+//     // 'fill-color-6': #212224,
+//     // 'fill-color-7': #1b1c1f,
+//     // 'fill-color-8': #1c1d1f,
+//     // 'fill-color-9': #18181a,
+//     'fill-color-1': #143f6d,
+//     'fill-color-2': #143f6d,
+//     'fill-color-3': #143f6d,
+//     'fill-color-4': #143f6d,
+//     'fill-color-5': #103863,
+//     'fill-color-6': #0c325b,
+//     'fill-color-7': #092b50,
+//     'fill-color-8': #052343,
+//     'fill-color-9': #021a33,
+//   ),
+//   $table: (
+//     'header-bg-color': #18314b,
+//   )
+// );
+// @import '../global.scss';

@@ -202,13 +202,13 @@ function getData() {
 
 <style lang="scss" scoped>
 .tip {
-  color: $color-primary;
+  // color: $color-primary;
 }
 .green {
-  color: $color-success;
+  // color: $color-success;
 }
 .error {
-  color: $color-err;
+  // color: $color-err;
 }
 .table-wrap {
   display: flex;

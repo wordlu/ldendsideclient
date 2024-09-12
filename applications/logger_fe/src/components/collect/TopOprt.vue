@@ -318,7 +318,7 @@ const switchFullScreen = () => {
     margin: 0 1.8rem;
   }
   .pause {
-    color: $color-primary;
+    // color: $color-primary;
     margin-left: 0.8rem;
     vertical-align: bottom;
     cursor: pointer;
@@ -328,18 +328,18 @@ const switchFullScreen = () => {
   }
   .tip {
     font-size: 0.75rem;
-    color: $color-tip;
+    // color: $color-tip;
     vertical-align: bottom;
     margin-left: 0.8rem;
     .icon {
       display: inline;
-      color: $el-color-primary-light-5;
+      // color: $el-color-primary-light-5;
       font-size: 18px;
       margin-left: 0.4rem;
       vertical-align: bottom;
     }
     &.error {
-      color: $color-err;
+      // color: $color-err;
     }
     &.mark-tip {
       position: absolute;
@@ -359,7 +359,7 @@ const switchFullScreen = () => {
     position: fixed;
     top: 62px;
     right: 24px;
-    background: $color-primary;
+    //background: $color-primary;
     color: #fff;
     text-align: center;
     line-height: 80px;
@@ -375,7 +375,7 @@ const switchFullScreen = () => {
 }
 .stop-icon {
   font-size: 1.5rem;
-  color: $color-warn;
+  //color: $color-warn;
   margin-right: 1rem;
 }
 .tag-trigger {
@@ -384,13 +384,13 @@ const switchFullScreen = () => {
   margin-top: -1.1rem;
   .tag-tip {
     font-size: 1.2rem;
-    color: $color-primary;
+    // color: $color-primary;
   }
 }
 </style>
 <style lang="scss">
 .link {
-  color: $color-primary;
+  // color: $color-primary;
   cursor: pointer;
 }
 </style>

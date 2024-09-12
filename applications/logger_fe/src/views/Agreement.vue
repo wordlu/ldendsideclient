@@ -171,7 +171,7 @@ const content = ref<any>({
 
 <style scoped lang="scss">
 .agree {
-  background: $bg-color;
+  // background: $bg-color;
   height: 100%;
   overflow: auto;
   padding: 1rem;

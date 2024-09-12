@@ -229,7 +229,7 @@ const saveSupplement = () => {
   width: 60%;
   margin: 0 auto;
   height: 2rem;
-  background: $bg-color2;
+  // background: $bg-color2;
   border-radius: 16px;
   position: relative;
 }
@@ -240,12 +240,12 @@ const saveSupplement = () => {
   padding-right: 1rem;
   .tog-icon {
     font-size: 30px;
-    color: $el-color-primary-light-3;
+    // color: $el-color-primary-light-3;
     cursor: pointer;
   }
   .text-center {
     font-size: 0.75rem;
-    color: $color-tip;
+    // color: $color-tip;
   }
 }
 .tags {
@@ -253,7 +253,7 @@ const saveSupplement = () => {
   width: 100%;
   height: 40rem;
   left: 0;
-  background: $bg-color1;
+  // background: $bg-color1;
   z-index: 1;
   padding: 0.8rem 2rem 0.6rem;
   overflow: auto;
@@ -269,7 +269,7 @@ const saveSupplement = () => {
     }
   }
   .empty-tag {
-    color: $color-primary;
+    // color: $color-primary;
   }
 }
 
@@ -290,12 +290,12 @@ const saveSupplement = () => {
     line-height: 2rem;
     border-radius: 0.4rem;
     text-align: center;
-    border: 1px solid $color-primary;
+    //border: 1px solid $color-primary;
     margin-bottom: 0.8rem;
     padding: 0 0.4rem;
     cursor: pointer;
     &.selected {
-      background: $color-primary;
+      //background: $color-primary;
     }
   }
   .suplt-empty {

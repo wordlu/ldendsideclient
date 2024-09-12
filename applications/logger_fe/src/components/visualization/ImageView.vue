@@ -64,7 +64,7 @@ const downloadImg = (name: string) => {
     height: 100%;
     margin-right: 0.4rem;
     overflow-y: auto;
-    background: $bg-color1;
+    // background: $bg-color1;
     .pic {
       width: 100%;
     }

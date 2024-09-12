@@ -115,7 +115,7 @@ const toAddTag = () => {
 .add-tip {
   margin-top: 0.75rem;
   span {
-    color: $color-primary;
+    // color: $color-primary;
     cursor: pointer;
   }
 }

@@ -90,7 +90,7 @@ const selectMenu = (index: string) => {
     width: 100%;
   }
   .my-icon {
-    color: $text-color1;
+    // color: $text-color1;
     font-size: 25px;
   }
 
@@ -114,10 +114,10 @@ const selectMenu = (index: string) => {
   }
 
   .toggle-button {
-    background-color: $bg-color;
+    // background-color: $bg-color;
     font-size: 10px;
     line-height: 24px;
-    color: $text-color1;
+    // color: $text-color1;
     text-align: center;
     letter-spacing: 0.2em;
     cursor: pointer;

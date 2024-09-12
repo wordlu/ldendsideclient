@@ -68,7 +68,7 @@ const delTag = (id: number) => {
     width: 111px;
     height: 111px;
     border: none;
-    color: $color-primary;
+    // color: $color-primary;
     font-size: 1.2rem;
     font-weight: 600;
     position: relative;
@@ -105,14 +105,14 @@ const delTag = (id: number) => {
 
     &.cached {
       animation: breath 1s linear 0.5s infinite alternate;
-      box-shadow: 0px 4px 20px $color-primary;
+      //box-shadow: 0px 4px 20px $color-primary;;
     }
 
     .auto-tag {
       position: absolute;
       top: 0;
       right: 0;
-      background: $color-success;
+      //background: $color-success;
       color: #ffffff;
       font-size: 0.8rem;
       padding: 0.4rem 0.8rem;

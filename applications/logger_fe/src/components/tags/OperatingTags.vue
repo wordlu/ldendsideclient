@@ -311,7 +311,7 @@ const handleTag = (tag: TagCollectItem) => {
 <style scoped lang="scss">
 .top {
   padding-bottom: 1rem;
-  border-bottom: 2px solid $bg-color2;
+  border-bottom: 2px solid #666;
   &-oprt {
     display: flex;
     align-items: center;
@@ -320,22 +320,22 @@ const handleTag = (tag: TagCollectItem) => {
   }
   .edit {
     font-size: 30px;
-    color: $el-color-primary-light-3;
+    // color: $el-color-primary-light-3;
     cursor: pointer;
     z-index: 1;
   }
   .add {
     font-size: 32px;
-    color: $el-color-primary-light-3;
+    // color: $el-color-primary-light-3;
     cursor: pointer;
   }
 }
 .tip {
   font-size: 0.75rem;
-  color: $color-tip;
+  // color: $color-tip;
 }
 .tag-wrap {
-  background: $bg-color;
+  // background: $bg-color;
   height: calc(100% - 4rem);
   border-radius: 4px;
   overflow: auto;

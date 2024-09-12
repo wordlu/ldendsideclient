@@ -150,7 +150,7 @@ const monitorErrorOprt = (oprt: string) => {
     font-weight: 600;
     margin-bottom: 0.75rem;
     margin-right: 0.5rem;
-    color: $color-error;
+    // color: $color-error;
   }
 }
 </style>

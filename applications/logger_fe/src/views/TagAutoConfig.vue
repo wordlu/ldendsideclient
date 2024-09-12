@@ -106,7 +106,7 @@ const switchEnable = (val: boolean, index: number) => {
 
 <style scoped lang="scss">
 .top-tip {
-  color: $color-primary;
+  // color: $color-primary;
   margin-bottom: 0.6rem;
 }
 </style>

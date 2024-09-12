@@ -112,10 +112,10 @@ const collectStore = useCollectStore()
     padding-bottom: 12px;
   }
   .success {
-    color: $color-success;
+    // color: $color-success;
   }
   .error {
-    color: $color-err;
+    // color: $color-err;
   }
 }
 </style>

@@ -98,11 +98,11 @@ const btnClick = () => {
   margin-bottom: 24px;
 }
 .empty-tip {
-  color: $color-err;
+  // color: $color-err;
   margin-right: 16px;
 }
 .select-tip {
-  color: $color-tip;
+  // color: $color-tip;
   margin-left: 12px;
   font-size: 0.75rem;
   vertical-align: bottom;

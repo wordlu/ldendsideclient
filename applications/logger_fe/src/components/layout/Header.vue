@@ -78,7 +78,7 @@ const togLangVal = (val: string) => {
     margin-right: 1rem;
     cursor: pointer;
     &.selected {
-      color: $color-primary;
+      // color: $color-primary;
     }
     &.set {
       margin-left: 1rem;

@@ -133,11 +133,11 @@ async function getSysSetting() {
   height: 60px;
   justify-content: space-between;
   padding: 0;
-  background-color: $bg-color1;
+  // background-color: $bg-color1;
   align-items: center;
-  color: $text-color1;
+  // color: $text-color1;
   font-size: 20px;
-  border-bottom: 2px solid $el-color-primary-light-3;
+  //border-bottom: 2px solid $el-color-primary-light-3;
   padding: 0 0.8rem;
 }
 .h100 {
@@ -147,7 +147,7 @@ async function getSysSetting() {
   height: calc(100% - 0px);
 }
 .el-aside {
-  background: $bg-color1;
+  // // background: $bg-color1;
   width: auto;
   height: 100%;
   overflow-y: auto;

@@ -22,7 +22,7 @@ link.value = envParam.PROD
 .info {
   text-align: center;
   .tip {
-    color: $color-tip;
+    // color: $color-tip;
   }
   .link {
     font-size: 2rem;

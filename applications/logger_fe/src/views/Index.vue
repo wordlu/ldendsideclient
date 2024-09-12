@@ -106,7 +106,7 @@ collectStore.$subscribe((mutation, state) => {
   }
 }
 .link {
-  color: $color-primary;
+  // color: $color-primary;
   margin-top: 24px;
   cursor: pointer;
 }

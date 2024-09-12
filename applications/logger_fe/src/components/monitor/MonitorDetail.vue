@@ -92,15 +92,15 @@ h1 {
   margin-bottom: 0.75rem;
 }
 .warning {
-  color: $color-warn;
+  //color: $color-warn;
 }
 // 目前后端逻辑error是最严重的情况
 .error {
-  color: $color-critical;
-  // color: $color-err;
+  //color: $color-critical;
+  // // color: $color-err;
 }
 .critical {
-  // color: $color-critical;
-  color: $color-err;
+  // //color: $color-critical;
+  // color: $color-err;
 }
 </style>
