@@ -43,79 +43,82 @@ const baseUrl = envParam.PROD ? location.hostname + envParam.VITE_BASE_URL : env
 // setWsClient(`ws://${location.host}/ws/`)
 
 // 建立socket连接
-setWsClient(`ws://${baseUrl}/ws/`)
+// setWsClient(`ws://${baseUrl}/ws/`)
 
 // 设置i请求路径
 setBaseUrl(`http://${baseUrl}`)
 
-onBeforeMount(async () => {
-  sessionStorage.setItem('collectStatusReady', '0')
-  // 获取使能的设备,需要await:会在获取到采集状态之后,设置设备状态
-  const dRes = await getEnableDevices()
-  if (dRes.status === 200) {
-    collectStore.deviceConfig = dRes.data
-  }
+/**
+ * @wodelu:暂时去掉所有前置请求
+ */
+// onBeforeMount(async () => {
+//   sessionStorage.setItem('collectStatusReady', '0')
+//   // 获取使能的设备,需要await:会在获取到采集状态之后,设置设备状态
+//   const dRes = await getEnableDevices()
+//   if (dRes.status === 200) {
+//     collectStore.deviceConfig = dRes.data
+//   }
 
-  if (location.pathname !== '/system_manage')
-    // 获取系统通用设置: 触发采集方式
-    await getSysSetting()
+//   if (location.pathname !== '/system_manage')
+//     // 获取系统通用设置: 触发采集方式
+//     await getSysSetting()
 
-  // 获取采集状态
-  const cRes = await getCollectionStatus()
-  if (cRes.status !== 200) {
-    return ElMessage.error(cRes.message)
-  }
-  // collectStore.collectStatus = 'pause'
-  collectStore.collectStatus = cRes.data.status || 'stop'
-  // 如果是检查状态,根据返回的设备状态设置设备和授时状态
-  if (collectStore.collectStatus === 'check') {
-    // 设置授时状态
-    collectStore.timingDetail = { status: cRes.data.timing_status }
-    if (cRes.data.timing_status === 'failed') {
-      collectStore.collectStatus = 'error'
-    }
-    // 设置设备状态
-    const status_list = cRes.data.devices_status || []
-    let connect_num = 0 // 记录连接状态的雷达个数
-    collectStore.deviceConfig.forEach(i => {
-      const target = status_list.find(t => t.name === i.name)
-      if (target) {
-        // 如果有设备连接失败,则采集状态置为失败
-        if (collectStore.collectStatus !== 'error' && target.status === 'disconnect') {
-          collectStore.collectStatus = 'error'
-        }
-        i.device_status = target.status
-        // 检查状态时,以下几个状态的设备都是已连接
-        if (CollectStatusMap[target.status as keyof typeof CollectStatusMap] > 1) {
-          i.device_status = 'connect'
-          connect_num++
-        }
-      }
-    })
-    // 如果授时成功且设备全部连接时,则采集状态为连接
-    if (cRes.data.timing_status === 'successed' && connect_num === status_list.length) {
-      collectStore.collectStatus = 'connect'
-    }
-  }
-  if (cRes.data.status.indexOf('collect') > -1) {
-    monitorStore.monitorStatus = 'run'
-    if (collectStore.collecting_mode !== '0') {
-      collectStore.triggerInCollecting = true
-    }
-  }
-  // 记录系统初始化时是否获取到了采集状态,有些操作需要等获取到采集状态之后再进行,记录标识
-  sessionStorage.setItem('collectStatusReady', '1')
-  // collectStore.collectStatus = 'connect'
-  Emitter.emit('collectStatusReady')
+//   // 获取采集状态
+//   const cRes = await getCollectionStatus()
+//   if (cRes.status !== 200) {
+//     return ElMessage.error(cRes.message)
+//   }
+//   // collectStore.collectStatus = 'pause'
+//   collectStore.collectStatus = cRes.data.status || 'stop'
+//   // 如果是检查状态,根据返回的设备状态设置设备和授时状态
+//   if (collectStore.collectStatus === 'check') {
+//     // 设置授时状态
+//     collectStore.timingDetail = { status: cRes.data.timing_status }
+//     if (cRes.data.timing_status === 'failed') {
+//       collectStore.collectStatus = 'error'
+//     }
+//     // 设置设备状态
+//     const status_list = cRes.data.devices_status || []
+//     let connect_num = 0 // 记录连接状态的雷达个数
+//     collectStore.deviceConfig.forEach(i => {
+//       const target = status_list.find(t => t.name === i.name)
+//       if (target) {
+//         // 如果有设备连接失败,则采集状态置为失败
+//         if (collectStore.collectStatus !== 'error' && target.status === 'disconnect') {
+//           collectStore.collectStatus = 'error'
+//         }
+//         i.device_status = target.status
+//         // 检查状态时,以下几个状态的设备都是已连接
+//         if (CollectStatusMap[target.status as keyof typeof CollectStatusMap] > 1) {
+//           i.device_status = 'connect'
+//           connect_num++
+//         }
+//       }
+//     })
+//     // 如果授时成功且设备全部连接时,则采集状态为连接
+//     if (cRes.data.timing_status === 'successed' && connect_num === status_list.length) {
+//       collectStore.collectStatus = 'connect'
+//     }
+//   }
+//   if (cRes.data.status.indexOf('collect') > -1) {
+//     monitorStore.monitorStatus = 'run'
+//     if (collectStore.collecting_mode !== '0') {
+//       collectStore.triggerInCollecting = true
+//     }
+//   }
+//   // 记录系统初始化时是否获取到了采集状态,有些操作需要等获取到采集状态之后再进行,记录标识
+//   sessionStorage.setItem('collectStatusReady', '1')
+//   // collectStore.collectStatus = 'connect'
+//   Emitter.emit('collectStatusReady')
 
-  // 获取监控状态
-  getMonitorStatus().then(res => {
-    if (res.status === 200) {
-      monitorStore.monitorStatus = res.data.monitor_status
-      monitorStore.showMonitor = res.data.monitor === 'fail'
-    }
-  })
-})
+//   // 获取监控状态
+//   getMonitorStatus().then(res => {
+//     if (res.status === 200) {
+//       monitorStore.monitorStatus = res.data.monitor_status
+//       monitorStore.showMonitor = res.data.monitor === 'fail'
+//     }
+//   })
+// })
 
 async function getSysSetting() {
   const res = await getSettings()

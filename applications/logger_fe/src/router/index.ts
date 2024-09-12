@@ -4,6 +4,7 @@ import DeviceRoutes from './devices'
 import Layout from '@/views/Layout.vue'
 import mainlayout from '../layout/Component.vue'
 import indexpage from '@/views/Index.vue'
+import createConfigpage from '@/views/createconfig.vue'
 import indexpage1 from '@/views/Index1.vue'
 import visualizationPage from '@/views/Visualization.vue'
 import SystemmanagePage from '@/views/SystemManage.vue'
@@ -24,6 +25,10 @@ const routes = [
           {
             path: 'index',
             component: indexpage,
+          },
+          {
+            path: 'createConfig',
+            component: createConfigpage,
           },
           {
             path: 'index1',

@@ -28,16 +28,27 @@
       </el-col>
       <el-col :span="16">
         <div class="grid-content ml">
-          <el-tree
-            ref="treeRef"
-            style="max-width: 600px"
-            :data="treedata"
-            show-checkbox
-            default-expand-all
-            node-key="id"
-            highlight-current
-            :props="defaultProps"
-          />
+          <div class="tree-area">
+            <el-tree
+              ref="treeRef"
+              style="max-width: 600px"
+              :data="treedata"
+              show-checkbox
+              default-expand-all
+              node-key="id"
+              highlight-current
+              @node-click="handleNodeClick"
+              :props="defaultProps"
+            />
+          </div>
+          <el-divider>
+            <el-icon><Link /></el-icon>
+          </el-divider>
+          <div class="config-area">
+            <div v-if="setConfigValue" class="info-btn-group">
+              <el-button type="primary" class="info-btn" @click="gotoSetConfigs">配置设备</el-button>
+            </div>
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -56,10 +67,11 @@ import PrepareInfo from '@/components/collect/PrepareInfo.vue'
 import { ref, onMounted, watchEffect  } from 'vue'
 import { setCollectionStatus } from '@/api/s1/collect'
 // import Monitor from '@/components/monitor/Index.vue'
-import { Search } from "@element-plus/icons-vue"
+import { Search, Link } from "@element-plus/icons-vue"
 import { ElTree } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll } from '@/api/jsonApi'
+import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 
 
@@ -69,10 +81,37 @@ interface Tree {
   children?: Tree[]
 }
 
+const setConfigValue = ref(false)
+
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
-const getCheckedNodes = () => {
-  console.log(treeRef.value!.getCheckedNodes(false, false))
+const handleNodeClick = (data: Tree) => {
+  console.log(data)
+  getSensoronfigs(data.label)
+}
+
+const getSensoronfigs = (lidarname: string) => {
+  try {
+    findAll('/models/devices', {'filter[slot]': lidarname}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('devices')
+      if(datavalue.length > 0) {
+        setConfigValue.value = false
+
+      } else {
+        setConfigValue.value = true
+      }
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const gotoSetConfigs = () => {
+  window.history.pushState(null, '', `/loggerfe/root/createConfig`)
 }
 
 const defaultProps = {
@@ -98,7 +137,7 @@ const queryCurrentDrivers = () => {
       console.log(err, 'err')
     })
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -225,6 +264,20 @@ queryCurrentDrivers()
 <style scoped lang="scss">
 .config-container {
   height: 100%;
+
+  .info-btn-group {
+    text-align: center;
+    margin-top: 88px;
+
+    .el-button--primary {
+      background: #FF7900;
+      border: none;
+    }
+
+    .info-btn {
+      margin: 5px;
+    }
+  }
 
   ::v-deep .el-input__icon {
     margin-left: 16px;

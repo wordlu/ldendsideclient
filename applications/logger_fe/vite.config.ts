@@ -18,6 +18,7 @@ export default ({ command, mode }: any): any => {
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
+         'vue': 'vue/dist/vue.esm-bundler.js'
       },
     },
     css: {
@@ -69,6 +70,11 @@ export default ({ command, mode }: any): any => {
           ws: true,
           changeOrigin: true,
         },
+        '^/element-plus': {
+          target: 'https://unpkg.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/element-plus/, ''),
+        }
       },
     },
   }

@@ -24,9 +24,9 @@ export function funcGovernanceLog(query:any) {
   })
 }
 
-export function getMdData(query) {
+export function getRemoteFile(query) {
   return request({
-    url: `http://dms${window.server.domain}/${query.path}`,
+    url: `http://daily-report-dev.10.86.14.200.nip.io/test.vue`,
     method: 'get',
     params: {}
   })
