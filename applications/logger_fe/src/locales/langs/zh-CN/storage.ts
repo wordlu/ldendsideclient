@@ -1,0 +1,16 @@
+export default {
+  storageTip: '配置是采集的第一步,请保证配置完毕后,再进行采集,否则系统不允许进行采集.',
+  emptyTip: '您还没有配置存储硬盘哦!',
+  selectDisk: '选择硬盘',
+  changeDisk: '更改硬盘',
+  selectTip: '注: 配置的是采集后,生成的数据包存储的位置',
+  storagePath: '存储位置',
+  diskName: '硬盘名称',
+  storageTitle: '请选择硬盘',
+  suggestTip: '剩余空间过小,不建议选择',
+  noSetStartTip: '系统检测到您未配置存储路径,请到',
+  setPage: '系统管理',
+  noSetEndTip: '进行配置.',
+  notEnoughStart: '系统检测到当前配置的硬盘空间不足,请到',
+  notEnoughEnd: '更换硬盘.',
+}
