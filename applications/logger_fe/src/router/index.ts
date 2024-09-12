@@ -4,6 +4,7 @@ import DeviceRoutes from './devices'
 import Layout from '@/views/Layout.vue'
 import mainlayout from '../layout/Component.vue'
 import indexpage from '@/views/Index.vue'
+import indexpage1 from '@/views/Index1.vue'
 import visualizationPage from '@/views/Visualization.vue'
 import SystemmanagePage from '@/views/SystemManage.vue'
 import aboutnativePage from '@/views/AboutNative.vue'
@@ -22,6 +23,10 @@ const routes = [
         children: [
           {
             path: 'index',
+            component: indexpage,
+          },
+          {
+            path: 'index1',
             component: indexpage,
           },
           {

@@ -5,15 +5,15 @@
     </el-header> -->
     <el-container class="main-con">
       <!-- 侧边栏菜单 -->
-      <el-aside>
+      <!-- <el-aside>
         <AsideMenu :menu-list="menuList" />
-      </el-aside>
+      </el-aside> -->
       <el-main id="main-cont">
         <router-view />
       </el-main>
     </el-container>
 
-    <Monitor />
+    <!-- <Monitor /> -->
   </el-container>
 </template>
 <script setup lang="ts">
