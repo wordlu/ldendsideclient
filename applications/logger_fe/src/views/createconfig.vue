@@ -9,17 +9,16 @@
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">配置设备</b>
+            <!-- <b class="title">配置设备</b> -->
           </div>
-          <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" /> -->
         </div>
       </div>
     </div>
     <el-form :model="form" label-width="auto" style="max-width: 600px">
-      <el-form-item label="Activity name">
+      <!-- <el-form-item label="Activity name">
         <el-input v-model="form.name" />
-      </el-form-item>
-      <el-form-item label="Activity zone">
+      </el-form-item> -->
+      <el-form-item label="设备类型">
         <el-select v-model="form.region" placeholder="please select your zone">
           <el-option label="Zone one" value="shanghai" />
           <el-option label="Zone two" value="beijing" />

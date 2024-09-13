@@ -31,7 +31,7 @@
           <div class="tree-area">
             <el-tree
               ref="treeRef"
-              style="max-width: 600px"
+              style="width: 300px"
               :data="treedata"
               show-checkbox
               default-expand-all
@@ -40,13 +40,41 @@
               @node-click="handleNodeClick"
               :props="defaultProps"
             />
+            <div class="btn-area" v-if="!setConfigValue">
+              <el-button type="primary" @click="onSubmit">保存</el-button>
+              <el-button>取消</el-button>
+            </div>
           </div>
-          <el-divider>
-            <el-icon><Link /></el-icon>
-          </el-divider>
           <div class="config-area">
             <div v-if="setConfigValue" class="info-btn-group">
+              <el-divider>
+                <!-- <el-icon><Link /></el-icon> -->
+              </el-divider>
               <el-button type="primary" class="info-btn" @click="gotoSetConfigs">配置设备</el-button>
+            </div>
+            <div v-if="!setConfigValue" style="margin-top: 20px">
+              <el-tabs
+                v-model="activeName"
+                type="card"
+                class="demo-tabs"
+                @tab-click="handleClick"
+              >
+                <el-tab-pane label="设备配置" name="first">
+                    <el-form :model="form" label-width="auto" style="max-width: 600px">
+                      <el-form-item label="设备类型">
+                        <el-select v-model="form.region" placeholder="please select your zone">
+                          <el-option label="Zone one" value="shanghai" />
+                          <el-option label="Zone two" value="beijing" />
+                        </el-select>
+                      </el-form-item>
+                      <div v-if="RemoteComponent">
+                        <!-- 动态渲染远程加载的组件 -->
+                        <component :is="RemoteComponent"></component>
+                      </div>
+                    </el-form>
+                </el-tab-pane>
+                <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane>
+              </el-tabs>
             </div>
           </div>
         </div>
@@ -64,7 +92,7 @@ import { useCollectStore } from '@/store/modules/collect'
 import TopOprt from '@/components/collect/TopOprt.vue'
 import OperatingTags from '@/components/tags/OperatingTags.vue'
 import PrepareInfo from '@/components/collect/PrepareInfo.vue'
-import { ref, onMounted, watchEffect  } from 'vue'
+import { ref, onMounted, watchEffect, reactive } from 'vue'
 import { setCollectionStatus } from '@/api/s1/collect'
 // import Monitor from '@/components/monitor/Index.vue'
 import { Search, Link } from "@element-plus/icons-vue"
@@ -73,6 +101,9 @@ import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
+import type { TabsPaneContext } from 'element-plus'
+import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
+
 
 
 interface Tree {
@@ -81,8 +112,25 @@ interface Tree {
   children?: Tree[]
 }
 
-const setConfigValue = ref(false)
+const form = reactive({
+  name: '',
+  region: '',
+  date1: '',
+  date2: '',
+  delivery: false,
+  type: [],
+  resource: '',
+  desc: '',
+})
 
+const activeName = ref('first')
+const RemoteComponent = ref<any>(null);
+
+const handleClick = (tab: TabsPaneContext, event: Event) => {
+  console.log(tab, event)
+}
+
+const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const handleNodeClick = (data: Tree) => {
@@ -98,7 +146,7 @@ const getSensoronfigs = (lidarname: string) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         setConfigValue.value = false
-
+        loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
@@ -260,22 +308,64 @@ const handleCanvasClick = (event) => {
 
 queryCurrentDrivers()
 
+const loadRemoteComponent = async () => {
+  try {
+    // Step 1: Fetch the remote .vue file content
+    const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    const vueFile = await response.text();
+
+    // Step 2: Parse the .vue file using @vue/compiler-sfc
+    const { descriptor } = parse(vueFile);
+
+    // Step 3: Compile <script> and <template> sections
+    const script = compileScript(descriptor, { id: 'remote-component' });
+    const { code: templateCode } = compileTemplate({ source: descriptor.template!.content });
+
+    // Create a new Vue component using the compiled script and template
+    const component = {
+      template: descriptor.template!.content,
+      setup: () => {
+        const scriptExports = {};
+        eval(script.code); // Dynamically evaluate script code
+        return scriptExports;
+      },
+    };
+
+    // Compile and apply styles (if present)
+    if (descriptor.styles.length > 0) {
+      descriptor.styles.forEach(style => {
+        const { code: styleCode } = compileStyle({
+          source: style.content,
+          id: 'remote-component',
+          scoped: style.scoped
+        });
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = styleCode;
+        document.head.appendChild(styleTag);
+      });
+    }
+
+    // Set the compiled component to render
+    RemoteComponent.value = component;
+  } catch (err) {
+    console.error('Failed to load remote component:', err);
+  }
+};
+
 </script>
 <style scoped lang="scss">
 .config-container {
   height: 100%;
+  .el-button--primary {
+    background: #FF7900;
+    border: none;
+  }
 
   .info-btn-group {
     text-align: center;
-    margin-top: 88px;
-
-    .el-button--primary {
-      background: #FF7900;
-      border: none;
-    }
 
     .info-btn {
-      margin: 5px;
+      margin-top: 88px;
     }
   }
 
@@ -300,6 +390,11 @@ queryCurrentDrivers()
   }
   .ml {
     padding-left: 20px;
+  }
+  .tree-area {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 20p
   }
   .grid-content {
     height: 100%;
