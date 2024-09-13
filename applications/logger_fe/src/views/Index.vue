@@ -95,7 +95,7 @@ import PrepareInfo from '@/components/collect/PrepareInfo.vue'
 import { ref, onMounted, watchEffect, reactive } from 'vue'
 import { setCollectionStatus } from '@/api/s1/collect'
 // import Monitor from '@/components/monitor/Index.vue'
-import { Search, Link } from "@element-plus/icons-vue"
+import { Search } from "@element-plus/icons-vue"
 import { ElTree } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll } from '@/api/jsonApi'

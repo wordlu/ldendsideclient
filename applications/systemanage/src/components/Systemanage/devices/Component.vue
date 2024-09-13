@@ -74,7 +74,7 @@ onMounted(() => {
 })
 
 const trigger = () => {
-  window.history.pushState(null, '', `/loggerfe/configs`)
+  window.history.pushState(null, '', `/loggerfe/root/configs`)
 }
 
 const queryDevice = (page: number) => {

@@ -13,10 +13,10 @@
       </div>
     </div>
     <!-- 控制显示的设备的选择 -->
-    <div v-if="!collectStore.hideVisualize" class="box-top">
-      <div class="devices">
+    <!-- <div v-if="!collectStore.hideVisualize" class="box-top">
+      <div class="devices"> -->
         <!-- 雷达设备点云显示控制: 可以选择多个 -->
-        <el-checkbox-group v-model="visualizeStore.selLidars" size="small">
+        <!-- <el-checkbox-group v-model="visualizeStore.selLidars" size="small">
           <el-checkbox
             v-for="item in collectStore.lidars"
             :key="item.id"
@@ -31,9 +31,9 @@
           </el-checkbox>
         </el-checkbox-group>
       </div>
-      <div class="devices">
+      <div class="devices"> -->
         <!-- 摄像头图像显示控制: 单选,选中一个要取消选择其他 -->
-        <el-checkbox-group v-model="visualizeStore.selCameras" size="small">
+        <!-- <el-checkbox-group v-model="visualizeStore.selCameras" size="small">
           <el-checkbox
             v-for="item in collectStore.cameras"
             :key="item.id"
@@ -48,7 +48,7 @@
           </el-checkbox>
         </el-checkbox-group>
       </div>
-    </div>
+    </div> -->
 
     <div
       v-loading="visualizeStore.showLoading"
@@ -59,6 +59,18 @@
       <ImageView v-if="!collectStore.hideVisualize && !visualizeStore.showPoint" />
       <!-- 点云可视化 -->
       <PointView v-else />
+      <!-- <el-aside :style="asideStyle" width="250px">
+        <h2>设置</h2>
+        <el-button @click="toggleAside" type="primary">
+          Collapse 
+        </el-button>
+      </el-aside>
+      <el-aside :style="asideStyle1" width="250px">
+        <h2>打标签</h2>
+        <el-button @click="toggleAside1" type="primary">
+          Collapse 
+        </el-button>
+      </el-aside> -->
     </div>
   </div>
 </template>
@@ -73,6 +85,33 @@ import { useVisualizeStore } from '@/store/modules/visualize'
 import { setCollectionStatus } from '@/api/s1/collect'
 import { getEnableDevices } from '@/api/s1/device'
 import { deletePc, addPcToScene, deleteImage, clearPcs } from '@/basic_data/visualization'
+import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton } from 'element-plus';
+import { ref, computed } from 'vue';
+
+
+const isAsideExpanded = ref(true);
+const isAsideExpanded1 = ref(true);
+
+const asideStyle = computed(() => ({
+  width: isAsideExpanded.value ? '250px' : '0',
+  transition: 'width 0.3s',
+  display: 'flex',
+  justifyContent: 'flex-end', // Right align
+}));
+
+const asideStyle1 = computed(() => ({
+  width: isAsideExpanded1.value ? '500px' : '0',
+  transition: 'width 0.3s',
+   display: 'flex',
+  justifyContent: 'flex-end', // Right align
+}));
+
+const toggleAside = () => {
+  isAsideExpanded.value = !isAsideExpanded.value;
+};
+const toggleAside1 = () => {
+  isAsideExpanded1.value = !isAsideExpanded1.value;
+};
 
 const collectStore = useCollectStore()
 const visualizeStore = useVisualizeStore()
@@ -208,7 +247,7 @@ function setLoading(isAdd: boolean, name: string, isLidar?: boolean) {
     background-color: white;
     display: flex;
     flex-direction: row;
-    margin-top: 20px;
+    margin: 20px 0;
   }
 
   &-top {

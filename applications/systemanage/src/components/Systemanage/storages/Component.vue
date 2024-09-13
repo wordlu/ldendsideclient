@@ -123,7 +123,7 @@ const change = () => {
 
 const handleCommand = (command, row) => {
   if(command == '数据详情'){
-    console.log(row)
+    window.history.pushState(null, '', `/loggerfe/root/index`)
   }else if(command == '删除'){  
     console.log(row)
   }else if(command == '导出'){
