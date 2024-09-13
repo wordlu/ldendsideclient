@@ -9,7 +9,8 @@
         />
       </div>
       <div class="login-nav-right">
-        <div
+        <!-- <span style="font-size: 14px;font-weight: bold;">端侧基线产品</span> -->
+        <!-- <div
           class="userSet"
           @click="clickAccount"
         >
@@ -38,7 +39,7 @@
             </div>
           </div>
         </div>
-        <!-- <lang-select
+        <lang-select
           class="right-menu-item hover-effect"
           style="margin-left: 10px; margin-top: 9px"
         /> -->
@@ -135,6 +136,7 @@ export default {
     padding: 24px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     position: relative;
 
     .login-nav-right {

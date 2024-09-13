@@ -184,15 +184,6 @@ const actions = {
         password: password
       }).then(response => {
         const data = response
-        const options = {
-          domain: window.server.domain,
-          path: "/",
-        }
-        //标注需要
-        // Cookies.set('account', data.account, options)
-        // Cookies.set('Token', data.token, options)
-        // Cookies.set('roles', data.role_ids.join(','), options)
-        // const currentRoles = data.auth_info.resource_access[keycloakInfo.client_name].roles.toString()
         const currentAccess = data.auth_info.resource_access[keycloakInfo.client_name]
         if(!currentAccess){
           store.dispatch('operation/logout').then(() => {
@@ -206,11 +197,6 @@ const actions = {
           reject('该账号没有该系统的权限')
         }
         const currentRoles = currentAccess.roles.toString()
-        Cookies.set('roles', currentRoles, options)
-        Cookies.set('account', data.auth_info.preferred_username, options)
-        Cookies.set('Token', data.access_token, options)
-        Cookies.set('refresh_token', data.refresh_token, options)
-        Cookies.set('systemId', systemId, options)
  
         Cookies.set('account', data.auth_info.preferred_username)
         Cookies.set('Token', data.access_token)
@@ -235,16 +221,6 @@ const actions = {
         client_id: keycloakInfo.client_name
       }).then(response => {
         const data = response
-        const options = {
-          domain: window.server.domain,
-          path: "/",
-        }
-        console.log("wodelu: ssologin")
-
-        //标注需要
-        // Cookies.set('account', data.account, options)
-        // Cookies.set('Token', data.token, options)
-        // Cookies.set('roles', data.role_ids.join(','), options)
 
         // const currentRoles = data.auth_info.resource_access[keycloakInfo.client_name].roles.toString()
         const currentAccess = data.auth_info.resource_access[keycloakInfo.client_name]
@@ -260,12 +236,6 @@ const actions = {
           reject('该账号没有该系统的权限')
         }
         const currentRoles = currentAccess.roles.toString()
-        
-        Cookies.set('roles', currentRoles, options)
-        Cookies.set('account', data.auth_info.preferred_username, options)
-        Cookies.set('Token', data.access_token, options)
-        Cookies.set('refresh_token', data.refresh_token, options)
-        Cookies.set('systemId', systemId, options)
  
         Cookies.set('account', data.auth_info.preferred_username)
         Cookies.set('Token', data.access_token)
@@ -281,144 +251,15 @@ const actions = {
       })
     })
   },
-  // pageCounter({ commit }, pageInfo){
-  //   const { pageName, pageUrl } = pageInfo
-  //   return new Promise((resolve, reject) => {
-  //     counters({name:pageName}).then(response=>{
-  //     }).catch(error => {
-  //       reject(error)
-  //     })
-  //   })
-  // },
   // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      // commit('SET_ROLES', Cookies.get('roles'))
-      // resolve(Cookies.get('roles'))
 
       const roles = 'manager'
       commit('SET_ROLES', roles)
       resolve(roles)
     })
   },
-  // user logout
-  // logout({ commit, state, dispatch }) {
-  //   return new Promise((resolve, reject) => {
-  //     const options = {
-  //       domain: window.server.domain,
-  //       path: "/",
-  //     }
-  //     Cookies.remove('Token',options)
-  //     Cookies.remove('refresh_token',options)
-  //     Cookies.remove('systemId',options)
-  //     Cookies.remove('roles',options)
-  //     Cookies.remove('frontendArray',options)
-  //     Cookies.remove('account',options)
-
-  //     Cookies.remove('Token')
-  //     Cookies.remove('refresh_token')
-  //     Cookies.remove('systemId')
-  //     Cookies.remove('roles')
-  //     Cookies.remove('frontendArray')
-  //     Cookies.remove('account')
-  //   resolve('logout')
-  //   })
-  // },
-  // 重置登录状态
-  // resetToken({ commit },refresh_token) {
-  //   return new Promise((resolve, reject) => {
-  //     ssoLogin({ refresh_token: refresh_token }).then(response => {
-  //       console.log("wodelu:refresh_token")
-  //       const data = response
-  //       //获取权限信息存入本地
-  //       localStorage.setItem('roles',JSON.stringify({roles:data.functions}))
-  //       const roles= localStorage.getItem('roles')
-  //       const options = {
-  //         domain: window.server.domain,
-  //         path: "/",
-  //       }
-  //       Cookies.set('name',data.name,options)
-  //       Cookies.set('creater_id',data.creater_id,options)
-  //       //获取token
-  //       Cookies.set('Token', data.access_token,options)
-  //       Cookies.set('update_time',data.update_time,options)
-  //       Cookies.set('refresh_token', data.refresh_token,options)
-
-  //       Cookies.set('name',data.name)
-  //       Cookies.set('creater_id',data.creater_id)
-  //       //获取token
-  //       Cookies.set('Token', data.access_token)
-  //       Cookies.set('update_time',data.update_time)
-  //       Cookies.set('refresh_token', data.refresh_token)
-  //       //同步到全局变量
-  //       commit('SET_ROLES', JSON.parse(roles))
-  //       commit('SET_TOKEN', data.access_token)
-  //       location.reload()
-  //       resolve(JSON.parse())
-  //     }).catch(error => {
-  //       reject(error)
-  //     })
-  //   })
-  // },
-  // dynamically modify permissions
-  // changeRoles({ commit, dispatch }) {
-  //   return new Promise(async resolve => {
-  //     await dispatch('resetToken',Cookies.get('refresh_token'))
-
-  //     const roles = localStorage.getItem('roles')
-
-  //     resetRouter()
-
-  //     // generate accessible routes map based on roles
-  //     const accessRoutes = await dispatch('permission/generateRoutes', roles, { root: true })
-
-  //     // dynamically add accessible routes
-  //     router.addRoutes(accessRoutes)
-
-  //     // reset visited views and cached views
-  //     dispatch('tagsView/delAllViews', null, { root: true })
-
-  //     resolve('权限重置')
-  //   })
-  // },
-  //获取前端配置
-  getConfigure({ commit, dispatch }){
-    return new Promise(async (resolve,reject) => {
-      axios('/front_end_configure/').then(res=>{
-        commit('SET_WEB_CONFIGURE', res.data)
-        const options = {
-          domain: window.server.domain,
-          path: "/",
-        }
-        Cookies.set('WEB_CONFIGURE',JSON.stringify(res.data),options)
-        resolve(res.data)
-      }).catch(error => {
-        reject(error)
-      })
-    })
-  },
-  //获取权限列表
-  // getActions(){
-  //   return new Promise(async (resolve,reject) => {
-  //     axios({
-  //       url: `http://${window.server.ssoPrefix}/api/access-policy/action`,
-  //       method: 'get',
-  //       headers: {
-  //         'Ld-Project': 'shell',
-  //         'Authorization': Cookies.get('Token'),
-  //       },
-  //     }).then(res=>{
-  //       const frontendArray = res.data.frontend
-  //       if (frontendArray.length > 0) {
-  //         Cookies.remove('shellfrontendArray')
-  //         Cookies.set('shellfrontendArray', frontendArray.toString());
-  //       }
-  //       resolve(res.data)
-  //     }).catch(error => {
-  //       reject(error)
-  //     })
-  //   })
-  // },
 
   //获取前端配置
   getConfigure_sql({ commit, dispatch },systemId){
