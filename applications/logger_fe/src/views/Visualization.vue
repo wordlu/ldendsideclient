@@ -1,5 +1,17 @@
 <template>
   <div class="box">
+    <el-breadcrumb :separator-icon="ArrowRight">
+      <el-breadcrumb-item >系统管理</el-breadcrumb-item>
+      <el-breadcrumb-item>采集</el-breadcrumb-item>
+    </el-breadcrumb>
+    <div class="panel">
+      <div class="title-panel">
+        <el-button type="primary" class="info-btn" @click="gotoSetConfigs">开始采集</el-button>
+        <el-button type="primary" class="info-btn" @click="gotoSetConfigs">调试设备</el-button>
+        <el-button  class="info-btn" @click="gotoSetConfigs">添加作业标签</el-button>
+        <el-button  class="info-btn" @click="gotoSetConfigs">查看已打标签</el-button>
+      </div>
+    </div>
     <!-- 控制显示的设备的选择 -->
     <div v-if="!collectStore.hideVisualize" class="box-top">
       <div class="devices">
@@ -11,7 +23,7 @@
             :label="item.name"
             border
             @change="
-            (val: any) => {
+            (val) => {
               changePoint(val, item)
             }
           ">
@@ -28,7 +40,7 @@
             :label="item.name"
             border
             @change="
-            (val: any) => {
+            (val) => {
               changeCamera(val,item)
             }
           ">
@@ -186,6 +198,18 @@ function setLoading(isAdd: boolean, name: string, isLidar?: boolean) {
   height: 100%;
   display: flex;
   flex-direction: column;
+
+  .el-button--primary {
+    background: #FF7900;
+    border: none;
+  }
+
+  .title-panel {
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    margin-top: 20px;
+  }
 
   &-top {
     height: 4.5rem;

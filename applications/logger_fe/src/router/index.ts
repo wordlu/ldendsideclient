@@ -24,6 +24,10 @@ const routes = [
         children: [
           {
             path: 'index',
+            component: visualizationPage,
+          },
+          {
+            path: 'configs',
             component: indexpage,
           },
           {
