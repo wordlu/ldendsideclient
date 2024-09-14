@@ -3,6 +3,18 @@
     <div class="grid-content ml">
       <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="width: 200px;margin-bottom: 20px;"/>
       <div class="tree-area">
+        <!-- <div class="tree-area-tree">
+          <div class="type" v-for="(item, index) in treedata" :key="index">
+            <div class="type-title">{{ item.label }}:</div>
+            <div class="type-content" v-for="item2 in item.children" :key="item2.id" @click="handleNodeClick(item2.label)">
+              <div class="type-content-title">{{ item2.label }}</div>
+              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
+              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
+              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
+              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
+            </div>
+          </div>
+        </div> -->
         <el-tree
           ref="treeRef"
           style="width: 300px"
@@ -13,6 +25,7 @@
           highlight-current
           @node-click="handleNodeClick"
           :props="defaultProps"
+          :render-content="renderContent"
         />
       </div>
       <div class="config-area">
@@ -186,6 +199,39 @@ const defaultProps = {
   children: 'children',
   label: 'label',
 }
+
+// 自定义树节点的渲染内容
+const renderContent = (h, { node, data }) => {
+  
+   if (!data.children) {
+    return h('div',{
+        style: 'display:flex;align-items:center;',
+      },
+      [
+      h('div', {
+        style: 'margin-right: 20px;',
+      },node.label), // 节点标签
+      h('iframe', {
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      }),
+      h('iframe', {
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      }),
+      h('iframe', {
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      }),
+      h('iframe', {
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      }),
+    ]);
+  } else {
+    return h('span', node.label); // 非叶子节点只显示标签
+  }
+};
 
 const treedata = ref([])
 const sensorData = ref([])
@@ -443,13 +489,35 @@ const changeAuto = (value: boolean) => {
 
 <style scoped lang="scss">
 
+.tree-area-tree {
+  color: #2D2F39;
+  cursor: pointer;
+  .type-title {
+    line-height: 40px;
+    height: 40px;
+  }
+
+  .type-content {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+
+    .type-content-title {
+      line-height: 24x;
+      height: 24px;
+    }
+  }
+}
+
 .ml {
   padding-left: 20px;
 }
 .tree-area {
   display: flex;
   justify-content: space-between;
-  padding-right: 20p
+  padding-right: 20px;
+  height: 200px;
+  overflow: auto;
 }
 
 .display-panel {
@@ -489,5 +557,10 @@ const changeAuto = (value: boolean) => {
 }
 .el-collapse-item {
   padding-left: 0.75rem;
+}
+</style>
+<style>
+.panel-header {
+  display: none !important;
 }
 </style>

@@ -52,6 +52,7 @@ router.beforeEach(async(to, from, next) => {
                   isMountApp = true
                 }else{
                   if(activeApp !== ''){
+                    console.log('卸载')
                     await MicroApp.unmount();
                   }
                   try{

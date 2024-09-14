@@ -53,7 +53,7 @@ export default ({ command, mode }: any): any => {
     build: {
       // target: 'es2020',
       target: ['edge90', 'chrome90', 'firefox90', 'safari15'],
-      outDir: 'loggerfe', // 根据项目实际情况进行配置
+      outDir: 'dist', // 根据项目实际情况进行配置
       sourcemap: true,
     },
     server: {

@@ -34,25 +34,6 @@ const state = {
   communication:'',
   microApp:[],
   registerMicroApps:[
-    /**
-     * 临时添加内容
-     */
-    {
-      //ld_cali
-      name: "ldcalibration",
-      entry: "http://localhost:5173/apps/ldcalibration",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      //ld_viz
-      name: "ldvizfe",
-      entry: "http://localhost:5273/apps/ldvizfe",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
     {
       //logger
       name: "loggerfe",
@@ -62,55 +43,9 @@ const state = {
       props:{}
     },
     {
-      //权限管理
-      name: "dmsshell",
-      entry: "http://localhost:8080/apps/dmsshell",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      //算法库
-      name: "algorithem",
-      entry: "http://localhost:9082/apps/algorithem",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      //治理集成
+      //系统管理
       name: "systemanage",
       entry: "http://10.86.24.22:8083/apps/systemanage",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      //概览
-      name: "landing",
-      entry: "http://localhost:9081/apps/landing",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      // 数据存储
-      name: "datastore",
-      entry: "http://localhost:8094/apps/datastore",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },{
-      // 数据存储
-      name: "dataasset",
-      entry: "http://localhost:8096/apps/dataasset",
-      container: "#Appmicro",
-      activeRule: [],
-      props:{}
-    },
-    {
-      name: "tagLibrary",
-      entry: "http://localhost:8086/apps/tagLibrary",
       container: "#Appmicro",
       activeRule: [],
       props:{}

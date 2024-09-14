@@ -7,7 +7,7 @@
     <div class="panel">
       <div class="title-panel">
         <el-button type="primary" class="info-btn" @click="gotoSetConfigs">开始采集</el-button>
-        <el-button type="primary" class="info-btn" @click="gotoSetConfigs">调试设备</el-button>
+        <el-button type="primary" class="info-btn" @click="startDevice">调试设备</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">添加作业标签</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">查看已打标签</el-button>
       </div>
@@ -87,10 +87,25 @@ import { getEnableDevices } from '@/api/s1/device'
 import { deletePc, addPcToScene, deleteImage, clearPcs } from '@/basic_data/visualization'
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton } from 'element-plus';
 import { ref, computed } from 'vue';
+import { addItem } from '@/api/jsonApi'
 
 
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
+
+const startDevice = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "startup",
+        "devices": [],
+        "viewport": "oIo_PGuiI2TCFtN"
+      }
+    }
+  }
+  addItem('/models/actions', params)
+}
 
 const asideStyle = computed(() => ({
   width: isAsideExpanded.value ? '250px' : '0',
@@ -123,18 +138,18 @@ const status = ['collect', 'push_data', 'push_and_collect', 'connect']
 
 onMounted(() => {
   clearPcs()
-  getEnableDevices().then(res => {
-    if (res.status === 200) {
-      // const devices = collectStore.deviceConfig || []
-      // res.data.forEach(i => {
-      //   const d_index = devices.findIndex(d => d.name === i.name)
-      //   if (d_index > -1) {
-      //     i.device_status = devices[d_index].device_status
-      //   }
-      // })
-      collectStore.deviceConfig = res.data
-    }
-  })
+  // getEnableDevices().then(res => {
+  //   if (res.status === 200) {
+  //     // const devices = collectStore.deviceConfig || []
+  //     // res.data.forEach(i => {
+  //     //   const d_index = devices.findIndex(d => d.name === i.name)
+  //     //   if (d_index > -1) {
+  //     //     i.device_status = devices[d_index].device_status
+  //     //   }
+  //     // })
+  //     collectStore.deviceConfig = res.data
+  //   }
+  // })
 })
 
 /**
