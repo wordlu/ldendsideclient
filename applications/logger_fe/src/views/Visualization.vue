@@ -89,11 +89,12 @@ import { getEnableDevices } from '@/api/s1/device'
 import { deletePc, addPcToScene, deleteImage, clearPcs } from '@/basic_data/visualization'
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton } from 'element-plus';
 import { ref, computed } from 'vue';
-import { addItem } from '@/api/jsonApi'
+import { addItem, findAll } from '@/api/jsonApi'
 
 
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
+const viewportId = ref('')
 
 const startupDevice = () => {
   const params = {
@@ -102,7 +103,7 @@ const startupDevice = () => {
       "attributes": {
         "command": "recordOn",
         "devices": [],
-        "viewport": "oIo_PGuiI2TCFtN"
+        "viewport": viewportId.value
       }
     }
   }
@@ -116,7 +117,7 @@ const shutdownDevice = () => {
       "attributes": {
         "command": "recordOff",
         "devices": [],
-        "viewport": "oIo_PGuiI2TCFtN"
+        "viewport": viewportId.value
       }
     }
   }
@@ -130,7 +131,7 @@ const startupCollect = () => {
       "attributes": {
         "command": "shutdown",
         "devices": [],
-        "viewport": "oIo_PGuiI2TCFtN"
+        "viewport": viewportId.value
       }
     }
   }
@@ -144,7 +145,7 @@ const shutdownCollect = () => {
       "attributes": {
         "command": "shutdown",
         "devices": [],
-        "viewport": "oIo_PGuiI2TCFtN"
+        "viewport": viewportId.value
       }
     }
   }
@@ -180,8 +181,22 @@ const { t } = useI18n()
 // 这些状态下点击可视化不需要loading
 const status = ['collect', 'push_data', 'push_and_collect', 'connect']
 
+const queryCurrentDrivers = () => {
+  try {
+    findAll('/models/viewports', {}).then((res: any) => {
+      viewportId.value = res.data.data[0].id
+      console.log(viewportId.value, 'viewportId')
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 onMounted(() => {
   clearPcs()
+  queryCurrentDrivers()
   // getEnableDevices().then(res => {
   //   if (res.status === 200) {
   //     // const devices = collectStore.deviceConfig || []
