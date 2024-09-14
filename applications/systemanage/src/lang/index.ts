@@ -22,8 +22,8 @@ const i18n:any = createI18n({
   messages,
 });
 
-mergeLocale('Menu')
-mergeLocale('common')
+// mergeLocale('Menu')
+// mergeLocale('common')
 // mergeLocale('governance')
 
 function mergeLocale(project:any){

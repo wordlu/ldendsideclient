@@ -151,7 +151,7 @@ var vite_config_default = ({ command, mode }) => {
     },
     build: {
       target: ["edge90", "chrome90", "firefox90", "safari15"],
-      outDir: "ld_logger_fe",
+      outDir: "loggerfe",
       sourcemap: true
     },
     server: {

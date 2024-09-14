@@ -14,7 +14,7 @@ export default ({ command, mode }: any): any => {
   const env = loadEnv(mode, root)
   return {
     // base: env.VITE_PUBLIC_PATH,
-    base: `/apps/loggerfe`,
+    base: `/apps/loggerfe/`,
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
@@ -53,7 +53,7 @@ export default ({ command, mode }: any): any => {
     build: {
       // target: 'es2020',
       target: ['edge90', 'chrome90', 'firefox90', 'safari15'],
-      outDir: 'ld_logger_fe', // 根据项目实际情况进行配置
+      outDir: 'loggerfe', // 根据项目实际情况进行配置
       sourcemap: true,
     },
     server: {
