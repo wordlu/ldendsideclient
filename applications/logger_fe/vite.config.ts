@@ -14,7 +14,7 @@ export default ({ command, mode }: any): any => {
   const env = loadEnv(mode, root)
   return {
     // base: env.VITE_PUBLIC_PATH,
-    base: `/apps/loggerfe/`,
+    base: `/apps/loggerfe`,
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
@@ -69,11 +69,6 @@ export default ({ command, mode }: any): any => {
           target: 'ws://10.86.24.56:8100',
           ws: true,
           changeOrigin: true,
-        },
-        '^/element-plus': {
-          target: 'https://unpkg.com',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/element-plus/, ''),
         }
       },
     },

@@ -32,7 +32,6 @@ const getTags = (lidarname: string) => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('tags')
       tagData.value = datavalue
-      console.log(tagData.value, 'datavalue')
     }).catch((err: any) => {
       console.log(err, 'err')
     })

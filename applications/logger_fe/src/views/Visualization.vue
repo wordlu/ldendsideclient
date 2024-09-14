@@ -6,8 +6,10 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <el-button type="primary" class="info-btn" @click="gotoSetConfigs">开始采集</el-button>
-        <el-button type="primary" class="info-btn" @click="startDevice">调试设备</el-button>
+        <el-button type="primary" class="info-btn" @click="startupCollect">开始采集</el-button>
+        <el-button type="primary" class="info-btn" @click="shutdownCollect">结束采集</el-button>
+        <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
+        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">添加作业标签</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">查看已打标签</el-button>
       </div>
@@ -93,12 +95,54 @@ import { addItem } from '@/api/jsonApi'
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
 
-const startDevice = () => {
+const startupDevice = () => {
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
-        "command": "startup",
+        "command": "recordOn",
+        "devices": [],
+        "viewport": "oIo_PGuiI2TCFtN"
+      }
+    }
+  }
+  addItem('/models/actions', params)
+}
+
+const shutdownDevice = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "recordOff",
+        "devices": [],
+        "viewport": "oIo_PGuiI2TCFtN"
+      }
+    }
+  }
+  addItem('/models/actions', params)
+}
+
+const startupCollect = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "shutdown",
+        "devices": [],
+        "viewport": "oIo_PGuiI2TCFtN"
+      }
+    }
+  }
+  addItem('/models/actions', params)
+}
+
+const shutdownCollect = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "shutdown",
         "devices": [],
         "viewport": "oIo_PGuiI2TCFtN"
       }
