@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
-import SystemanageDevicesPage from '../components/Systemanage/devices/Component.vue'
+import Indexpage from '../components/Systemanage/Indexpage/Component.vue'
+import configsPage from '../components/Systemanage/configsPage/Component.vue'
 import storagesPage from '../components/Systemanage/storages/Component.vue'
 import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
 import tagLibListPage from '../components/Systemanage/tagLibrary/taglist.vue'
@@ -16,11 +16,11 @@ const router = createRouter({
       children: [
         {
           path: 'root/index',
-          component: SysmanagePage
+          component: Indexpage
         },
         {
           path: 'root/configs',
-          component: SystemanageDevicesPage
+          component: configsPage
         },
         {
           path: 'root/createConfig',

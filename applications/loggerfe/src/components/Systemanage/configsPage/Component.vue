@@ -62,14 +62,20 @@
                 <el-tab-pane label="设备配置" name="first">
                     <el-form :model="form" label-width="auto" style="max-width: 600px">
                       <el-form-item label="设备类型">
-                        <el-select v-model="form.region" placeholder="please select your zone">
-                          <el-option label="Zone one" value="shanghai" />
-                          <el-option label="Zone two" value="beijing" />
+                        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange">
+                          <!-- <el-option label="Zone one" value="shanghai" /> -->
+                          <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
                         </el-select>
                       </el-form-item>
                       <div v-if="RemoteComponent">
                         <!-- 动态渲染远程加载的组件 -->
-                        <component :is="RemoteComponent"></component>
+                        <component :is="RemoteComponent" @submit="handleFormSubmit"></component>
+                        <!-- 展示从远程组件获取的表单数据 -->
+                        <div v-if="formData">
+                          <h2>Form Data from Remote Component:</h2>
+                          <p>Name: {{ formData.name }}</p>
+                          <p>Option: {{ formData.option }}</p>
+                        </div>
                       </div>
                     </el-form>
                 </el-tab-pane>
@@ -125,6 +131,10 @@ const form = reactive({
 
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
+  const formData = ref<{ name: string; option: string } | null>(null);
+const onSubmit = () => {
+  console.log('submit!')
+}
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
   console.log(tab, event)
@@ -137,6 +147,28 @@ const handleNodeClick = (data: Tree) => {
   console.log(data)
   getSensoronfigs(data.label)
 }
+const driversdata = ref<Row[]>([])
+
+const queryDeviceDrivers = (page: number) => {
+  try {
+    findAll('/models/device-drivers', {}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      driversdata.value = gostore.findAll('device-drivers')
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const handleDriverChange = (row: any) => {
+  const currentdriver = driversdata.value.find(it => it.name === row)
+  console.log(currentdriver, 'currentdriver')
+  loadRemoteComponent()
+
+}
 
 const getSensoronfigs = (lidarname: string) => {
   try {
@@ -146,7 +178,7 @@ const getSensoronfigs = (lidarname: string) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         setConfigValue.value = false
-        loadRemoteComponent()
+        // loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
@@ -307,43 +339,37 @@ const handleCanvasClick = (event) => {
 
 
 queryCurrentDrivers()
+queryDeviceDrivers()
 
 const loadRemoteComponent = async () => {
   try {
-    // Step 1: Fetch the remote .vue file content
     const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
     const vueFile = await response.text();
-
-    // Step 2: Parse the .vue file using @vue/compiler-sfc
     const { descriptor } = parse(vueFile);
-
-    // Step 3: Compile <script> and <template> sections
     const script = compileScript(descriptor, { id: 'remote-component' });
-    const { code: templateCode } = compileTemplate({ source: descriptor.template!.content });
+    const { code: templateCode } = compileTemplate({ source: descriptor.template!.content, id: 'remote-component' });
 
-    // Create a new Vue component using the compiled script and template
     const component = {
-      template: descriptor.template!.content,
+      template: descriptor.template?.content || '',
       setup: () => {
         const scriptExports = {};
-        eval(script.code); // Dynamically evaluate script code
+        eval(script.code);
         return scriptExports;
-      },
+      }
     };
 
-    // Compile and apply styles (if present)
-    if (descriptor.styles.length > 0) {
-      descriptor.styles.forEach(style => {
-        const { code: styleCode } = compileStyle({
-          source: style.content,
-          id: 'remote-component',
-          scoped: style.scoped
-        });
-        const styleTag = document.createElement('style');
-        styleTag.innerHTML = styleCode;
-        document.head.appendChild(styleTag);
-      });
-    }
+    // if (descriptor.styles.length > 0) {
+    //   descriptor.styles.forEach(style => {
+    //     const { code: styleCode } = compileStyle({
+    //       source: style.content,
+    //       id: 'remote-component',
+    //       scoped: style.scoped
+    //     });
+    //     const styleTag = document.createElement('style');
+    //     styleTag.innerHTML = styleCode;
+    //     document.head.appendChild(styleTag);
+    //   });
+    // }
 
     // Set the compiled component to render
     RemoteComponent.value = component;
