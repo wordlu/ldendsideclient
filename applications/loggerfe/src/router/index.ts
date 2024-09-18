@@ -11,19 +11,19 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/systemanage',
+      path: '/loggerfe',
       component: layout,
       children: [
         {
-          path: 'sysmanage',
+          path: 'root/index',
           component: SysmanagePage
         },
         {
-          path: 'devices',
+          path: 'root/configs',
           component: SystemanageDevicesPage
         },
         {
-          path: 'drives',
+          path: 'root/createConfig',
           component: SystemanageDevicesDrivesPage
         },
         {

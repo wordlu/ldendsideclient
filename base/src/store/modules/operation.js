@@ -37,7 +37,7 @@ const state = {
     {
       //logger
       name: "loggerfe",
-      entry: "http://localhost:8686/apps/loggerfe",
+      entry: "http://localhost:8084/apps/loggerfe",
       container: "#Appmicro",
       activeRule: [],
       props:{}

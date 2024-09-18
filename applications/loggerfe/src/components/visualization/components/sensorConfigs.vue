@@ -126,9 +126,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watchEffect, reactive } from 'vue'
 import DataSource from './DataSource.vue'
-import { changeProps } from '@/basic_data/visualization'
+// import { changeProps } from '@/basic_data/visualization'
 import { useI18n } from 'vue-i18n'
-import { numberLimit } from '@/utils/common'
+// import { numberLimit } from '@/utils/common'
 import { ElTree } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll } from '@/api/jsonApi'
@@ -212,19 +212,19 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 20px;',
       },node.label), // 节点标签
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&panelId=3&refresh=5s',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=4',
       style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=9',
       style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=8',
       style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk=tv',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=7',
       style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
       }),
     ]);

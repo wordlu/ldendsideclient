@@ -1,191 +1,139 @@
 <template>
-  <div class="container">
+  <div class="config-create-container">
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
-      <el-breadcrumb-item>设备驱动管理</el-breadcrumb-item>
+      <el-breadcrumb-item>采集配置</el-breadcrumb-item>
+      <el-breadcrumb-item>配置设备</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">设备驱动管理<span class="count">({{ count }})</span></b>
-          </div>
-          <div class="info-btn-group">
-            <el-button type="primary" class="info-btn" @click="trigger">拉取设备驱动</el-button>
-          </div>
-        </div>
-      </div>
-      <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索设备名称" @change="change" @input="change" :prefix-icon="Search" />
-        <div class="mid-group">
-          <div class="ver-mid">
-            <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
-          </div>
-          <el-text size="large">{{ current + 1 }}</el-text>
-          <div class="ver-mid">
-            <el-button type="text" :disabled="current === 0" :icon="ArrowLeftBold" @click="prevPage" />
+            <!-- <b class="title">配置设备</b> -->
           </div>
         </div>
       </div>
     </div>
-    <div class="list">
-      <div class="list-panel">
-        <el-table ref="multipleTableRef" 
-          :data="data" style="width: 100%">
-          <el-table-column property="name" label="设备驱动名称" width="300" />
-          <el-table-column property="brand" label="品牌"/>
-          <el-table-column property="model" label="型号"/>
-          <el-table-column property="version" label="版本" />
-          <el-table-column label="驱动发布时间">
-            <template #default="scope">{{ formatter(scope.row.releasedate, "yyyy-MM-dd hh:mm:ss") }}</template>
-          </el-table-column>
-          <el-table-column property="contacts" label="驱动联系人"/>
-        </el-table>
+    <!-- <div class="step-panel">
+      <el-steps align-center :active="active" finish-status="success">
+        <el-step title="Step 1" />
+      </el-steps>
+    </div> -->
+    <el-form :model="form" label-width="auto" style="max-width: 600px">
+      
+      <el-form-item label="设备类型">
+        <el-select v-model="form.region" placeholder="please select your zone">
+          <el-option label="Zone one" value="shanghai" />
+          <el-option label="Zone two" value="beijing" />
+        </el-select>
+      </el-form-item>
+      
+      <div v-if="RemoteComponent">
+        <!-- 动态渲染远程加载的组件 -->
+        <component :is="RemoteComponent"></component>
       </div>
+    </el-form>
+    <div class="btn-panel">
+      <el-button type="primary" @click="onSubmit">保存</el-button>
+      <el-button>取消</el-button>
     </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
-import gostore from '@/services/governance-store'
-import { findAll } from '@/api/jsonApi'
-import { ref, onMounted } from "vue"
-import { ElTable } from 'element-plus'
+<script setup lang="ts">
+import { ref } from 'vue';
+import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
+import { reactive } from 'vue'
 
-interface Row {}
-
-const count = ref(0)
-const step = ref(10)
-const search = ref('')
-const current = ref(0)
-const currentmax = ref(0)
-const data = ref<Row[]>([])
-
-const multipleTableRef = ref<InstanceType<typeof ElTable>>()
-const multipleSelection = ref<Row[]>([])
-const isDeleteBtnDisabled = ref<boolean>(true)
-
-const nextPage = () => {
-  queryDeviceDrivers(current.value + 1)
-}
-
-const prevPage = () => {
-  queryDeviceDrivers(current.value - 1)
-}
-
-onMounted(() => {
-  queryDeviceDrivers(current.value)
+// do not use same name with ref
+const form = reactive({
+  name: '',
+  region: '',
+  date1: '',
+  date2: '',
+  delivery: false,
+  type: [],
+  resource: '',
+  desc: '',
 })
 
-const trigger = () => {
-  window.history.pushState(null, '', `/loggerfe/configs`)
+// const active = ref(0)
+// const next = () => {
+//   if (active.value++ > 2) active.value = 0
+// }
+const onSubmit = () => {
+  console.log('submit!')
 }
+// 创建一个 ref 来保存加载的远程组件
+const RemoteComponent = ref<any>(null);
 
-const queryDeviceDrivers = (page: number) => {
+const loadRemoteComponent = async () => {
   try {
-    const params = {
-      offset: step.value * page,
-      limit: step.value,
-      sort: '-created',
-      'filter[name][fuzzy-match]': search.value
+    // Step 1: Fetch the remote .vue file content
+    const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    const vueFile = await response.text();
+
+    // Step 2: Parse the .vue file using @vue/compiler-sfc
+    const { descriptor } = parse(vueFile);
+
+    // Step 3: Compile <script> and <template> sections
+    const script = compileScript(descriptor, { id: 'remote-component' });
+    const { code: templateCode } = compileTemplate({ source: descriptor.template!.content });
+
+    // Create a new Vue component using the compiled script and template
+    const component = {
+      template: descriptor.template!.content,
+      setup: () => {
+        const scriptExports = {};
+        eval(script.code); // Dynamically evaluate script code
+        return scriptExports;
+      },
+    };
+
+    // Compile and apply styles (if present)
+    if (descriptor.styles.length > 0) {
+      descriptor.styles.forEach(style => {
+        const { code: styleCode } = compileStyle({
+          source: style.content,
+          id: 'remote-component',
+          scoped: style.scoped
+        });
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = styleCode;
+        document.head.appendChild(styleTag);
+      });
     }
-    findAll('/models/device-drivers', params).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      data.value = gostore.findAll('device-drivers')
-      count.value = res.data.meta.count
-      current.value = page
-      currentmax.value = Math.ceil(count.value / step.value)
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.log(error)
-  }
-}
 
+    // Set the compiled component to render
+    RemoteComponent.value = component;
+  } catch (err) {
+    console.error('Failed to load remote component:', err);
+  }
+};
 
-const change = () => {
-  queryDeviceDrivers(0)
-}
-
-const formatter = (thistime: any, fmt: string) => {
-  if (!thistime) return '--'
-  const isUTC = thistime.indexOf('Z') > -1 ? 'UTC' : ''
-  // const isUTC = ""
-  let $this = new Date(thistime)
-  let o = {
-    'M+': $this[`get${isUTC}Month`]() + 1,
-    'd+': $this[`get${isUTC}Date`](),
-    'h+': $this[`get${isUTC}Hours`](),
-    'm+': $this[`get${isUTC}Minutes`](),
-    's+': $this[`get${isUTC}Seconds`](),
-    'q+': Math.floor(($this[`get${isUTC}Month`]() + 3) / 3),
-    'S': $this[`get${isUTC}Milliseconds`]()
-  }
-  if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(RegExp.$1, ($this[`get${isUTC}FullYear`]() + '').substr(4 - RegExp.$1.length))
-  }
-  for (var k in o) {
-    if (new RegExp('(' + k + ')').test(fmt)) {
-      fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length)))
-    }
-  }
-  return fmt
-}
+loadRemoteComponent()
 </script>
+<style scoped lang="scss">
+.config-create-container {
+  height: 100%;
 
-<style lang="scss" scoped>
-.ver-mid {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  margin: 0 30px;
-
-  .bread-font {
-    font-weight: 700;
+  .el-button--primary {
+    background: #FF7900;
+    border: none;
   }
 
-  .panel {
-    margin-top: 15px;
-    flex-grow: 1;
-    border: 1px solid transparent;
+  .btn-panel {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
   }
 
-  .mid-panel {
-    display: flex;
-    flex-direction: row;
+  .info-btn-group {
+    text-align: center;
+    margin-top: 88px;
 
-    .search-bar {
-      max-width: 300px;
-      padding: 10px
-    }
-
-    .mid-group {
-      flex-grow: 1;
-      width: 100px;
-      display: flex;
-      flex-direction: row-reverse;
-      margin: 0 15px;
-
-      .el-button--text {
-        color: #FF7900;
-      }
-
-      .el-button--text.is-disabled {
-        color: rgba(255, 121, 0, 0.4);
-      }
-
-
-      button {
-        margin: 0 15px
-      }
+    .info-btn {
+      margin: 5px;
     }
   }
 
@@ -199,6 +147,7 @@ const formatter = (thistime: any, fmt: string) => {
       width: 100%;
       display: flex;
       flex-direction: row;
+      justify-content: space-between;
 
       .info-detail {
         display: flex;
@@ -245,16 +194,6 @@ const formatter = (thistime: any, fmt: string) => {
         }
       }
 
-    }
-  }
-
-  .list {
-    // height: 100px;
-    flex-grow: 1;
-    border: 1px solid transparent;
-
-    .list-panel {
-      margin: 10px;
     }
   }
 }

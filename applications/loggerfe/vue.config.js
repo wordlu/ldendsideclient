@@ -6,7 +6,7 @@ const port = process.env.port || process.env.npm_config_port || 9081 // dev port
 module.exports = defineConfig({
   transpileDependencies: true,
   lintOnSave: false,
-  publicPath: `/apps/systemanage`,
+  publicPath: `/apps/loggerfe`,
   lintOnSave:false,
   devServer:{
     port:8083,
@@ -31,7 +31,7 @@ module.exports = defineConfig({
       libraryTarget: 'umd', // 把微应用打包成 umd 库格式
       // jsonpFunction: `webpackJsonp_${packageName}`,
       chunkLoadingGlobal: `webpackJsonp_${packageName}`
-    },
+    }
   },
   chainWebpack: config => {
     // set svg-sprite-loader

@@ -16,7 +16,7 @@ function render(props:any) {
   instance.config.globalProperties.$labelCaApi = labelCaApi
   instance.config.globalProperties.$menuList = menuList
   instance.config.globalProperties.$filter = filter
-  instance.mount('#systemanage')
+  instance.mount('#loggerfe')
 }
 
 if ((window as any).__POWERED_BY_QIANKUN__) {
