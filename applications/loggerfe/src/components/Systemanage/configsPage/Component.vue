@@ -71,11 +71,32 @@
                         <!-- 动态渲染远程加载的组件 -->
                         <component :is="RemoteComponent" @submit="handleFormSubmit"></component>
                         <!-- 展示从远程组件获取的表单数据 -->
-                        <div v-if="formData">
-                          <h2>Form Data from Remote Component:</h2>
-                          <p>Name: {{ formData.name }}</p>
-                          <p>Option: {{ formData.option }}</p>
-                        </div>
+                        <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
+                          <el-form-item label="host_name">
+                            <el-input v-model="form.host_name" />
+                          </el-form-item>
+                          <el-form-item label="points_topic">
+                            <el-input v-model="form.points_topic" />
+                          </el-form-item>
+                          <el-form-item label="timestamp_mode">
+                            <el-input v-model="form.timestamp_mode" />
+                          </el-form-item>
+                          <el-form-item label="ptp_utc_tai_offset">
+                            <el-input v-model="form.ptp_utc_tai_offset" />
+                          </el-form-item>
+                          <el-form-item label="point_type">
+                            <el-input v-model="form.point_type" />
+                          </el-form-item>
+                          <el-form-item label="receive_topic">
+                            <el-input v-model="form.receive_topic" />
+                          </el-form-item>
+                          <el-form-item label="save_topic">
+                            <el-input v-model="form.nasave_topicme" />
+                          </el-form-item>
+                          <el-form-item label="bag_file_name">
+                            <el-input v-model="form.bag_file_name" />
+                          </el-form-item>
+                        </el-form>
                       </div>
                     </el-form>
                 </el-tab-pane>
@@ -104,7 +125,7 @@ import { setCollectionStatus } from '@/api/s1/collect'
 import { Search } from "@element-plus/icons-vue"
 import { ElTree } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-import { findAll } from '@/api/jsonApi'
+import { findAll, addItem, patchItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
@@ -119,22 +140,56 @@ interface Tree {
 }
 
 const form = reactive({
-  name: '',
-  region: '',
-  date1: '',
-  date2: '',
-  delivery: false,
-  type: [],
-  resource: '',
-  desc: '',
 })
 
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
-  const formData = ref<{ name: string; option: string } | null>(null);
-const onSubmit = () => {
-  console.log('submit!')
+
+const onSubmit = async () => {
+  try {
+    const deviceparams = {
+      "points_topic": form.points_topic,
+      "host_name": form.host_name,
+      "timestamp_mode": form.timestamp_mode,
+      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+      "point_type": form.point_type,
+      "receive_topic": form.receive_topic,
+      "save_topic": form.save_topic,
+      "bag_file_name": form.bag_file_name,
+    }
+    const params = {
+      data: {
+        type: 'devices',
+        id: currentDevice.value.id,
+        attributes: {
+          "device-params": deviceparams,
+        }
+      }
+          
+    }
+    patchItem(params).then((res) => {
+      console.log(res)
+      ElMessage({
+        message: "保存配置成功",
+        type: 'success',
+      })
+    }).catch(err => {
+      let msg = t(`common['操作失败']`)
+      const {response:{data:{errors}}} = err
+      if(errors && errors[0]) {
+        msg = errors[0]['detail']
+      }
+      ElMessage({
+        message: msg,
+        type: 'error',
+      })
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
+
+
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
   console.log(tab, event)
@@ -162,21 +217,24 @@ const queryDeviceDrivers = (page: number) => {
     console.log(error)
   }
 }
-
+const currentDriver = ref(null)
 const handleDriverChange = (row: any) => {
-  const currentdriver = driversdata.value.find(it => it.name === row)
-  console.log(currentdriver, 'currentdriver')
+  currentDriver.value = driversdata.value.find(it => it.name === row)
+  console.log(currentDriver.value, 'currentDriver.value')
   loadRemoteComponent()
 
 }
-
+const currentDevice = ref({})
+const currentlidarname = ref('')
 const getSensoronfigs = (lidarname: string) => {
+  currentlidarname.value = lidarname
   try {
     findAll('/models/devices', {'filter[slot]': lidarname}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
+        currentDevice.value = datavalue[0]
         setConfigValue.value = false
         // loadRemoteComponent()
       } else {
@@ -191,7 +249,7 @@ const getSensoronfigs = (lidarname: string) => {
 }
 
 const gotoSetConfigs = () => {
-  window.history.pushState(null, '', `/loggerfe/root/createConfig`)
+  window.history.pushState(null, '', `/loggerfe/root/createConfig?slot=${currentlidarname.value}`)
 }
 
 const defaultProps = {

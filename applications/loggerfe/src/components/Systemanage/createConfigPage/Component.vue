@@ -22,15 +22,43 @@
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
       <el-form-item label="设备类型">
-        <el-select v-model="form.region" placeholder="please select your zone">
-          <el-option label="Zone one" value="shanghai" />
-          <el-option label="Zone two" value="beijing" />
+        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange">
+          <!-- <el-option label="Zone one" value="shanghai" /> -->
+          <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
       </el-form-item>
       
       <div v-if="RemoteComponent">
         <!-- 动态渲染远程加载的组件 -->
         <component :is="RemoteComponent"></component>
+
+        <!-- 展示从远程组件获取的表单数据 -->
+        <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
+          <el-form-item label="host_name">
+            <el-input v-model="form.host_name" />
+          </el-form-item>
+          <el-form-item label="points_topic">
+            <el-input v-model="form.points_topic" />
+          </el-form-item>
+          <el-form-item label="timestamp_mode">
+            <el-input v-model="form.timestamp_mode" />
+          </el-form-item>
+          <el-form-item label="ptp_utc_tai_offset">
+            <el-input v-model="form.ptp_utc_tai_offset" />
+          </el-form-item>
+          <el-form-item label="point_type">
+            <el-input v-model="form.point_type" />
+          </el-form-item>
+          <el-form-item label="receive_topic">
+            <el-input v-model="form.receive_topic" />
+          </el-form-item>
+          <el-form-item label="save_topic">
+            <el-input v-model="form.nasave_topicme" />
+          </el-form-item>
+          <el-form-item label="bag_file_name">
+            <el-input v-model="form.bag_file_name" />
+          </el-form-item>
+        </el-form>
       </div>
     </el-form>
     <div class="btn-panel">
@@ -44,25 +72,91 @@
 import { ref } from 'vue';
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import { reactive } from 'vue'
+import { findAll, addItem, patchItem } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
+import { useRoute } from 'vue-router';
 
-// do not use same name with ref
-const form = reactive({
-  name: '',
-  region: '',
-  date1: '',
-  date2: '',
-  delivery: false,
-  type: [],
-  resource: '',
-  desc: '',
-})
+const route = useRoute();
 
-// const active = ref(0)
-// const next = () => {
-//   if (active.value++ > 2) active.value = 0
-// }
-const onSubmit = () => {
-  console.log('submit!')
+const form = reactive({})
+
+
+const driversdata = ref<Row[]>([])
+
+const queryDeviceDrivers = (page: number) => {
+  try {
+    findAll('/models/device-drivers', {}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      driversdata.value = gostore.findAll('device-drivers')
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+queryDeviceDrivers()
+
+const currentDriver = ref(null)
+const handleDriverChange = (row: any) => {
+  currentDriver.value = driversdata.value.find(it => it.name === row)
+  console.log(currentDriver.value, 'currentDriver.value')
+  loadRemoteComponent()
+}
+
+const onSubmit = async () => {
+  try {
+    const deviceparams = {
+      "points_topic": form.points_topic,
+      "host_name": form.host_name,
+      "timestamp_mode": form.timestamp_mode,
+      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+      "point_type": form.point_type,
+      "receive_topic": form.receive_topic,
+      "save_topic": form.save_topic,
+      "bag_file_name": form.bag_file_name,
+    }
+    const params = {
+      data: {
+        type: 'devices',
+        attributes: {
+          "name": currentDriver.value.name,
+          "type": currentDriver.value.type,
+          "brand": currentDriver.value.brand,
+          "model": currentDriver.value.model,
+          "helm-path": currentDriver.value['helm-path'],
+          "device-params-path": currentDriver.value['device-params-path'],
+          "device-params": deviceparams,
+          "driver": currentDriver.value.id,
+          "slot": route.query.slot,
+          "isdeleted": false,
+        }
+      }
+          
+    }
+    addItem('/models/devices', params).then((res) => {
+      console.log(res)
+      ElMessage({
+        message: "保存配置成功",
+        type: 'success',
+      })
+    }).catch(err => {
+      console.log(err)
+      let msg ='操作失败'
+      // const {response:{data:{errors}}} = err
+      // if(errors && errors[0]) {
+      //   msg = errors[0]['detail']
+      // }
+      // ElMessage({
+      //   message: msg,
+      //   type: 'error',
+      // })
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
 // 创建一个 ref 来保存加载的远程组件
 const RemoteComponent = ref<any>(null);
@@ -111,7 +205,7 @@ const loadRemoteComponent = async () => {
   }
 };
 
-loadRemoteComponent()
+// loadRemoteComponent()
 </script>
 <style scoped lang="scss">
 .config-create-container {

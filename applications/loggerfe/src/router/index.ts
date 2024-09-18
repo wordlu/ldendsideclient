@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Indexpage from '../components/Systemanage/Indexpage/Component.vue'
 import configsPage from '../components/Systemanage/configsPage/Component.vue'
 import storagesPage from '../components/Systemanage/storages/Component.vue'
-import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
+import createConfigPage from '../components/Systemanage/createConfigPage/Component.vue'
 import tagLibListPage from '../components/Systemanage/tagLibrary/taglist.vue'
 import collectiontemplatesPage from '../components/Systemanage/collectiontemplates/Component.vue'
 import layout from '../layout/Component.vue'
@@ -24,7 +24,7 @@ const router = createRouter({
         },
         {
           path: 'root/createConfig',
-          component: SystemanageDevicesDrivesPage
+          component: createConfigPage
         },
         {
           path: 'storages',
