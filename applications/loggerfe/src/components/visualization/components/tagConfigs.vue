@@ -58,6 +58,7 @@ getTags()
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  padding: 0 6px;
 
   .tag-item {
     margin-bottom: 10px;
@@ -80,18 +81,11 @@ getTags()
       white-space: nowrap;
     }
     .icon-item {
-      // min-width: 32px;
-      // height: 32px;
       border-radius: 8px;
-      // margin-left: 12px;
-      // display: flex;
-      // justify-content: center;
-      // align-items: center;
       cursor:pointer;
       margin-bottom: 4px;
       .icon-item-custom{
-        // min-width: 32px;
-        border-radius: 6px;
+        border-radius:  10px;
         padding-left: 3px;
         padding-right: 3px;
         width: 80px;
@@ -99,7 +93,6 @@ getTags()
         display: flex;
         align-items: center;
         justify-content: center;
-        // position: absolute;
         font-size: 12px;
         font-weight: 500;
         color: #ffffff;

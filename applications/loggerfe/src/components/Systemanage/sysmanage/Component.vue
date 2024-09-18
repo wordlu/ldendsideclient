@@ -253,6 +253,10 @@ function setLoading(isAdd: boolean, name: string, isLidar?: boolean) {
   display: flex;
   flex-direction: column;
 
+  .panel, .point {
+    padding: 0 10px;
+  }
+
   .el-button--primary {
     background: #FF7900;
     border: none;

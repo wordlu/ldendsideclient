@@ -212,20 +212,20 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 20px;',
       },node.label), // 节点标签
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=4',
-      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=test&theme=light&panelId=4&kiosk',
+      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=9',
-      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=test&panelId=9&theme=light&kiosk',
+      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=8',
-      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=test&panelId=10&theme=light&kiosk',
+      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&from=1726637056528&to=1726637356528&var-device=test&panelId=7',
-      style: 'width: 30px; height: 30px; background-color: #fff; margin-left: 10px;',
+      src: 'http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=test&panelId=7&theme=light&kiosk',
+      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
     ]);
   } else {
