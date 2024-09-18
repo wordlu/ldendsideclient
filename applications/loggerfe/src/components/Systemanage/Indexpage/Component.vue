@@ -6,9 +6,9 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
+        <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
         <el-button type="primary" class="info-btn" @click="startupCollect">开始采集</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownCollect">结束采集</el-button>
-        <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">添加作业标签</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">查看已打标签</el-button>
@@ -42,7 +42,7 @@ const startupDevice = () => {
     "data": {
       "type": "actions",
       "attributes": {
-        "command": "recordOn",
+        "command": "startup",
         "devices": [],
         "viewport": viewportId.value
       }
@@ -56,7 +56,7 @@ const shutdownDevice = () => {
     "data": {
       "type": "actions",
       "attributes": {
-        "command": "recordOff",
+        "command": "shutdown",
         "devices": [],
         "viewport": viewportId.value
       }
@@ -70,7 +70,7 @@ const startupCollect = () => {
     "data": {
       "type": "actions",
       "attributes": {
-        "command": "shutdown",
+        "command": "recordOn",
         "devices": [],
         "viewport": viewportId.value
       }
@@ -84,7 +84,7 @@ const shutdownCollect = () => {
     "data": {
       "type": "actions",
       "attributes": {
-        "command": "shutdown",
+        "command": "recordOff",
         "devices": [],
         "viewport": viewportId.value
       }

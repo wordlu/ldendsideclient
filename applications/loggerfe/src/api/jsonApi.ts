@@ -25,7 +25,7 @@ export function findItem(module:string,id:number,data:any) {
 }
 
 export function addItem(module:string,params:any) {
-  debugger
+  
   return request({
     url: module,
     method: 'post',
@@ -45,5 +45,15 @@ export function patchItem(module:string,params:any) {
       'Content-Type':'application/vnd.api+json'
     },
     data:params
+  })
+}
+
+export function deleteItem(module:string,params:any) {
+  return request({
+    url: `${module}/${params.data.id}`,
+    method: 'delete',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    }
   })
 }

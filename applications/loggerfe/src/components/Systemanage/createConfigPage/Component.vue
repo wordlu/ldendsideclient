@@ -53,7 +53,7 @@
             <el-input v-model="form.receive_topic" />
           </el-form-item>
           <el-form-item label="save_topic">
-            <el-input v-model="form.nasave_topicme" />
+            <el-input v-model="form.save_topic" />
           </el-form-item>
           <el-form-item label="bag_file_name">
             <el-input v-model="form.bag_file_name" />
@@ -132,6 +132,7 @@ const onSubmit = async () => {
           "driver": currentDriver.value.id,
           "slot": route.query.slot,
           "isdeleted": false,
+          "viewport": route.query.viewport,
         }
       }
           

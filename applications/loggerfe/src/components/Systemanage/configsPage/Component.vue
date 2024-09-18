@@ -42,13 +42,12 @@
             />
             <div class="btn-area" v-if="!setConfigValue">
               <el-button type="primary" @click="onSubmit">保存</el-button>
-              <el-button>取消</el-button>
+              <el-button @click="onDelete">删除</el-button>
             </div>
           </div>
           <div class="config-area">
             <div v-if="setConfigValue" class="info-btn-group">
               <el-divider>
-                <!-- <el-icon><Link /></el-icon> -->
               </el-divider>
               <el-button type="primary" class="info-btn" @click="gotoSetConfigs">配置设备</el-button>
             </div>
@@ -62,9 +61,9 @@
                 <el-tab-pane label="设备配置" name="first">
                     <el-form :model="form" label-width="auto" style="max-width: 600px">
                       <el-form-item label="设备类型">
-                        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange">
+                        <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
                           <!-- <el-option label="Zone one" value="shanghai" /> -->
-                          <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
+                          <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                       </el-form-item>
                       <div v-if="RemoteComponent">
@@ -91,7 +90,7 @@
                             <el-input v-model="form.receive_topic" />
                           </el-form-item>
                           <el-form-item label="save_topic">
-                            <el-input v-model="form.nasave_topicme" />
+                            <el-input v-model="form.save_topic" />
                           </el-form-item>
                           <el-form-item label="bag_file_name">
                             <el-input v-model="form.bag_file_name" />
@@ -125,7 +124,7 @@ import { setCollectionStatus } from '@/api/s1/collect'
 import { Search } from "@element-plus/icons-vue"
 import { ElTree } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-import { findAll, addItem, patchItem } from '@/api/jsonApi'
+import { findAll, addItem, patchItem, deleteItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
@@ -139,11 +138,37 @@ interface Tree {
   children?: Tree[]
 }
 
-const form = reactive({
-})
+const form = reactive({})
 
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
+
+const onDelete = () => {
+  const params = {
+      data: {
+        id: currentDevice.value.id,
+        type: 'algorithmversions'
+      }
+    }
+  deleteItem('/models/devices', params).then(res => {
+    ElMessage({
+      message: "删除成功",
+      type: 'success',
+    })
+    refresh()
+  }).catch(err => {
+    const {response:{data:{errors}}} = err
+    let msg =  "删除失败"
+    if(errors && errors[0]) {
+      const errmsg = errors[0]['detail']
+      msg =  t(`algorithm['${errmsg}']`)
+    }
+    ElMessage({
+      message: msg,
+      type: 'error',
+    })
+  })
+}
 
 const onSubmit = async () => {
   try {
@@ -167,7 +192,7 @@ const onSubmit = async () => {
       }
           
     }
-    patchItem(params).then((res) => {
+    patchItem('/models/devices', params).then((res) => {
       console.log(res)
       ElMessage({
         message: "保存配置成功",
@@ -236,7 +261,8 @@ const getSensoronfigs = (lidarname: string) => {
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
         setConfigValue.value = false
-        // loadRemoteComponent()
+        loadRemoteComponent()
+        setFormData(datavalue[0])
       } else {
         setConfigValue.value = true
       }
@@ -248,8 +274,19 @@ const getSensoronfigs = (lidarname: string) => {
   }
 }
 
+const setFormData = (details: any) => {
+  form.points_topic = details['device-params'].points_topic
+  form.host_name = details['device-params'].host_name
+  form.timestamp_mode = details['device-params'].timestamp_mode
+  form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
+  form.point_type = details['device-params'].point_type
+  form.receive_topic = details['device-params'].receive_topic
+  form.save_topic = details['device-params'].save_topic
+  form.bag_file_name = details['device-params'].bag_file_name
+  form.type = details.driver
+}
 const gotoSetConfigs = () => {
-  window.history.pushState(null, '', `/loggerfe/root/createConfig?slot=${currentlidarname.value}`)
+  window.history.pushState(null, '', `/loggerfe/root/createConfig?slot=${currentlidarname.value}&viewport=${currentViewport.value.id}`)
 }
 
 const defaultProps = {
@@ -260,12 +297,14 @@ const defaultProps = {
 const treedata = ref([])
 const sensorData = ref([])
 const name = ref('')
+const currentViewport = ref(null)
 const queryCurrentDrivers = () => {
   try {
     findAll('/models/viewports', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
+      currentViewport.value = datavalue[0]
       console.log(datavalue, 'datavalue')
       name.value = datavalue[0].name
       sensorData.value = datavalue[0]['device-hub']
