@@ -22,7 +22,7 @@
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
       <el-form-item label="设备类型">
-        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange">
+        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange" clearable>
           <!-- <el-option label="Zone one" value="shanghai" /> -->
           <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
@@ -30,7 +30,7 @@
       
       <div v-if="RemoteComponent">
         <!-- 动态渲染远程加载的组件 -->
-        <component :is="RemoteComponent"></component>
+        <component :is="RemoteComponent" ref="remoteComponentRef"></component>
 
         <!-- 展示从远程组件获取的表单数据 -->
         <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
@@ -62,7 +62,7 @@
       </div>
     </el-form>
     <div class="btn-panel">
-      <el-button type="primary" @click="onSubmit">保存</el-button>
+      <el-button type="primary" @click="getRemoteFormData">保存</el-button>
       <el-button>取消</el-button>
     </div>
   </div>
@@ -71,17 +71,28 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import { findAll, addItem, patchItem } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import { useRoute } from 'vue-router';
-
+import * as ElementPlus from 'element-plus'; 
+import('element-plus/dist/index.css');
 const route = useRoute();
 
 const form = reactive({})
 
-
+// const RemoteComponent = shallowRef(null);
+const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const driversdata = ref<Row[]>([])
+
+const getRemoteFormData = () => {
+  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
+    const formData = remoteComponentRef.value.getFormData();
+    console.log('Remote component form data:', formData);
+  } else {
+    console.error('Remote component is not loaded or getFormData method is not available');
+  }
+};
 
 const queryDeviceDrivers = (page: number) => {
   try {
@@ -175,13 +186,41 @@ const loadRemoteComponent = async () => {
     const script = compileScript(descriptor, { id: 'remote-component' });
     const { code: templateCode } = compileTemplate({ source: descriptor.template!.content });
 
+    const scriptFunction = new Function(`
+      const exports = {};
+      ${script.content.replace('export default', 'exports.default =')}
+      return exports.default;
+    `);
+
+    const scriptExports = scriptFunction();
+
     // Create a new Vue component using the compiled script and template
     const component = {
-      template: descriptor.template!.content,
-      setup: () => {
-        const scriptExports = {};
-        eval(script.code); // Dynamically evaluate script code
-        return scriptExports;
+      template: descriptor.template!.content || '',
+      // setup: () => {
+      //   const scriptExports = {};
+      //   eval(script.content); // Dynamically evaluate script code
+      //   return scriptExports;
+      // },
+      setup() {
+        // return  scriptExports.data ? scriptExports.data.call(this) : {};
+        const data = scriptExports.data ? scriptExports.data.call(this) : {};
+
+        // Bind methods to the component instance
+        const methods = scriptExports.methods || {};
+        for (const key in methods) {
+          methods[key] = methods[key].bind(data);
+        }
+
+        // Handle lifecycle hooks
+        if (scriptExports.mounted) {
+          onMounted(scriptExports.mounted.bind(data));
+        }
+
+        return {
+          ...data,
+          ...methods,
+        };
       },
     };
 
