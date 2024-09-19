@@ -87,7 +87,6 @@ const queryDeviceDrivers = (page: number) => {
     const params = {
       offset: step.value * page,
       limit: step.value,
-      sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
     findAll('/models/device-drivers', params).then((res: any) => {

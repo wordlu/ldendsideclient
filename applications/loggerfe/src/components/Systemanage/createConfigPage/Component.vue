@@ -9,21 +9,14 @@
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <!-- <b class="title">配置设备</b> -->
           </div>
         </div>
       </div>
     </div>
-    <!-- <div class="step-panel">
-      <el-steps align-center :active="active" finish-status="success">
-        <el-step title="Step 1" />
-      </el-steps>
-    </div> -->
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
       <el-form-item label="设备类型">
         <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange" clearable>
-          <!-- <el-option label="Zone one" value="shanghai" /> -->
           <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
       </el-form-item>
@@ -176,7 +169,8 @@ const RemoteComponent = ref<any>(null);
 const loadRemoteComponent = async () => {
   try {
     // Step 1: Fetch the remote .vue file content
-    const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    const response = await fetch(`http://logger.liangdao.ai.10.86.14.200.nip.io/static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
 
     // Step 2: Parse the .vue file using @vue/compiler-sfc
@@ -334,66 +328,4 @@ const loadRemoteComponent = async () => {
 </style>
 <style>
 
-.remote-file {
-  height: 100%;
-  width: 100%;
-  /* padding: 10px; */
-}
-.remote-form {
-  display: flex;
-  flex-direction: column;
-}
-
-.remote-form .remote-form-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.remote-form .remote-form-item label {
-  width: 80px;
-  text-align: right;
-  vertical-align: middle;
-  float: left;
-  font-size: 14px;
-  color: #606266;
-  line-height: 40px;
-  padding: 0 12px 0 0;
-  box-sizing: border-box;
-  font-weight: 400;
-}
-
-.remote-form-input {
-  background-color: #fff;
-  background-image: none;
-  border-radius: 4px;
-  border: 1px solid #dcdfe6;
-  box-sizing: border-box;
-  color: #606266;
-  display: inline-block;
-  font-size: inherit;
-  height: 40px;
-  line-height: 40px;
-  outline: none;
-  padding: 0 15px;
-  transition: border-color .2s cubic-bezier(.645,.045,.355,1);
-  width: 100%;
-}
-
-.remote-form-select {
-  background-color: #fff;
-  background-image: none;
-  border-radius: 4px;
-  border: 1px solid #dcdfe6;
-  box-sizing: border-box;
-  color: #606266;
-  display: inline-block;
-  font-size: inherit;
-  height: 40px;
-  line-height: 40px;
-  outline: none;
-  padding: 0 15px;
-  transition: border-color .2s cubic-bezier(.645,.045,.355,1);
-  width: 100%;
-}
 </style>

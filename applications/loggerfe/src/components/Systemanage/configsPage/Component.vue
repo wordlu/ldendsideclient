@@ -36,19 +36,24 @@
               show-checkbox
               default-expand-all
               node-key="id"
-              highlight-current
+              :highlight-current="false"
               @node-click="handleNodeClick"
               :props="defaultProps"
-            />
+            >
+              <template #default="{ node, data }">
+                <span :class="{ 'highlight': isLeaf(data) && selectedNode === node }">
+                  {{ data.label }}
+                </span>
+              </template>
+            </el-tree>
             <div class="btn-area" v-if="!setConfigValue">
               <el-button type="primary" @click="onSubmit">保存</el-button>
               <el-button @click="onDelete">删除</el-button>
             </div>
           </div>
-          <div class="config-area">
+          <div class="config-area" v-show="selectedNode">
             <div v-if="setConfigValue" class="info-btn-group">
-              <el-divider>
-              </el-divider>
+              <el-divider />
               <el-button type="primary" class="info-btn" @click="gotoSetConfigs">配置设备</el-button>
             </div>
             <div v-if="!setConfigValue" style="margin-top: 20px">
@@ -63,39 +68,12 @@
                       <el-form-item label="设备类型">
                         <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
                           <!-- <el-option label="Zone one" value="shanghai" /> -->
-                          <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.id" />
+                          <el-option v-for="item in driversdataOptions" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                       </el-form-item>
                       <div v-if="RemoteComponent">
                         <!-- 动态渲染远程加载的组件 -->
-                        <component :is="RemoteComponent" @submit="handleFormSubmit"></component>
-                        <!-- 展示从远程组件获取的表单数据 -->
-                        <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
-                          <el-form-item label="host_name">
-                            <el-input v-model="form.host_name" />
-                          </el-form-item>
-                          <el-form-item label="points_topic">
-                            <el-input v-model="form.points_topic" />
-                          </el-form-item>
-                          <el-form-item label="timestamp_mode">
-                            <el-input v-model="form.timestamp_mode" />
-                          </el-form-item>
-                          <el-form-item label="ptp_utc_tai_offset">
-                            <el-input v-model="form.ptp_utc_tai_offset" />
-                          </el-form-item>
-                          <el-form-item label="point_type">
-                            <el-input v-model="form.point_type" />
-                          </el-form-item>
-                          <el-form-item label="receive_topic">
-                            <el-input v-model="form.receive_topic" />
-                          </el-form-item>
-                          <el-form-item label="save_topic">
-                            <el-input v-model="form.save_topic" />
-                          </el-form-item>
-                          <el-form-item label="bag_file_name">
-                            <el-input v-model="form.bag_file_name" />
-                          </el-form-item>
-                        </el-form>
+                        <component :is="RemoteComponent" ref="remoteComponentRef"></component>
                       </div>
                     </el-form>
                 </el-tab-pane>
@@ -118,11 +96,11 @@ import { useCollectStore } from '@/store/modules/collect'
 import TopOprt from '@/components/collect/TopOprt.vue'
 import OperatingTags from '@/components/tags/OperatingTags.vue'
 import PrepareInfo from '@/components/collect/PrepareInfo.vue'
-import { ref, onMounted, watchEffect, reactive } from 'vue'
+import { ref, onMounted, watchEffect, reactive, nextTick, markRaw } from 'vue'
 import { setCollectionStatus } from '@/api/s1/collect'
 // import Monitor from '@/components/monitor/Index.vue'
 import { Search } from "@element-plus/icons-vue"
-import { ElTree } from 'element-plus'
+import { ElTree, ElMessage } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll, addItem, patchItem, deleteItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
@@ -131,13 +109,12 @@ import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 
 
-
 interface Tree {
   id: number
   label: string
   children?: Tree[]
 }
-
+const router = useRouter();
 const form = reactive({})
 
 const activeName = ref('first')
@@ -170,7 +147,26 @@ const onDelete = () => {
   })
 }
 
+const refresh = () => {
+  setTimeout(() => {
+    router.go(0);
+  }, 1000);
+}
+
+const remoteComponentRef = ref(null); // 用于获取远程组件实例
+
+const getRemoteFormData = () => {
+  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
+    const formData = remoteComponentRef.value.getFormData();
+    Object.assign(form, formData);
+    console.log('远程组件的表单数据:', formData);
+  } else {
+    console.error('远程组件加载错误，无法获取表单数据');
+  }
+};
+
 const onSubmit = async () => {
+  getRemoteFormData()
   try {
     const deviceparams = {
       "points_topic": form.points_topic,
@@ -187,7 +183,17 @@ const onSubmit = async () => {
         type: 'devices',
         id: currentDevice.value.id,
         attributes: {
+          "name": currentDriver.value.name,
+          "type": currentDriver.value.type,
+          "brand": currentDriver.value.brand,
+          "model": currentDriver.value.model,
+          "helm-path": currentDriver.value['helm-path'],
+          "device-params-path": currentDriver.value['device-params-path'],
           "device-params": deviceparams,
+          "driver": currentDriver.value.id,
+          "slot": currentDeviceName.value,
+          "isdeleted": false,
+          "viewport": currentViewport.value.id,
         }
       }
           
@@ -198,8 +204,9 @@ const onSubmit = async () => {
         message: "保存配置成功",
         type: 'success',
       })
+      // refresh()
     }).catch(err => {
-      let msg = t(`common['操作失败']`)
+      let msg = "保存配置失败"
       const {response:{data:{errors}}} = err
       if(errors && errors[0]) {
         msg = errors[0]['detail']
@@ -208,6 +215,7 @@ const onSubmit = async () => {
         message: msg,
         type: 'error',
       })
+      // refresh()
     })
   } catch (error) {
     console.log(error)
@@ -222,13 +230,20 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
-
-const handleNodeClick = (data: Tree) => {
-  console.log(data)
-  getSensoronfigs(data.label)
+const selectedNode = ref(null);
+const handleNodeClick = (nodeData: Tree, node: any) => {
+  if (isLeaf(nodeData)) {
+    selectedNode.value = node; 
+    getSensoronfigs(nodeData)
+  } else {
+    // selectedNode.value = null;
+  }
 }
+const isLeaf = (nodeData) => {
+  return nodeData && (!nodeData.children || nodeData.children.length === 0);
+};
 const driversdata = ref<Row[]>([])
-
+const driversdataOptions = ref<Row[]>([])
 const queryDeviceDrivers = (page: number) => {
   try {
     findAll('/models/device-drivers', {}).then((res: any) => {
@@ -244,25 +259,28 @@ const queryDeviceDrivers = (page: number) => {
 }
 const currentDriver = ref(null)
 const handleDriverChange = (row: any) => {
-  currentDriver.value = driversdata.value.find(it => it.name === row)
+  currentDriver.value = driversdata.value.find(it => it.id === row)
   console.log(currentDriver.value, 'currentDriver.value')
   loadRemoteComponent()
 
 }
 const currentDevice = ref({})
-const currentlidarname = ref('')
-const getSensoronfigs = (lidarname: string) => {
-  currentlidarname.value = lidarname
+const currentDeviceName = ref('')
+const getSensoronfigs = (nodedata) => {
+  driversdataOptions.value = driversdata.value.filter(it => it.type === nodedata.type)
+  currentDeviceName.value = nodedata.label
   try {
-    findAll('/models/devices', {'filter[slot]': lidarname}).then((res: any) => {
+    findAll('/models/devices', {'filter[slot]': nodedata.label}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
+
+        currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
-        loadRemoteComponent()
         setFormData(datavalue[0])
+        loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
@@ -286,7 +304,7 @@ const setFormData = (details: any) => {
   form.type = details.driver
 }
 const gotoSetConfigs = () => {
-  window.history.pushState(null, '', `/loggerfe/root/createConfig?slot=${currentlidarname.value}&viewport=${currentViewport.value.id}`)
+  window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)
 }
 
 const defaultProps = {
@@ -338,9 +356,11 @@ const totree = () => {
     // 添加子节点（对应传感器的坐标点）
     parent.children.push({
       id: parent.children.length + 1 + tree.length,  // 子节点id
-      label: sensor.id,       // 用坐标作为label
+      label: sensor.id,   
+      type: sensor.type    // 用坐标作为label
     });
   });
+  console.log(tree, 'tree')
   return tree;
 }
 
@@ -440,36 +460,57 @@ queryDeviceDrivers()
 
 const loadRemoteComponent = async () => {
   try {
-    const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
+    const response = await fetch(`http://logger.liangdao.ai.10.86.14.200.nip.io/static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
     const { descriptor } = parse(vueFile);
     const script = compileScript(descriptor, { id: 'remote-component' });
     const { code: templateCode } = compileTemplate({ source: descriptor.template!.content, id: 'remote-component' });
 
+    const scriptFunction = new Function(`
+      const exports = {};
+      ${script.content.replace('export default', 'exports.default =')}
+      return exports.default;
+    `);
+
+    const scriptExports = scriptFunction();
+
     const component = {
-      template: descriptor.template?.content || '',
-      setup: () => {
-        const scriptExports = {};
-        eval(script.code);
-        return scriptExports;
-      }
+      template: descriptor.template!.content || '',
+      setup() {
+        const data = scriptExports.data ? scriptExports.data.call(this) : {};
+        for (const key in data) {
+          data[key] = form[key];
+        }
+        const methods = scriptExports.methods || {};
+        for (const key in methods) {
+          methods[key] = methods[key].bind(data);
+        }
+
+        if (scriptExports.mounted) {
+          onMounted(scriptExports.mounted.bind(data));
+        }
+
+        return {
+          ...data,
+          ...methods,
+        };
+      },
     };
+    if (descriptor.styles.length > 0) {
+      descriptor.styles.forEach(style => {
+        const { code: styleCode } = compileStyle({
+          source: style.content,
+          id: 'remote-component',
+          scoped: style.scoped
+        });
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = styleCode;
+        document.head.appendChild(styleTag);
+      });
+    }
 
-    // if (descriptor.styles.length > 0) {
-    //   descriptor.styles.forEach(style => {
-    //     const { code: styleCode } = compileStyle({
-    //       source: style.content,
-    //       id: 'remote-component',
-    //       scoped: style.scoped
-    //     });
-    //     const styleTag = document.createElement('style');
-    //     styleTag.innerHTML = styleCode;
-    //     document.head.appendChild(styleTag);
-    //   });
-    // }
-
-    // Set the compiled component to render
-    RemoteComponent.value = component;
+    RemoteComponent.value = markRaw(component);
   } catch (err) {
     console.error('Failed to load remote component:', err);
   }
@@ -527,6 +568,12 @@ const loadRemoteComponent = async () => {
     display: flex;
     justify-content: space-between;
     padding-right: 20px;
+
+    .highlight {
+      padding: 4px;
+      background-color: #FFF1E5;
+      color: #FF7900;
+    }
 
     .tree-content {
       width: 300px; 
