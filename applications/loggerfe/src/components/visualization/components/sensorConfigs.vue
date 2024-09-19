@@ -14,6 +14,7 @@
           @node-click="handleNodeClick"
           :props="defaultProps"
           :render-content="renderContent"
+          @check-change="handleCheckChange"
         />
       </div>
       <div class="config-area">
@@ -110,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
 import { ElTree } from 'element-plus'
@@ -130,16 +131,9 @@ interface Tree {
   children?: Tree[]
 }
 
-const form = reactive({
-  name: '',
-  region: '',
-  date1: '',
-  date2: '',
-  delivery: false,
-  type: [],
-  resource: '',
-  desc: '',
-})
+const form = reactive({})
+
+
 
 const activeNameTab = ref('first')
 const RemoteComponent = ref<any>(null);
@@ -150,6 +144,15 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
+
+const emit = defineEmits(['update:leafNodes']);
+
+const handleCheckChange = (node, checked) => {
+  const checkedNodes = treeRef.value.getCheckedNodes();
+  const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
+  console.log(leafNodes, 'leafNodes')
+  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id })));
+};
 
 const handleNodeClick = (data: Tree) => {
   console.log(data)
@@ -187,7 +190,7 @@ const defaultProps = {
 
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
-   if (!data.children && data.devidedata) {
+   if (!data.children && data.devicedata) {
     return h('div',{
         style: 'display:flex;align-items:center;',
       },
@@ -196,19 +199,19 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 20px;',
       },node.label), // 节点标签
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devidedata.key}&theme=light&panelId=4&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devidedata.key}&panelId=9&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devidedata.key}&panelId=10&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devidedata.key}&panelId=7&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
     ]);
@@ -234,7 +237,7 @@ const queryCurrentDrivers = () => {
       const devicehubdata = devicehub.map((item: any) => {
         return {
           ...item,
-          devidedata: device.find((it: any) => it.slot === item.id),
+          devicedata: device.find((it: any) => it.slot === item.id),
         }
       })
       treedata.value = totree(devicehubdata)
@@ -251,6 +254,7 @@ const totree = (data) => {
   const tree = [];
   // 通过类型(type)分组
   data.forEach(sensor => {
+    console.log(sensor, 'sensor')
     // 查找当前type是否已经存在于树结构中
     let parent = tree.find(node => node.label === sensor.type);
     
@@ -267,7 +271,7 @@ const totree = (data) => {
     // 添加子节点（对应传感器的坐标点）
     parent.children.push({
       id: parent.children.length + 1 + tree.length,  // 子节点id
-      devidedata: sensor.devidedata,
+      devicedata: sensor.devicedata,
       label: sensor.id,       // 用坐标作为label
     });
   });

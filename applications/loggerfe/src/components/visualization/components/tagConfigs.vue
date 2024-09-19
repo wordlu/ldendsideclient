@@ -1,6 +1,5 @@
 <template>
   <div class="tags-area-content">
-    <!-- {{ tagData }} -->
     <el-input v-model="search" class="search-bar" placeholder="搜索标签名称" :prefix-icon="Search" clearable />
     <div class="tags-area">
       <div v-for="tagvalue in tagData" :key="tagvalue.id" class="tag-item">

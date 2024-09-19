@@ -21,7 +21,16 @@
       <!-- 图像可视化: 当不展示点云且不隐藏可视化时展示图像 -->
       <!-- <ImageView /> -->
       <!-- 点云可视化 -->
-      <PointView />
+      <!-- <PointView /> -->
+      <div class="point">
+        <!-- 可视化点云场景类 -->
+        <BasicScene />
+
+        <!-- 点云控制区域 -->
+        <sensorConfigs @update:leafNodes="handleLeafNodes"/>
+        <tagConfigs />
+
+      </div>
     </div>
   </div>
 </template>
@@ -30,12 +39,22 @@
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton } from 'element-plus';
 import { ref, computed, onMounted } from 'vue';
 import { addItem, findAll } from '@/api/jsonApi'
-import PointView from '@/components/visualization/PointView.vue'
-
+// import PointView from '@/components/visualization/PointView.vue'
+import BasicScene from '@/components/visualization/components/BasicScene.vue'
+import DisplayPanel from '@/components/visualization/components/DisplayPanel.vue'
+import sensorConfigs from '@/components/visualization/components/sensorConfigs.vue'
+import tagConfigs from '@/components/visualization/components/tagConfigs.vue'
 
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
 const viewportId = ref('')
+
+const selectedLeafNodes = ref([]);
+
+const handleLeafNodes = (leafNodes) => {
+  selectedLeafNodes.value = leafNodes;
+  console.log(selectedLeafNodes.value)
+};
 
 const startupDevice = () => {
   const params = {
@@ -57,7 +76,7 @@ const shutdownDevice = () => {
       "type": "actions",
       "attributes": {
         "command": "shutdown",
-        "devices": [],
+        "devices":[],
         "viewport": viewportId.value
       }
     }
@@ -71,7 +90,7 @@ const startupCollect = () => {
       "type": "actions",
       "attributes": {
         "command": "recordOn",
-        "devices": [],
+        "devices": selectedLeafNodes.value.map(node => node.deviceid),
         "viewport": viewportId.value
       }
     }
@@ -85,7 +104,7 @@ const shutdownCollect = () => {
       "type": "actions",
       "attributes": {
         "command": "recordOff",
-        "devices": [],
+        "devices": selectedLeafNodes.value.map(node => node.deviceid),
         "viewport": viewportId.value
       }
     }
@@ -252,6 +271,11 @@ function setLoading(isAdd: boolean, name: string, isLidar?: boolean) {
   height: 100%;
   display: flex;
   flex-direction: column;
+
+  .point {
+    display: flex;
+    height: 100%;
+  }
 
   .panel, .point {
     padding: 0 10px;
