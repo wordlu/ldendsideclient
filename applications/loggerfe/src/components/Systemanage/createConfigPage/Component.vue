@@ -2,7 +2,7 @@
   <div class="config-create-container">
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
-      <el-breadcrumb-item>采集配置</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/loggerfe/root/configs' }">采集配置</el-breadcrumb-item>
       <el-breadcrumb-item>配置设备</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
@@ -16,7 +16,7 @@
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
       <el-form-item label="设备类型">
-        <el-select v-model="form.region" placeholder="请选择驱动" @change="handleDriverChange" clearable>
+        <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
           <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
       </el-form-item>
@@ -26,7 +26,7 @@
         <component :is="RemoteComponent" ref="remoteComponentRef"></component>
 
         <!-- 展示从远程组件获取的表单数据 -->
-        <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
+        <!-- <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
           <el-form-item label="host_name">
             <el-input v-model="form.host_name" />
           </el-form-item>
@@ -51,11 +51,11 @@
           <el-form-item label="bag_file_name">
             <el-input v-model="form.bag_file_name" />
           </el-form-item>
-        </el-form>
+        </el-form> -->
       </div>
     </el-form>
     <div class="btn-panel">
-      <el-button type="primary" @click="getRemoteFormData">保存</el-button>
+      <el-button type="primary" @click="onSubmit">保存</el-button>
       <el-button>取消</el-button>
     </div>
   </div>
@@ -68,6 +68,7 @@ import { reactive, onMounted } from 'vue'
 import { findAll, addItem, patchItem } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import { useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus'
 import * as ElementPlus from 'element-plus'; 
 import('element-plus/dist/index.css');
 const route = useRoute();
@@ -78,18 +79,9 @@ const form = reactive({})
 const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const driversdata = ref<Row[]>([])
 
-const getRemoteFormData = () => {
-  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
-    const formData = remoteComponentRef.value.getFormData();
-    console.log('Remote component form data:', formData);
-  } else {
-    console.error('Remote component is not loaded or getFormData method is not available');
-  }
-};
-
 const queryDeviceDrivers = (page: number) => {
   try {
-    findAll('/models/device-drivers', {}).then((res: any) => {
+    findAll('/models/device-drivers', {'filter[type]': route.query.type}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       driversdata.value = gostore.findAll('device-drivers')
@@ -110,7 +102,19 @@ const handleDriverChange = (row: any) => {
   loadRemoteComponent()
 }
 
+
+const getRemoteFormData = () => {
+  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
+    const formData = remoteComponentRef.value.getFormData();
+    Object.assign(form, formData);
+    console.log('远程组件的表单数据:', formData);
+  } else {
+    console.error('远程组件加载错误，无法获取表单数据');
+  }
+};
+
 const onSubmit = async () => {
+  getRemoteFormData()
   try {
     const deviceparams = {
       "points_topic": form.points_topic,
@@ -147,17 +151,18 @@ const onSubmit = async () => {
         message: "保存配置成功",
         type: 'success',
       })
+      window.history.pushState(null, '', `/loggerfe/root/configs`)
     }).catch(err => {
       console.log(err)
-      let msg ='操作失败'
-      // const {response:{data:{errors}}} = err
-      // if(errors && errors[0]) {
-      //   msg = errors[0]['detail']
-      // }
-      // ElMessage({
-      //   message: msg,
-      //   type: 'error',
-      // })
+      let msg ='保存配置失败'
+      const {response:{data:{errors}}} = err
+      if(errors && errors[0]) {
+        msg = errors[0]['detail']
+      }
+      ElMessage({
+        message: msg,
+        type: 'error',
+      })
     })
   } catch (error) {
     console.log(error)
@@ -244,6 +249,7 @@ const loadRemoteComponent = async () => {
 <style scoped lang="scss">
 .config-create-container {
   height: 100%;
+  padding: 24px;
 
   .el-button--primary {
     background: #FF7900;
