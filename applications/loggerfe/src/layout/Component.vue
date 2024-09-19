@@ -14,6 +14,6 @@ export default {
 #layout {
   width: 100%;
   height: calc(100vh - 130px);
-  overflow: auto;
+  overflow: hidden;
 }
 </style>

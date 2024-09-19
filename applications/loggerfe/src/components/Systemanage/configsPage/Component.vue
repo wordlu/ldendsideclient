@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-    <el-row>
+    <el-row class="config-content">
       <el-col :span="8">
         <div class="grid-content bg-black" ref="parent">
           <canvas 
@@ -31,7 +31,7 @@
           <div class="tree-area">
             <el-tree
               ref="treeRef"
-              style="width: 300px"
+              class="tree-content"
               :data="treedata"
               show-checkbox
               default-expand-all
@@ -514,11 +514,27 @@ const loadRemoteComponent = async () => {
   .ml {
     padding-left: 20px;
   }
+
+  .config-area {
+
+    .el-tab-pane {
+      height: calc(100vh - 500px);
+      overflow: auto;
+    }
+  }
+
   .tree-area {
     display: flex;
     justify-content: space-between;
-    padding-right: 20p
+    padding-right: 20px;
+
+    .tree-content {
+      width: 300px; 
+      height: 200px; 
+      overflow: auto;
+    }
   }
+
   .grid-content {
     height: 100%;
     border-radius: 4px;
@@ -527,6 +543,9 @@ const loadRemoteComponent = async () => {
   .row-bg {
     padding: 10px 0;
     background-color: #f9fafc;
+  }
+  .config-content {
+    padding: 0 10px;
   }
 
   .panel {

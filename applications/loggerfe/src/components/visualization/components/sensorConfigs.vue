@@ -482,26 +482,6 @@ const changeAuto = (value: boolean) => {
 
 <style scoped lang="scss">
 
-.tree-area-tree {
-  color: #2D2F39;
-  cursor: pointer;
-  .type-title {
-    line-height: 40px;
-    height: 40px;
-  }
-
-  .type-content {
-    margin-left: 16px;
-    display: flex;
-    align-items: center;
-
-    .type-content-title {
-      line-height: 24x;
-      height: 24px;
-    }
-  }
-}
-
 .ml {
   padding-left: 20px;
 }
