@@ -10,7 +10,7 @@
         <el-button type="primary" class="info-btn" @click="startupCollect">开始采集</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownCollect">结束采集</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button>
-        <el-button  class="info-btn" @click="gotoSetConfigs">添加作业标签</el-button>
+        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button  class="info-btn" @click="gotoSetConfigs">查看已打标签</el-button>
       </div>
     </div>
@@ -32,11 +32,35 @@
 
       </div>
     </div>
+    <el-dialog
+      v-model="dialogVisible"
+      title="添加作业标签"
+      width="680"
+      :before-close="handleClose"
+    >
+      <el-transfer
+        class="tags-transfer"
+        v-model="value"
+        :titles="['全部标签', '作业标签']"
+        filterable
+        :filter-method="filterMethod"
+        filter-placeholder="搜索标签名称"
+        :data="data"
+      />
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="dialogVisible = false">
+            确认
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton } from 'element-plus';
+import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox } from 'element-plus';
 import { ref, computed, onMounted } from 'vue';
 import { addItem, findAll } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
@@ -51,10 +75,56 @@ const viewportId = ref('')
 
 const selectedLeafNodes = ref([]);
 
+
 const handleLeafNodes = (leafNodes) => {
   selectedLeafNodes.value = leafNodes;
   console.log(selectedLeafNodes.value)
 };
+
+const dialogVisible = ref(false)
+const addTaskTags = () => {
+  // 10.86.24.47:9001
+  dialogVisible.value = true
+}
+
+const handleClose = (done: () => void) => {
+  dialogVisible.value = false
+}
+
+interface Option {
+  key: number
+  label: string
+  initial: string
+}
+
+const generateData = () => {
+  const data: Option[] = []
+  const states = [
+    'California',
+    'Illinois',
+    'Maryland',
+    'Texas',
+    'Florida',
+    'Colorado',
+    'Connecticut ',
+  ]
+  const initials = ['CA', 'IL', 'MD', 'TX', 'FL', 'CO', 'CT']
+  states.forEach((city, index) => {
+    data.push({
+      label: city,
+      key: index,
+      initial: initials[index],
+    })
+  })
+  return data
+}
+
+const data = ref<Option[]>(generateData())
+const value = ref([])
+
+const filterMethod = (query, item) => {
+  return item.initial.toLowerCase().includes(query.toLowerCase())
+}
 
 const startupDevice = () => {
   const params = {
@@ -303,6 +373,43 @@ function setLoading(isAdd: boolean, name: string, isLidar?: boolean) {
   }
   .visible {
     flex: 1;
+  }
+}
+</style>
+
+<style lang="scss">
+.tags-transfer {
+
+  .el-transfer-panel__filter {
+    margin: 0 !important;
+  }
+
+  .el-button.is-disabled {
+    background-color: #FFF1E5;
+    border-color:#FFF1E5;
+    color: #FF7900;
+  }
+  .el-button--primary {
+    background-color: #FF7900;
+    border-color:#FF7900;
+  }
+
+  .el-checkbox {
+    // background-color: #FF7900;
+    // border-color: #FF7900;
+  }
+
+  .el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner {
+    background-color: #FF7900;
+    border-color: #FF7900;
+  }
+  .el-checkbox__input:hover .el-checkbox__inner  {
+    border-color: #FF7900;
+  }
+
+
+  .el-checkbox__input.is-checked+.el-checkbox__label,  .el-checkbox__label:hover, .el-checkbox__input:hover, .el-checkbox__input:hover { 
+    color: #FF7900;
   }
 }
 </style>
