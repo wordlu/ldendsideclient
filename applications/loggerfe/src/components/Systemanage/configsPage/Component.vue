@@ -11,7 +11,7 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
-          <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" />
+          <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" /> -->
         </div>
       </div>
     </div>
@@ -41,7 +41,7 @@
               :props="defaultProps"
             >
               <template #default="{ node, data }">
-                <span :class="{ 'highlight': isLeaf(data) && selectedNode === node }">
+                <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
                   {{ data.label }}
                 </span>
               </template>
@@ -119,7 +119,7 @@ const form = reactive({})
 
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
-
+const search = ref('')
 const onDelete = () => {
   const params = {
       data: {
@@ -235,11 +235,13 @@ const handleNodeClick = (nodeData: Tree, node: any) => {
   if (isLeaf(nodeData)) {
     selectedNode.value = node; 
     getSensoronfigs(nodeData)
-  } else {
-    // selectedNode.value = null;
   }
 }
-const isLeaf = (nodeData) => {
+const isLeaf = (nodeData, node) => {
+  if (!selectedNode.value && !node.data.children) {
+    selectedNode.value = node; 
+    getSensoronfigs(nodeData)
+  }
   return nodeData && (!nodeData.children || nodeData.children.length === 0);
 };
 const driversdata = ref<Row[]>([])

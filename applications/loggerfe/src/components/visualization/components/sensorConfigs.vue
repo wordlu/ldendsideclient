@@ -1,7 +1,7 @@
 <template>
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
-      <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="width: 200px;margin-bottom: 20px;"/>
+      <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
       <div class="tree-area">
         <el-tree
           ref="treeRef"
