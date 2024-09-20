@@ -38,6 +38,34 @@ let refAllGroup = { //当前帧目标物组合
 }
 
 let isData = false;
+/**
+ * 初始化
+ */
+let socket = {
+  value: null
+};
+export const connectWebSocket = () => {
+  socket.value = new WebSocket('ws://10.86.24.47:9001')
+
+  socket.value.onopen = () => {
+    isConnected.value = true
+    console.log('WebSocket connected')
+  }
+
+  socket.value.onmessage = (event) => {
+    messages.value.push(event.data)
+    console.log('Received message:', event.data)
+  }
+
+  socket.value.onclose = () => {
+    isConnected.value = false
+    console.log('WebSocket disconnected')
+  }
+
+  socket.value.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+}
 
 // 创建 hub
 export const createHub = async ()=>{

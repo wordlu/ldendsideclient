@@ -4,7 +4,7 @@ import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
-import { createHub } from '../../components/socket/socket';
+import { createHub, connectWebSocket } from '../../components/socket/socket';
 import { ref , watch } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
@@ -14,7 +14,8 @@ watch(()=>dataSet.activeCam,(newVal)=>{
   dataSet.value = newVal
 },{deep:true})
 
-createHub();
+// createHub();
+connectWebSocket()
 console.log("1:createHub")
 
 function print(val) {
