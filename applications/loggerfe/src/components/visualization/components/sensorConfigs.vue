@@ -2,6 +2,8 @@
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
       <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
+     <div class="title">配置信息</div>
+
       <div class="tree-area">
         <el-tree
           ref="treeRef"
@@ -199,19 +201,19 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 20px;',
       },node.label), // 节点标签
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk&refresh=5s`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk&refresh=5s`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk&refresh=5s`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk`,
+      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk&refresh=5s`,
       style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
       }),
     ]);
@@ -505,6 +507,15 @@ const changeAuto = (value: boolean) => {
   height: 100%;
   overflow: auto;
   padding-right: 20px;
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #5A5E72;
+    margin-bottom: 10px;
+    text-align: left;
+  }
+
 }
 
 .el-descriptions__content {

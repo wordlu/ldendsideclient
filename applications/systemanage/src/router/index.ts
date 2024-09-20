@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
+import SystemMonitorPage from '../components/Systemanage/SystemMonitor/Component.vue'
 import SystemanageDevicesPage from '../components/Systemanage/devices/Component.vue'
 import storagesPage from '../components/Systemanage/storages/Component.vue'
 import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
@@ -37,6 +38,10 @@ const router = createRouter({
         {
           path: 'collectiontemplates',
           component: collectiontemplatesPage
+        },
+        {
+          path: 'systemmonitor',
+          component: SystemMonitorPage
         }
       ]
     }

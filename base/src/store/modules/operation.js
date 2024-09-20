@@ -45,7 +45,7 @@ const state = {
     {
       //系统管理
       name: "systemanage",
-      entry: "http://10.86.24.22:8083/apps/systemanage",
+      entry: "http://10.86.24.22:8084/apps/systemanage",
       container: "#Appmicro",
       activeRule: [],
       props:{}

@@ -171,9 +171,9 @@ export default {
           policy: "menumonitor",
           menuItem: [
             {
-              index: '/menumonitor/system',
+              index: '/systemanage/systemmonitor',
               title: '系统监控',
-              policy: "pagemenumonitorsystem",
+              policy: "pagesystemmonitor",
             },
             {
               index: '/menumonitor/status',

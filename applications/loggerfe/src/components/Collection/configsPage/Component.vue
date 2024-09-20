@@ -124,7 +124,7 @@ const onDelete = () => {
   const params = {
       data: {
         id: currentDevice.value.id,
-        type: 'algorithmversions'
+        type: 'devices'
       }
     }
   deleteItem('/models/devices', params).then(res => {
