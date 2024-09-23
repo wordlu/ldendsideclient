@@ -1,5 +1,7 @@
 <template>
-  <div id="canvas-box" @click="canvasClick"></div>
+  <div id="canvas-box" @click="canvasClick">
+    <iframe src="http://localhost:5173/bevfront/visualization" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+  </div>
 </template>
  <script setup lang="ts">
 // import { Axes, MyGrid } from '@/three_controls/basic_three'
