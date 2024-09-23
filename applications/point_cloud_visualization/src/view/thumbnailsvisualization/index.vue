@@ -1,5 +1,5 @@
 <template>
-  <div id="visualization">
+  <div id="thumbvisualization">
     <topBarVue  @currentSceneClick="currentSceneClick" />
     <div class="view">
       <toolBarVue/>
@@ -47,7 +47,7 @@ const y = ref(document.documentElement.clientHeight - 620)
 
 
 <style lang="scss">
-#visualization{
+#thumbvisualization{
   width: 100%;
   height: 100%;
   .view{
