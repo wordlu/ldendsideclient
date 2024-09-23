@@ -63,20 +63,6 @@ export const connectWebSocket = () => {
     console.log('Received message:', event.data)
     // 点云数据
     reader.readAs('ArrayBuffer',event.data,function(result){
-      // for(let key in splitInfo){
-      //   // activeCamInfo 当前帧的摄像头数据
-      //   if(dataSet.activeCamInfo.hasOwnProperty(key)){
-      //     // 摄像头数据生成 base64的url
-      //     let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
-      //     dataSet.activeCamInfo[key] = url
-      //     if(dataSet.activeCam.cam == key){
-      //       dataSet.activeCam.value = url
-      //     }
-      //   }
-      //   if(dataSet.activePcdInfo.meta_key == key){
-      //     DracoPoint(result)
-      //   }
-      // }
       DracoPoint(result)
 
     });

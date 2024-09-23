@@ -176,14 +176,14 @@ export default {
               policy: "pagesystemmonitor",
             },
             {
-              index: '/menumonitor/status',
+              index: '/systemanage/statusmonitor',
               title: '状态监控',
-              policy: "pagemenumonitorstatus",
+              policy: "pagestatusmonitor",
             },
             {
-              index: '/menumonitor/logs',
+              index: '/systemanage/logsanalyze',
               title: '日志分析',
-              policy: "pagemenumonitorlogs",
+              policy: "pagelogsanalyze",
             },
           ]
         }
