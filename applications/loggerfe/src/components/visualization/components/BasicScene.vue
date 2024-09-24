@@ -1,9 +1,46 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe src="http://localhost:5173/bevfront/visualization" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'http://localhost:5173/bevfront/visualization?allports='+getString(allports)+'&portarray='+getString(currentSelectedSensor)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
+import { ref, defineEmits, defineProps, watch, toRef } from 'vue'
+import { findAll } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
+
+const props = defineProps({
+  currentSelectedSensor: Array,
+  allports: Array
+});
+
+// const currentSelectedSensorRef = toRef(props, 'currentSelectedSensor');
+
+// watch(currentSelectedSensorRef, (newValue, oldValue) => {
+//   getDevices(newValue)
+// });
+
+const getString = (arr: any) => {
+  if(!arr) return ''
+  return arr.toString()
+}
+
+// const displayPortArray = ref('')
+
+// const getDevices = (idsArray) => {
+//   findAll('/models/devices?ids[]='+idsArray.toString(), {}).then((res: any) => {
+//     gostore.reset()
+//     gostore.sync(res.data)
+//     const datavalue = gostore.findAll('devices')
+//     if(datavalue.length > 0) {
+//       const arr = datavalue.map(it => it['display-port'])
+//       displayPortArray.value = arr.toString()
+//     }
+//   }).catch((err: any) => {
+//     console.error(err, 'err')
+//   })
+// }
+
+
 // import { Axes, MyGrid } from '@/three_controls/basic_three'
 // import { ResizeObserver } from '@juggle/resize-observer' //polyfills the ResizeObserver API
 // import { onMounted } from 'vue'

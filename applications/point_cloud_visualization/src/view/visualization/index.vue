@@ -4,19 +4,17 @@ import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
-import { createHub, connectWebSocket } from '../../components/socket/socket';
+import { connectWebSocketArray } from '../../components/socket/socket';
 import { ref , watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { dataSetStore } from '../../pinia/dataSet';
-const dataSet = dataSetStore();
-const activeCam = ref(dataSet.activeCam);
 
-watch(()=>dataSet.activeCam,(newVal)=>{
-  dataSet.value = newVal
-},{deep:true})
+const route = useRoute();
+const routeQuery = ref(route.query);
 
-// createHub();
-connectWebSocket()
 console.log("1:createHub")
+connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allport)
+
 
 function print(val) {
   document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'

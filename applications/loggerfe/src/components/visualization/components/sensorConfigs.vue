@@ -135,8 +135,6 @@ interface Tree {
 
 const form = reactive({})
 
-
-
 const activeNameTab = ref('first')
 const RemoteComponent = ref<any>(null);
 
@@ -147,14 +145,43 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
-const emit = defineEmits(['update:leafNodes']);
+const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 
 const handleCheckChange = (node, checked) => {
   const checkedNodes = treeRef.value.getCheckedNodes();
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
   console.log(leafNodes, 'leafNodes')
-  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id })));
+  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
 };
+
+const allTreeKeys = ref([])
+
+const selectAllNodes = () => {
+  if (treeRef.value) {
+    // const allKeys = getAllNodeKeys(treedata.value);
+    treeRef.value.setCheckedKeys(allTreeKeys.value);
+  }
+};
+
+const clearAllNodes = () => {
+  if (treeRef.value) {
+    treeRef.value.setCheckedKeys([]);
+  }
+};
+
+// 获取树中所有节点的key
+// const getAllNodeKeys = (nodes) => {
+//   const keys = [];
+//   nodes.forEach((node) => {
+//     if (!node.disabled && !node.children)  {
+//       keys.push(node.id);
+//     }
+//     if (node.children && node.children.length > 0) {
+//       keys.push(...getAllNodeKeys(node.children));
+//     }
+//   });
+//   return keys;
+// };
 
 const handleNodeClick = (data: Tree) => {
   console.log(data)
@@ -254,29 +281,36 @@ const queryCurrentDrivers = () => {
 
 const totree = (data) => {
   const tree = [];
-  // 通过类型(type)分组
+  allTreeKeys.value = []
+  const allport = []
+  // 通过类型分组
   data.forEach(sensor => {
-    console.log(sensor, 'sensor')
-    // 查找当前type是否已经存在于树结构中
     let parent = tree.find(node => node.label === sensor.type);
     
-    // 如果没有找到，创建一个新的节点
+    // 创建父节点
     if (!parent) {
       parent = {
-        id: tree.length + 1,  // 自动生成id
-        label: sensor.type,   // 使用type作为label
+        id: sensor.type,
+        label: sensor.type,
         children: []
       };
       tree.push(parent);
     }
 
-    // 添加子节点（对应传感器的坐标点）
+    // 添加子节点
     parent.children.push({
-      id: parent.children.length + 1 + tree.length,  // 子节点id
+      id: sensor.type+'_'+sensor.id,
       devicedata: sensor.devicedata,
-      label: sensor.id,       // 用坐标作为label
+      label: sensor.id,
+      disabled: !sensor.devicedata
     });
+
+    if (sensor.devicedata) {
+      allport.push(sensor.devicedata['display-port'])
+      allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+    }
   });
+  emit('setAllTreeKeys', allport)
   return tree;
 }
 
@@ -484,6 +518,13 @@ const changeMaxColor = (value: number) => {
 const changeAuto = (value: boolean) => {
   setPropStorage({ autoColorRange: value })
 }
+
+
+defineExpose({
+  selectAllNodes,
+  clearAllNodes
+});
+
 </script>
 
 <style scoped lang="scss">

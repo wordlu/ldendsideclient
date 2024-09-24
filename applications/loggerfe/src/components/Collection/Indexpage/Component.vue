@@ -19,8 +19,8 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene />
-        <sensorConfigs @update:leafNodes="handleLeafNodes"/>
+        <BasicScene :allports="allports" :currentSelectedSensor="currentSelectedSensor" />
+        <sensorConfigs ref="sensorConfigsRef" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" />
         <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
       </div>
     </div>
@@ -108,6 +108,8 @@ interface Option {
   label: string
   data: object
 }
+
+const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
 const viewportId = ref('')
@@ -116,9 +118,17 @@ const selectedLeafNodes = ref([]);
 const checkTagsDialogVisible = ref(false)
 const taggingsTableData = ref([])
 
+const currentSelectedSensor = ref([])
+
+//iframe参数：所有端口
+const allports = ref([])
+const setAllTreeKeys = (keys) => {
+  allports.value = keys
+}
+
 const handleLeafNodes = (leafNodes) => {
   selectedLeafNodes.value = leafNodes;
-  console.log(selectedLeafNodes.value)
+  getCurrentPorts()
 };
 
 const handleCheckTagsClose = (done: () => void) => {
@@ -162,9 +172,13 @@ const getTaggings = (lidarname: string) => {
 
 const transferData = ref<Option[]>()
 const transferDataValue = ref([])
-
+const directive = ref('')
 // 开始调试
 const startupDevice = () => {
+  getCurrentPorts()
+  if (sensorConfigsRef.value) {
+    sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+  }
   const params = {
     "data": {
       "type": "actions",
@@ -189,6 +203,11 @@ const startupDevice = () => {
 }
 // 结束调试
 const shutdownDevice = () => {
+  getCurrentPorts()
+  if (sensorConfigsRef.value) {
+    sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
+  }
+  // directive.value = 'shutdown'
   const params = {
     "data": {
       "type": "actions",
@@ -213,12 +232,13 @@ const shutdownDevice = () => {
 }
 // 开始采集
 const recordOnDevice = () => {
+  getCurrentPorts()
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
         "command": "recordOn",
-        "devices": selectedLeafNodes.value.map(node => node.deviceid),
+        "devices": currentSelectedSensor.value,
         "viewport": viewportId.value
       }
     }
@@ -237,12 +257,13 @@ const recordOnDevice = () => {
 }
 // 结束采集
 const recordOffCollect = () => {
+  getCurrentPorts()
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
         "command": "recordOff",
-        "devices": selectedLeafNodes.value.map(node => node.deviceid),
+        "devices": currentSelectedSensor.value,
         "viewport": viewportId.value
       }
     }
@@ -258,6 +279,10 @@ const recordOffCollect = () => {
       type: 'error',
     })
   })
+}
+
+const getCurrentPorts = () => {
+  currentSelectedSensor.value = selectedLeafNodes.value.map(node => node.port)
 }
 
 //获取设备树

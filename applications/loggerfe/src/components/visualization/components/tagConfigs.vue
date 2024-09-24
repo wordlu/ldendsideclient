@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits   } from 'vue'
+import { ref, defineEmits, defineProps  } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import { Search } from "@element-plus/icons-vue"

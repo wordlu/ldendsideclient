@@ -25,6 +25,8 @@ let activeCam;
 let splitInfo;
 let group = new THREE.Group();
 scene.add(group);
+
+
 let odAllGroup = { //当前帧目标物组合
   list:new Array()
 }
@@ -38,45 +40,98 @@ let refAllGroup = { //当前帧目标物组合
 }
 
 let isData = false;
-/**
- * 初始化
- */
-let socket = {
-  value: null
-};
-let isConnected = {
-  value: false
-}
-let messages = {
-  value: []
-}
-export const connectWebSocket = () => {
-  socket.value = new WebSocket('ws://10.86.24.47:9001')
 
-  socket.value.onopen = () => {
-    isConnected.value = true
-    console.log('WebSocket connected')
+/**
+ * @wodelu
+ * 1. 传两个数组，一个所有ip，一个当前连接ip，去进行对比
+ */
+let connectedIPs = []
+
+let webSockets  = {}
+
+let ipList = []
+
+let ipvalue = 'ws://10.86.24.49'
+
+export const connectWebSocketArray = (portarray, allport) => {
+  const currentport = portarray ? portarray.split(',') : []
+  const allportArray = allport ? allport.split(',') : []
+
+  //断开所有连接
+  if (currentport.length === 0) {
+    const lists = allportArray.map(item => `${ipvalue}:${item}`)
+    disconnectFromAllIPs(lists)
+  } else {
+    const connectlist = currentport.map(item => `${ipvalue}:${item}`)
+    const disconnectlist = allportArray.filter(item => !currentport.includes(item)).map(item => `${ipvalue}:${item}`)
+    disconnectFromAllIPs(disconnectlist)
+    connectToAllIPs(connectlist)
+  }
+}
+
+export const connectWebSocket = (ip) => {
+  if (webSockets[ip] && webSockets[ip].status === 'Connected') {
+    console.log(`Already connected to ${ip}`);
+    return;
   }
 
-  socket.value.onmessage = (event) => {
-    messages.value.push(event.data)
-    console.log('Received message:', event.data)
+  const socket = new WebSocket(ip)
+
+  webSockets[ip] = {
+    socket,
+    status: 'Connecting...',
+  };
+
+  socket.onopen = () => {
+    webSockets[ip].status = 'Connected';
+    connectedIPs.push(ip);
+    console.log(`Connected to ${ip}`);
+  };
+
+  socket.onmessage = (event) => {
     // 点云数据
     reader.readAs('ArrayBuffer',event.data,function(result){
       DracoPoint(result)
-
     });
   }
 
-  socket.value.onclose = () => {
-    isConnected.value = false
-    console.log('WebSocket disconnected')
-  }
+  socket.onclose = () => {
+    webSockets[ip].status = 'Disconnected';
+    const index = connectedIPs.indexOf(ip);
+    if (index > -1) {
+      connectedIPs.splice(index, 1);
+    }
+    console.log(`Disconnected from ${ip}`);
+  };
 
-  socket.value.onerror = (error) => {
+  socket.onerror = (error) => {
     console.error('WebSocket error:', error)
   }
 }
+
+
+// 断开指定 IP 的 WebSocket
+const disconnectFromIP = (ip) => {
+  const wsData = webSockets[ip];
+  if (wsData && wsData.socket) {
+    wsData.socket.close();
+  }
+};
+
+// 连接所有 IP
+const connectToAllIPs = (lists) => {
+  lists.forEach((ip) => {
+    connectWebSocket(ip);
+  });
+};
+
+// 断开所有 IP
+const disconnectFromAllIPs = (lists) => {
+  lists.forEach((ip) => {
+    disconnectFromIP(ip);
+  });
+};
+
 
 // 创建 hub
 export const createHub = async ()=>{
