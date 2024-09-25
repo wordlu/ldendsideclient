@@ -16,7 +16,7 @@
     </div>
     <div class="progress-area">
       
-      <div class="mask" :style="maskStyle" v-if="currentScene"></div>
+      <!-- <div class="mask" :style="maskStyle" v-if="currentScene"></div> -->
       <div class="Progress-thumbnails">
         <div class="Progress_back"
           @mouseleave="progressMouseleave"
@@ -26,8 +26,7 @@
           <div class="Progress_line"></div>
         </div>
       </div>
-      <div id="thumbnails" ref="thumbnailsContainer">
-      </div>
+      <!-- <div id="thumbnails" ref="thumbnailsContainer"></div> -->
     </div>
   </div>
 </template>
@@ -355,13 +354,10 @@ const maskStyle = computed(() => {
 
 
 #thumbnailsvideoBar{
-  // position: absolute;
-  // left: 8px;
-  // bottom: 8px;
   z-index: 999;
   color: #ffffff;
   width: calc(100% - 16px);
-  height: 230px;
+  height: 50px;
   background: transparent;
   border-radius: 8px;
   display: flex;

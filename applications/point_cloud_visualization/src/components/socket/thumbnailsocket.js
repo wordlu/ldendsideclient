@@ -14,7 +14,7 @@ function getQueryString(name) {
   return null;
 }
 
-const podUrl = ref(null);
+const podUrl = ref('ws://10.86.24.49/');
 let dataSet;
 let ws;
 let pcdWs;
@@ -41,26 +41,25 @@ let isData = false;
 
 // 创建 hub
 export const createHub = async ()=>{
-  // console.log("parent.window.server.domain", parent.window.server.domain)
-  // await Post(`http://dms${parent.window.server.domain}/api/func_pods_hub/`,{
-  await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
-    service_name: "func-visualization",
-    client_name: getQueryString('client_name')
-  }).then(res=>{
-    // hub 通道创建成功后才会初始化socket
-    if(res.data.data.status == "Succeeded"){
-      console.log("2:hub通道创建成功,获取pod_url")
-      podUrl.value = res.data.data.pod_url;
-      initSocket()
-    }
-  })
+  // await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
+  //   service_name: "func-visualization",
+  //   client_name: getQueryString('client_name')
+  // }).then(res=>{
+  //   // hub 通道创建成功后才会初始化socket
+  //   if(res.data.data.status == "Succeeded"){
+  //     console.log("2:hub通道创建成功,获取pod_url")
+  //     podUrl.value = res.data.data.pod_url;
+  //     initSocket()
+  //   }
+  // })
+  initSocket()
 }
 
 // 执行点云压缩命令
-export const pcdencode = ()=>{
-  encodeWs = new WebSocket(`${podUrl.value}pcdencode`);
-  console.log("6:启动点云压缩通道")
-}
+// export const pcdencode = ()=>{
+//   encodeWs = new WebSocket(`${podUrl.value}pcdencode`);
+//   console.log("6:启动点云压缩通道")
+// }
 
 // 初始化socket
 export const initSocket = ()=>{
@@ -71,18 +70,18 @@ export const initSocket = ()=>{
     // 发送数据集id
     // ws.send(JSON.stringify({dataset: 'LD28df9ba7',"app_name": "dataset"}));
     let options = {
-      app_name: getQueryString('app_name'),
-      client_name: getQueryString('client_name'),
       dataset: getQueryString('dataset')
+      // app_name: getQueryString('app_name'),
+      // client_name: getQueryString('client_name'),
     }
 
-    if(getQueryString('endtime')){
-      options.end_ts = parseTimestamp(getQueryString('endtime')) 
-    }
+    // if(getQueryString('endtime')){
+    //   options.end_ts = parseTimestamp(getQueryString('endtime')) 
+    // }
 
-    if(getQueryString('starttime')){
-      options.start_ts = parseTimestamp(getQueryString('starttime'))
-    }
+    // if(getQueryString('starttime')){
+    //   options.start_ts = parseTimestamp(getQueryString('starttime'))
+    // }
     ws.send(JSON.stringify(options))
     console.log("4:websocket发送消息"+JSON.stringify(options))
   };
@@ -92,10 +91,16 @@ export const initSocket = ()=>{
       console.log("5:websocket接收到消息"+evt.data)
       // 初始化数据
       dataSet.info = JSON.parse(evt.data);
-      dataSet.activePcdInfo.meta_key = Object.keys(dataSet.info.meta_json.pcd)[0];
-      dataSet.activePcdInfo.meta_val = Object.values(dataSet.info.meta_json.pcd)[0];
+      const devicesHub = getQueryString('deviceshub') ? JSON.parse(getQueryString('deviceshub')) : [];
+      const lidarDevices = devicesHub.filter(item => item.type == 'lidar').map(it => it.id);
+      const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
+      dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
+      dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
+      
+      // dataSet.activePcdInfo.meta_key = Object.keys(dataSet.info.meta_json.pcd)[0];
+      // dataSet.activePcdInfo.meta_val = Object.values(dataSet.info.meta_json.pcd)[0];
       // 启动pcd压缩通道
-      pcdencode()
+      // pcdencode()
       // // 启动点云通道
       // initPcdSocket()
       // // 启动视觉通道
@@ -117,13 +122,13 @@ export const initSocket = ()=>{
 }
 
 // 初始化点云文件通道
-export const initPcdSocket = ()=>{
-  pcdWs = new WebSocket(`${podUrl.value}pcd`);
+// export const initPcdSocket = ()=>{
+//   pcdWs = new WebSocket(`${podUrl.value}pcd`);
 
-  pcdWs.onclose = function() {
-    console.log("连接已关闭...");
-  };
-}
+//   pcdWs.onclose = function() {
+//     console.log("连接已关闭...");
+//   };
+// }
 
 // 获取pcd压缩数据并渲染
 export const pcdWsSend = (frame)=>{
@@ -146,23 +151,23 @@ export const pcdWsSend = (frame)=>{
 }
 
 // 初始化视觉数据
-export const initCamSocket = ()=>{
-  camWs = new WebSocket(`${podUrl.value}cam`);
+// export const initCamSocket = ()=>{
+//   camWs = new WebSocket(`${podUrl.value}cam`);
 
-  camWs.onclose = function() {
-    console.log("连接已关闭...");
-  };
+//   camWs.onclose = function() {
+//     console.log("连接已关闭...");
+//   };
 
-  const cams = dataSet.info.meta_json.cam;
+//   const cams = dataSet.info.meta_json.cam;
 
-  //生成摄像头数据的结构
-  //cam 摄像头的名称
-  for(let cam in cams){
-    dataSet.activeCamInfo[cam] = null;
-  }
+//   //生成摄像头数据的结构
+//   //cam 摄像头的名称
+//   for(let cam in cams){
+//     dataSet.activeCamInfo[cam] = null;
+//   }
 
-  dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
-}
+//   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
+// }
 
 //获取视觉数据并渲染
 export const camWsSend = (frame)=>{
@@ -223,22 +228,26 @@ export const initAllSocket = ()=>{
 export const allWsSend = (frame,play,endframe)=>{
   try{
     let options = {
-      frame_index:frame,
-      pcd: dataSet.info.meta_json.pcd,
-      cam: dataSet.info.meta_json.cam,
-      data_files_prefix: dataSet.info.data_files_prefix,
-      od: dataSet.info.meta_json.od,
-      kpi: getQueryString('kpi'),
-      client_name: getQueryString('client_name')
+      "dataset": getQueryString('dataset'),
+      "devices": dataSet.info.devices,
+      "request_index": 0,
+      "request_count": 1 
+      // frame_index:frame,
+      // pcd: dataSet.info.meta_json.pcd,
+      // cam: dataSet.info.meta_json.cam,
+      // data_files_prefix: dataSet.info.data_files_prefix,
+      // od: dataSet.info.meta_json.od,
+      // kpi: getQueryString('kpi'),
+      // client_name: getQueryString('client_name')
     }
 
-    if(getQueryString('endtime')){
-      options.end_ts = parseTimestamp(getQueryString('endtime'));
-    }
+    // if(getQueryString('endtime')){
+    //   options.end_ts = parseTimestamp(getQueryString('endtime'));
+    // }
 
-    if(getQueryString('starttime')){
-      options.start_ts = parseTimestamp(getQueryString('starttime'));
-    }
+    // if(getQueryString('starttime')){
+    //   options.start_ts = parseTimestamp(getQueryString('starttime'));
+    // }
 
     allWs.send(JSON.stringify(options));
     console.log("8:all websocket发送消息"+JSON.stringify(options))
@@ -261,18 +270,37 @@ export const allWsSend = (frame,play,endframe)=>{
         // 点云数据
         reader.readAs('ArrayBuffer',evt.data,function(result){
           for(let key in splitInfo){
+
             // activeCamInfo 当前帧的摄像头数据
-            if(dataSet.activeCamInfo.hasOwnProperty(key)){
-              // 摄像头数据生成 base64的url
-              let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
+            // if(dataSet.activeCamInfo.hasOwnProperty(key)){
+            //   // 摄像头数据生成 base64的url
+            //   let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
+            //   dataSet.activeCamInfo[key] = url
+            //   if(dataSet.activeCam.cam == key){
+            //     dataSet.activeCam.value = url
+            //   }
+            // }
+
+            // activePcdInfo 当前帧的点云数据
+            // if(dataSet.activePcdInfo.meta_key == key){
+            //   DracoPoint(result)
+            // }
+
+            dataSet.lidarDevices.forEach((key,index)=>{
+              const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+              DracoPoint(res)
+            })
+
+            dataSet.cameraDevices.forEach((key,index)=>{
+              const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+              let url = arrayBufferToBase64(res)
               dataSet.activeCamInfo[key] = url
               if(dataSet.activeCam.cam == key){
                 dataSet.activeCam.value = url
               }
-            }
-            if(dataSet.activePcdInfo.meta_key == key){
-              DracoPoint(result)
-            }
+            })
+
+           
           }
         });
 

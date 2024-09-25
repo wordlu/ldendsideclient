@@ -1,6 +1,6 @@
 <template>
   <div id="thumbvisualization">
-    <topBarVue  @currentSceneClick="currentSceneClick" />
+    <!-- <topBarVue  @currentSceneClick="currentSceneClick" /> -->
     <div class="view">
       <toolBarVue/>
       <div class="main">
@@ -52,7 +52,7 @@ const y = ref(document.documentElement.clientHeight - 620)
   height: 100%;
   .view{
     width: 100%;
-    height: calc(100vh - 125px);
+    height: 100%;
     display: flex;
     #toolBar{
       height: 100%;
@@ -66,7 +66,7 @@ const y = ref(document.documentElement.clientHeight - 620)
       .container{
         width: 100%;
         // height: 50%;
-        height: calc(100% - 230px);
+        height: calc(100% - 80px);
       }
     }
     .vdr-container.active{

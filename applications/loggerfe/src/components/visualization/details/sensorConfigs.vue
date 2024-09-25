@@ -150,7 +150,7 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
-const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
+const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys', 'setDevicesHub']);
 
 const handleCheckChange = (node, checked) => {
   const checkedNodes = treeRef.value.getCheckedNodes();
@@ -254,6 +254,7 @@ const queryCurrentDrivers = () => {
       console.log(datavalue, 'datavalue')
       name.value = datavalue[0].name
       const devicehub = datavalue[0]['device-hub']
+      emit('setDevicesHub', devicehub)
       const device = datavalue[0]['devices']
       sensorData.value = devicehub
       const devicehubdata = devicehub.map((item: any) => {
