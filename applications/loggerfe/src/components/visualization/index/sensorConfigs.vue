@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
 import { ElTree } from 'element-plus'
@@ -134,9 +134,9 @@ interface Tree {
 }
 
 
-const props = defineProps({
-  deviceids: Array
-});
+// const props = defineProps({
+//   deviceids: Array
+// });
 
 const form = reactive({})
 
@@ -164,9 +164,9 @@ const allTreeKeys = ref([])
 const selectAllNodes = () => {
   if (treeRef.value) {
     treeRef.value.setCheckedKeys(allTreeKeys.value);
-    setTimeout(() => {
-      handleCheckChange()
-    })
+    // setTimeout(() => {
+    //   handleCheckChange()
+    // })
   }
 };
 
@@ -263,7 +263,8 @@ const queryCurrentDrivers = () => {
         }
       })
       treedata.value = totree(devicehubdata)
-      createSensorCanvas(treedata.value)
+      console.log(treedata.value, 'treedata')
+      // createSensorCanvas(treedata.value)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -298,13 +299,14 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      if (props.deviceids.includes(sensor.devicedata.id)) {
-        allTreeKeys.value.push(sensor.type+'_'+sensor.id)
-      }
+      // if (props.deviceids.includes(sensor.devicedata.id)) {
+      //   allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+      // }
       allport.push(sensor.devicedata['display-port'])
+      allTreeKeys.value.push(sensor.type+'_'+sensor.id)
     }
   });
-  selectAllNodes()
+  // selectAllNodes()
   emit('setAllTreeKeys', allport)
   return tree;
 }
@@ -337,12 +339,12 @@ const showPopup = (sensor) => {
   alert(`Sensor Type: ${sensor.type}, Position: (${sensor.x}, ${sensor.y})`);
 };
 
-const createSensorCanvas = (treeData) => {
-  const canvas = sensorCanvas.value;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
-  drawSensors(ctx);
-}
+// const createSensorCanvas = (treeData) => {
+//   const canvas = sensorCanvas.value;
+//   const ctx = canvas.getContext("2d");
+//   ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
+//   drawSensors(ctx);
+// }
 
 // 画传感器
 const drawSensors = (ctx) => {

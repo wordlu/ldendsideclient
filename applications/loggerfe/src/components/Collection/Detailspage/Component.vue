@@ -96,10 +96,10 @@ import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBo
 import { ref, computed, onMounted } from 'vue';
 import { addItem, findAll, deleteItem, findItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
-import BasicScene from '@/components/visualization/components/BasicScene.vue'
-import DisplayPanel from '@/components/visualization/components/DisplayPanel.vue'
-import sensorConfigs from '@/components/visualization/components/sensorConfigs.vue'
-import tagConfigs from '@/components/visualization/components/tagConfigs.vue'
+import BasicScene from '@/components/visualization/details/BasicScene.vue'
+import DisplayPanel from '@/components/visualization/details/DisplayPanel.vue'
+import sensorConfigs from '@/components/visualization/details/sensorConfigs.vue'
+import tagConfigs from '@/components/visualization/details/tagConfigs.vue'
 import gostore from '@/services/governance-store'
 import { MoreFilled } from "@element-plus/icons-vue"
 
