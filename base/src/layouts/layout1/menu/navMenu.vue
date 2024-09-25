@@ -122,9 +122,9 @@ export default {
           policy: "menuSystemanage",
           menuItem: [
             {
-              index: '/systemanage/sysmanage',
-              title: '系统环境',
-              policy: "pagesystemanagesysmanage",
+              index: '/loggerfe/root/configs',
+              title: '采集配置',
+              policy: "pageloggerfeconfigs",
             },
             {
               index: '/systemanage/devices',
@@ -132,30 +132,31 @@ export default {
               policy: "pagesystemanagedevices",
             },
             {
-              index: '/systemanage/drives',
-              title: '设备驱动管理',
-              policy: "pagesystemanagedrives",
-            },
-            {
               index: '/systemanage/storages',
               title: '存储管理',
               policy: "pagesystemanagestorages",
             },
             {
-              index: '/systemanage/tags',
-              title: '标签管理',
-              policy: "pagesystemanagetags",
+              index: '/systemanage/sysmanage',
+              title: '系统环境',
+              policy: "pagesystemanagesysmanage",
             },
-            {
-              index: '/systemanage/collectiontemplates',
-              title: '采集模版管理',
-              policy: "pagesystemanagecollectiontemplates",
-            },
-            {
-              index: '/loggerfe/root/configs',
-              title: '采集配置',
-              policy: "pageloggerfeconfigs",
-            },
+            
+            // {
+            //   index: '/systemanage/drives',
+            //   title: '设备驱动管理',
+            //   policy: "pagesystemanagedrives",
+            // },
+            // {
+            //   index: '/systemanage/tags',
+            //   title: '标签管理',
+            //   policy: "pagesystemanagetags",
+            // },
+            // {
+            //   index: '/systemanage/collectiontemplates',
+            //   title: '采集模版管理',
+            //   policy: "pagesystemanagecollectiontemplates",
+            // },
           ]
         },
         {
