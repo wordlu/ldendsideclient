@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
 import { ElTree } from 'element-plus'
@@ -132,6 +132,11 @@ interface Tree {
   label: string
   children?: Tree[]
 }
+
+
+const props = defineProps({
+  deviceids: Array
+});
 
 const form = reactive({})
 
@@ -158,8 +163,10 @@ const allTreeKeys = ref([])
 
 const selectAllNodes = () => {
   if (treeRef.value) {
-    // const allKeys = getAllNodeKeys(treedata.value);
     treeRef.value.setCheckedKeys(allTreeKeys.value);
+    setTimeout(() => {
+      handleCheckChange()
+    })
   }
 };
 
@@ -168,20 +175,6 @@ const clearAllNodes = () => {
     treeRef.value.setCheckedKeys([]);
   }
 };
-
-// 获取树中所有节点的key
-// const getAllNodeKeys = (nodes) => {
-//   const keys = [];
-//   nodes.forEach((node) => {
-//     if (!node.disabled && !node.children)  {
-//       keys.push(node.id);
-//     }
-//     if (node.children && node.children.length > 0) {
-//       keys.push(...getAllNodeKeys(node.children));
-//     }
-//   });
-//   return keys;
-// };
 
 const handleNodeClick = (data: Tree) => {
   console.log(data)
@@ -304,12 +297,14 @@ const totree = (data) => {
       label: sensor.id,
       disabled: !sensor.devicedata
     });
-
     if (sensor.devicedata) {
+      if (props.deviceids.includes(sensor.devicedata.id)) {
+        allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+      }
       allport.push(sensor.devicedata['display-port'])
-      allTreeKeys.value.push(sensor.type+'_'+sensor.id)
     }
   });
+  selectAllNodes()
   emit('setAllTreeKeys', allport)
   return tree;
 }

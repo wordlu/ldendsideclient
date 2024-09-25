@@ -6,10 +6,10 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
+        <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
         <el-button type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
         <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
-        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button>
+        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
@@ -20,7 +20,7 @@
       class="visible">
       <div class="point">
         <BasicScene :allports="allports" :currentSelectedSensor="currentSelectedSensor" />
-        <sensorConfigs ref="sensorConfigsRef" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" />
+        <sensorConfigs ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :deviceids="deviceids" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" />
         <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
       </div>
     </div>
@@ -94,7 +94,7 @@
 <script setup lang="ts">
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage } from 'element-plus';
 import { ref, computed, onMounted } from 'vue';
-import { addItem, findAll, deleteItem } from '@/api/jsonApi'
+import { addItem, findAll, deleteItem, findItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/components/BasicScene.vue'
 import DisplayPanel from '@/components/visualization/components/DisplayPanel.vue'
@@ -108,6 +108,11 @@ interface Option {
   label: string
   data: object
 }
+
+import { useRoute } from 'vue-router';
+
+// 获取当前路由对象
+const route = useRoute();
 
 const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
@@ -174,132 +179,133 @@ const transferData = ref<Option[]>()
 const transferDataValue = ref([])
 const directive = ref('')
 // 开始调试
-const startupDevice = () => {
-  getCurrentPorts()
-  if (sensorConfigsRef.value) {
-    sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
-  }
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "startup",
-        "devices": [],
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    ElMessage({
-      message: "设备正在启动中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    ElMessage({
-      message: "启动设备失败",
-      type: 'error',
-    })
-  })
-}
-// 结束调试
-const shutdownDevice = () => {
-  getCurrentPorts()
-  if (sensorConfigsRef.value) {
-    sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
-  }
-  // directive.value = 'shutdown'
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "shutdown",
-        "devices":[],
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    ElMessage({
-      message: "设备正在关闭中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    ElMessage({
-      message: "关闭设备失败",
-      type: 'error',
-    })
-  })
-}
-// 开始采集
-const recordOnDevice = () => {
-  getCurrentPorts()
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "recordOn",
-        "devices": currentSelectedSensorId.value,
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    ElMessage({
-      message: "设备正在采集中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    ElMessage({
-      message: "设备采集失败",
-      type: 'error',
-    })
-  })
-}
-// 结束采集
-const recordOffCollect = () => {
-  getCurrentPorts()
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "recordOff",
-        "devices": currentSelectedSensorId.value,
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    ElMessage({
-      message: "设备正在结束采集中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    ElMessage({
-      message: "设备结束采集失败",
-      type: 'error',
-    })
-  })
-}
+// const startupDevice = () => {
+//   getCurrentPorts()
+//   if (sensorConfigsRef.value) {
+//     sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+//   }
+//   const params = {
+//     "data": {
+//       "type": "actions",
+//       "attributes": {
+//         "command": "startup",
+//         "devices": [],
+//         "viewport": viewportId.value
+//       }
+//     }
+//   }
+//   addItem('/models/actions', params).then((res: any) => {
+//     ElMessage({
+//       message: "设备正在启动中",
+//       type: 'success',
+//     })
+//   }).catch((err: any) => {
+//     ElMessage({
+//       message: "启动设备失败",
+//       type: 'error',
+//     })
+//   })
+// }
+// // 结束调试
+// const shutdownDevice = () => {
+//   getCurrentPorts()
+//   if (sensorConfigsRef.value) {
+//     sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
+//   }
+//   // directive.value = 'shutdown'
+//   const params = {
+//     "data": {
+//       "type": "actions",
+//       "attributes": {
+//         "command": "shutdown",
+//         "devices":[],
+//         "viewport": viewportId.value
+//       }
+//     }
+//   }
+//   addItem('/models/actions', params).then((res: any) => {
+//     ElMessage({
+//       message: "设备正在关闭中",
+//       type: 'success',
+//     })
+//   }).catch((err: any) => {
+//     ElMessage({
+//       message: "关闭设备失败",
+//       type: 'error',
+//     })
+//   })
+// }
+// // 开始采集
+// const recordOnDevice = () => {
+//   getCurrentPorts()
+//   const params = {
+//     "data": {
+//       "type": "actions",
+//       "attributes": {
+//         "command": "recordOn",
+//         "devices": currentSelectedSensorId.value,
+//         "viewport": viewportId.value
+//       }
+//     }
+//   }
+//   addItem('/models/actions', params).then((res: any) => {
+//     ElMessage({
+//       message: "设备正在采集中",
+//       type: 'success',
+//     })
+//   }).catch((err: any) => {
+//     ElMessage({
+//       message: "设备采集失败",
+//       type: 'error',
+//     })
+//   })
+// }
+// // 结束采集
+// const recordOffCollect = () => {
+//   getCurrentPorts()
+//   const params = {
+//     "data": {
+//       "type": "actions",
+//       "attributes": {
+//         "command": "recordOff",
+//         "devices": currentSelectedSensorId.value,
+//         "viewport": viewportId.value
+//       }
+//     }
+//   }
+//   addItem('/models/actions', params).then((res: any) => {
+//     ElMessage({
+//       message: "设备正在结束采集中",
+//       type: 'success',
+//     })
+//   }).catch((err: any) => {
+//     ElMessage({
+//       message: "设备结束采集失败",
+//       type: 'error',
+//     })
+//   })
+// }
 
+// 获取当前勾选设备的port
 const currentSelectedSensorId = ref([])
-
 const getCurrentPorts = () => {
   currentSelectedSensor.value = selectedLeafNodes.value.map(node => node.port)
   currentSelectedSensorId.value = selectedLeafNodes.value.map(node => node.deviceid)
 }
 
-//获取设备树
-const queryCurrentDrivers = () => {
-  try {
-    findAll('/models/viewports', {}).then((res: any) => {
-      viewportId.value = res.data.data[0].id
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.error(error)
-  }
-}
+// 获取设备树
+// const queryCurrentDrivers = () => {
+//   try {
+//     debugger
+//     findAll('/models/viewports', {}).then((res: any) => {
+//       viewportId.value = res.data.data[0].id
+//     }).catch((err: any) => {
+//       console.log(err, 'err')
+//     })
+//   } catch (error) {
+//     console.error(error)
+//   }
+// }
 
 //获取标签列表
 const tagData = ref([])
@@ -324,6 +330,31 @@ const getTags = (lidarname: string) => {
     console.error(error)
   }
 }
+
+const datasetData = ref(null)
+const deviceids = ref([])
+const getDatasetDetails = () => {
+  try {
+    findItem('/models/datasets', route.params.id).then((res: any) => {
+      gostore.reset()
+      datasetData.value = gostore.sync(res.data)
+      getDevices()
+    }).catch((err: any) => {
+      console.error(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const getDevices = () => {
+  deviceids.value = datasetData.value.devices
+  // if (sensorConfigsRef.value) {
+  //   sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+  // }
+}
+
+getDatasetDetails()
 
 const handleSelectTag = (tagData: any) => {
   const currentTime = new Date().toISOString()
@@ -417,7 +448,7 @@ const formatter = (thistime: any, fmt: string) => {
 }
 
 onMounted(() => {
-  queryCurrentDrivers()
+  // queryCurrentDrivers()
   getTags()
 })
 

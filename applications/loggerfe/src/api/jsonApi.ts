@@ -13,7 +13,7 @@ export function findAll(module:string,data:any) {
 }
 
 export function findItem(module:string,id:number,data:any) {
-  const urlstr = `/${module}/${id}`
+  const urlstr = `${module}/${id}`
   const url = setQuery(urlstr, data)
   return request({
     url: url,
@@ -25,7 +25,6 @@ export function findItem(module:string,id:number,data:any) {
 }
 
 export function addItem(module:string,params:any) {
-  
   return request({
     url: module,
     method: 'post',
