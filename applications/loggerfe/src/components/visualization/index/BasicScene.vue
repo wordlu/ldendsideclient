@@ -1,6 +1,6 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe :src="'http://localhost:5173/bevfront/visualization?allports='+getString(allports)+'&portarray='+getString(currentSelectedSensor)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'http://localhost:5173/pointcloud/visualization?allports='+getString(allports)+'&portarray='+getString(currentSelectedSensor)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
