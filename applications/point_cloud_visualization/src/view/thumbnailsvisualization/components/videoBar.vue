@@ -51,7 +51,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const datasetid = ref(urlParams.get('dataset'))
 const getDataval = async () => {
   const arr = await func_scene_thumbnail({dataset: datasetid.value,image_count: imageCount.value})
-  
   return arr.data.data
 }
 const endframe = ref(Infinity)
@@ -118,9 +117,9 @@ const loadThumbnails = () => {
 };
 
 onMounted(async () => {
-  data.value = await getDataval()
+  // data.value = await getDataval()
   
-  loadThumbnails();
+  // loadThumbnails();
 });
 
 // 遮挡

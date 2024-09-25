@@ -6,10 +6,15 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
-        <el-button type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
-        <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
-        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button>
+        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+          <div style="margin-right: 4px;">调试设备</div>
+          <el-switch v-model="testDevice" style="--el-switch-on-color: #13ce66;--el-switch-off-color: #aaa;" @change="testDeviceChange"/>
+        </div>
+        
+        <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button> -->
+        <el-button v-show="showRecordOnDevice" type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
+        <el-button v-show="testDevice && !showRecordOnDevice" type="primary" class="info-btn" @click="recordOffDevice">结束采集</el-button>
+        <!-- <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
@@ -109,6 +114,8 @@ interface Option {
   data: object
 }
 
+const showRecordOnDevice = ref(false)
+const testDevice = ref(false)
 const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
@@ -119,6 +126,14 @@ const checkTagsDialogVisible = ref(false)
 const taggingsTableData = ref([])
 
 const currentSelectedSensor = ref([])
+
+const testDeviceChange = (val) => {
+  if (val) {
+    startupDevice()
+  } else {
+    shutdownDevice()
+  }
+}
 
 //iframe参数：所有端口
 const allports = ref([])
@@ -190,14 +205,21 @@ const startupDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
+    showRecordOnDevice.value = true
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
     })
   }).catch((err: any) => {
+    showRecordOnDevice.value = true
+    console.error(err, 'err')
+    // ElMessage({
+    //   message: "启动设备失败",
+    //   type: 'error',
+    // })
     ElMessage({
-      message: "启动设备失败",
-      type: 'error',
+      message: "设备正在启动中",
+      type: 'success',
     })
   })
 }
@@ -219,14 +241,21 @@ const shutdownDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
+    showRecordOnDevice.value = false
     ElMessage({
-      message: "设备正在关闭中",
+      message: "设备关闭中",
       type: 'success',
     })
   }).catch((err: any) => {
+    showRecordOnDevice.value = false
+    console.error(err, 'err')
+    // ElMessage({
+    //   message: "关闭设备失败",
+    //   type: 'error',
+    // })
     ElMessage({
-      message: "关闭设备失败",
-      type: 'error',
+      message: "设备关闭中",
+      type: 'success',
     })
   })
 }
@@ -244,11 +273,13 @@ const recordOnDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
+    showRecordOnDevice.value = false
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
     })
   }).catch((err: any) => {
+    showRecordOnDevice.value = false
     ElMessage({
       message: "设备采集失败",
       type: 'error',
@@ -256,7 +287,7 @@ const recordOnDevice = () => {
   })
 }
 // 结束采集
-const recordOffCollect = () => {
+const recordOffDevice = () => {
   getCurrentPorts()
   const params = {
     "data": {
@@ -269,14 +300,21 @@ const recordOffCollect = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
+    showRecordOnDevice.value = true
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
     })
   }).catch((err: any) => {
+    showRecordOnDevice.value = true
+    console.error(err, 'err')
+    // ElMessage({
+    //   message: "设备结束采集失败",
+    //   type: 'error',
+    // })
     ElMessage({
-      message: "设备结束采集失败",
-      type: 'error',
+      message: "设备正在结束采集中",
+      type: 'success',
     })
   })
 }
