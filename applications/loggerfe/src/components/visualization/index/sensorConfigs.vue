@@ -210,6 +210,8 @@ const defaultProps = {
   label: 'label',
 }
 
+const renderContentUrl = 'http://10.86.24.49:30000/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=3s&kiosk&theme=light'
+const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
    if (!data.children && data.devicedata) {
@@ -221,20 +223,20 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 20px;',
       },node.label), // 节点标签
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
+      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=1`,
+      style: renderContentStyle,
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
+      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=2`,
+      style: renderContentStyle,
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
+      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=3`,
+      style: renderContentStyle,
       }),
       h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
+      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=4`,
+      style: renderContentStyle,
       }),
     ]);
   } else {

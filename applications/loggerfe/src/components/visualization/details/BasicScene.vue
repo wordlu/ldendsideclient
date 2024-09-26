@@ -1,6 +1,6 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe :src="'http://localhost:5173/pointcloud/thumbnailsvisualization?dataset='+datasetprefix+'&deviceshub='+JSON.stringify(devicesHub)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'http://localhost:5173/pointcloud/thumbnailsvisualization?dataset='+datasetprefix+'&deviceshub='+JSON.stringify(devicesHub)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
@@ -16,7 +16,8 @@ const props = defineProps({
   currentSelectedSensor: Array,
   allports: Array,
   datasetprefix: String,
-  devicesHub: Array
+  devicesHub: Array,
+  cloudpointparams: Object
 });
 
 // const currentSelectedSensorRef = toRef(props, 'currentSelectedSensor');

@@ -72,11 +72,13 @@ const initThree = async () =>{
       intersects.forEach((item,index)=>{
         selectedObject.push(item.object)
         item.object.material.color.set( '#f00' );
+        
       })
     }else{
       selectedObject.forEach((item,index)=>{
         selectedObject.push(item)
         item.material.color.set( '#67C23A' );
+        
       })
       selectedObject = [];
     }

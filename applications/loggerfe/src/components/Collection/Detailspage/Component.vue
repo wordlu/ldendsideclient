@@ -10,7 +10,7 @@
         <el-button type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
         <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
-        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
     </div>
@@ -19,9 +19,19 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports" :datasetprefix="datasetprefix"  :currentSelectedSensor="currentSelectedSensor" :devicesHub="devicesHub" />
-        <sensorConfigs ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :deviceids="deviceids" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys"  @setDevicesHub=setDevicesHub />
-        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
+        <BasicScene :allports="allports" 
+          :datasetprefix="datasetprefix"  
+          :currentSelectedSensor="currentSelectedSensor" 
+          :cloudpointparams="cloudpointparams"
+          :devicesHub="devicesHub"  />
+        <sensorConfigs ref="sensorConfigsRef" 
+          @getCurrentPorts="getCurrentPorts" 
+          :deviceids="deviceids" 
+          @update:leafNodes="handleLeafNodes" 
+          @setAllTreeKeys="setAllTreeKeys" 
+          @changeProps="changeProps" 
+          @setDevicesHub=setDevicesHub />
+        <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
       </div>
     </div>
     <el-dialog
@@ -113,6 +123,14 @@ interface Option {
   data: object
 }
 
+const cloudpointparams = ref({
+  color: "00ffff",
+  size: 0.1,
+})
+const changeProps = (obj) => {
+  cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
+}
+
 const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
@@ -168,7 +186,7 @@ const checkTags = () => {
 
 const getTaggings = (lidarname: string) => {
   try {
-    findAll('/models/taggings', {}).then((res: any) => {
+    findAll('/models/taggings', {'filter[dataset]': route.params.id}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('taggings')

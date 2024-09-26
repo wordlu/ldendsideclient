@@ -214,10 +214,21 @@ export const renderODBox = (data,odAllGroup,frame) => {
   return odAllGroup;
 }
 
+export const getQueryString = (name) => {
+  var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+  var r = window.location.search.substr(1).match(reg);
+  if (r != null) {
+    return unescape(r[2]);
+  }
+  return null;
+}
+const cloudpointparams = getQueryString('cloudpointparams') ? JSON.parse(getQueryString('cloudpointparams')) : {}
+
 export const setPointCloud = () => {
+  console.log(cloudpointparams)
   let material = new THREE.PointsMaterial({
-    color: 0x00ffff,//模型颜色
-    size: 0.1//模型大小
+    color: `#${cloudpointparams.color}` || '#00ffff',//模型颜色
+    size: Number(cloudpointparams.size) || 0.1 //模型大小
   });//配置模型的材质对象        
   function initpoint() {
     let points = new THREE.Points(geometry, material)//将上述对象配置到点模型对象上

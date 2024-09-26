@@ -33,7 +33,6 @@
               ref="treeRef"
               class="tree-content"
               :data="treedata"
-              show-checkbox
               default-expand-all
               node-key="id"
               :highlight-current="false"
