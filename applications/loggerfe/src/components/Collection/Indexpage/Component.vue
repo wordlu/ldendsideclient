@@ -7,13 +7,16 @@
     <div class="panel">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">调试设备</div>
+          <div style="margin-right: 4px;">调试</div>
           <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #aaa;" @change="testDeviceChange"/>
         </div>
-        
+        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+          <div style="margin-right: 4px;">采集</div>
+          <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #aaa;" @change="startCollectChange"/>
+        </div>
         <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button> -->
-        <el-button v-show="showRecordOnDevice" type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
-        <el-button v-show="testDevice && !showRecordOnDevice" style="margin-left: 0;" type="primary" class="info-btn" @click="recordOffDevice">结束采集</el-button>
+        <!-- <el-button v-show="showRecordOnDevice" type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
+        <el-button v-show="testDevice && !showRecordOnDevice" style="margin-left: 0;" type="primary" class="info-btn" @click="recordOffDevice">结束采集</el-button> -->
         <!-- <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
@@ -117,6 +120,7 @@ interface Option {
 const switchLoading = ref(false)
 const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
+const startCollect = ref(false)
 const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
@@ -128,6 +132,7 @@ const taggingsTableData = ref([])
 
 const currentSelectedSensor = ref([])
 
+// 调试
 const testDeviceChange = (val) => {
   switchLoading.value = true
   if (val) {
@@ -137,6 +142,15 @@ const testDeviceChange = (val) => {
   }
 }
 
+// 采集
+const startCollectChange = (val) => {
+  switchLoading.value = true
+  if (val) {
+    recordOnDevice()
+  } else {
+    recordOffDevice()
+  }
+}
 //iframe参数：所有端口
 const allports = ref([])
 const setAllTreeKeys = (keys) => {
@@ -207,14 +221,14 @@ const startupDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    showRecordOnDevice.value = true
+    // showRecordOnDevice.value = true
     switchLoading.value = false
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
     })
   }).catch((err: any) => {
-    showRecordOnDevice.value = true
+    // showRecordOnDevice.value = true
     switchLoading.value = false
     console.error(err, 'err')
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
@@ -243,7 +257,7 @@ const shutdownDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    showRecordOnDevice.value = false
+    // showRecordOnDevice.value = false
     switchLoading.value = false
     ElMessage({
       message: "设备关闭中",
@@ -251,7 +265,7 @@ const shutdownDevice = () => {
     })
   }).catch((err: any) => {
     switchLoading.value = false
-    showRecordOnDevice.value = false
+    // showRecordOnDevice.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
     console.error(err, 'err')
     ElMessage({
@@ -274,14 +288,16 @@ const recordOnDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    showRecordOnDevice.value = false
+    // showRecordOnDevice.value = false
+    switchLoading.value = false
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
     })
   }).catch((err: any) => {
     console.error(err, 'err')
-    showRecordOnDevice.value = false
+    switchLoading.value = false
+    // showRecordOnDevice.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
     ElMessage({
       message: "设备采集失败"+errmsg,
@@ -303,13 +319,15 @@ const recordOffDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    showRecordOnDevice.value = true
+    // showRecordOnDevice.value = true
+    switchLoading.value = false
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
     })
   }).catch((err: any) => {
-    showRecordOnDevice.value = true
+    // showRecordOnDevice.value = true
+    switchLoading.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
     console.error(err, 'err')
     ElMessage({
