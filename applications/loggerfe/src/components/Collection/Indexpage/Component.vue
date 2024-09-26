@@ -281,7 +281,7 @@ const recordOnDevice = () => {
     })
   }).catch((err: any) => {
     console.error(err, 'err')
-    // showRecordOnDevice.value = false
+    showRecordOnDevice.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
     ElMessage({
       message: "设备采集失败"+errmsg,
@@ -309,7 +309,7 @@ const recordOffDevice = () => {
       type: 'success',
     })
   }).catch((err: any) => {
-    // showRecordOnDevice.value = true
+    showRecordOnDevice.value = true
     const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
     console.error(err, 'err')
     ElMessage({
