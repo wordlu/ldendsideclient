@@ -1,6 +1,6 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe :src="'http://localhost:5173/pointcloud/thumbnailsvisualization?dataset='+datasetData?.prefix+'&deviceshub='+JSON.stringify(devicesHub)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'http://localhost:5173/pointcloud/thumbnailsvisualization?dataset='+datasetprefix+'&deviceshub='+JSON.stringify(devicesHub)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
@@ -15,7 +15,7 @@ import gostore from '@/services/governance-store'
 const props = defineProps({
   currentSelectedSensor: Array,
   allports: Array,
-  datasetData: Object,
+  datasetprefix: String,
   devicesHub: Array
 });
 
@@ -25,10 +25,10 @@ const props = defineProps({
 //   getDevices(newValue)
 // });
 
-const getString = (arr: any) => {
-  if(!arr) return ''
-  return arr.toString()
-}
+// const getString = (arr: any) => {
+//   if(!arr) return ''
+//   return arr.toString()
+// }
 </script>
 
 <style lang="scss" scoped>

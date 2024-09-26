@@ -14,7 +14,7 @@ function getQueryString(name) {
   return null;
 }
 
-const podUrl = ref('ws://10.86.24.49/');
+const podUrl = ref('ws://ld.10.86.24.49.nip.io/replay/');
 let dataSet;
 let ws;
 let pcdWs;
@@ -63,7 +63,7 @@ export const createHub = async ()=>{
 
 // 初始化socket
 export const initSocket = ()=>{
-  ws = new WebSocket(`${podUrl.value}check`);
+  ws = new WebSocket(`${podUrl.value}info`);
   dataSet = dataSetStore();
   ws.onopen = function() {
     console.log("3:连接websocket")
@@ -96,7 +96,7 @@ export const initSocket = ()=>{
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
       dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
-      
+      console.log(dataSet, '=========')
       // dataSet.activePcdInfo.meta_key = Object.keys(dataSet.info.meta_json.pcd)[0];
       // dataSet.activePcdInfo.meta_val = Object.values(dataSet.info.meta_json.pcd)[0];
       // 启动pcd压缩通道
@@ -203,7 +203,7 @@ export const camWsSend = (frame)=>{
 
 // 初始化组合数据
 export const initAllSocket = ()=>{
-  allWs = new WebSocket(`${podUrl.value}all`);
+  allWs = new WebSocket(`${podUrl.value}frames`);
 
   allWs.onopen = function() {
     console.log("7:开启点云数据通道all")
@@ -215,13 +215,13 @@ export const initAllSocket = ()=>{
     console.log("连接已关闭...");
   };
 
-  const cams = dataSet.info.meta_json.cam;
+  // const cams = dataSet.info.meta_json.cam;
 
-  for(let cam in cams){
-    dataSet.activeCamInfo[cam] = null;
-  }
+  // for(let cam in cams){
+  //   dataSet.activeCamInfo[cam] = null;
+  // }
 
-  dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
+  // dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
 //获取视觉数据并渲染
@@ -230,7 +230,7 @@ export const allWsSend = (frame,play,endframe)=>{
     let options = {
       "dataset": getQueryString('dataset'),
       "devices": dataSet.info.devices,
-      "request_index": 0,
+      "request_index": frame,
       "request_count": 1 
       // frame_index:frame,
       // pcd: dataSet.info.meta_json.pcd,

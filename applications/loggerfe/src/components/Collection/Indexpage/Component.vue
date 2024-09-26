@@ -7,12 +7,12 @@
     <div class="panel">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">调试</div>
-          <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #aaa;" @change="testDeviceChange"/>
+          <div style="margin-right: 4px;">设备调试</div>
+          <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">采集</div>
-          <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #aaa;" @change="startCollectChange"/>
+          <div style="margin-right: 4px;">设备采集</div>
+          <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
         <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button> -->
         <!-- <el-button v-show="showRecordOnDevice" type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>

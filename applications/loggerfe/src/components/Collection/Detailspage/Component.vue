@@ -19,8 +19,8 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports" :currentSelectedSensor="currentSelectedSensor" :devicesHub="devicesHub" />
-        <sensorConfigs ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :datasetData="datasetData" :deviceids="deviceids" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys"  @setDevicesHub=setDevicesHub />
+        <BasicScene :allports="allports" :datasetprefix="datasetprefix"  :currentSelectedSensor="currentSelectedSensor" :devicesHub="devicesHub" />
+        <sensorConfigs ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :deviceids="deviceids" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys"  @setDevicesHub=setDevicesHub />
         <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
       </div>
     </div>
@@ -220,11 +220,13 @@ const getTags = (lidarname: string) => {
 
 const datasetData = ref(null)
 const deviceids = ref([])
+const datasetprefix = ref('')
 const getDatasetDetails = () => {
   try {
     findItem('/models/datasets', route.params.id).then((res: any) => {
       gostore.reset()
       datasetData.value = gostore.sync(res.data)
+      datasetprefix.value = datasetData.value.prefix
       getDevices()
     }).catch((err: any) => {
       console.error(err, 'err')

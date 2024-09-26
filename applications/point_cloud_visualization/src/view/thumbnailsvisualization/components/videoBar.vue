@@ -123,28 +123,28 @@ onMounted(async () => {
 });
 
 // 遮挡
-const currentScene = ref(null)
-const getMasks = () => {
-  const currentFrame = currentScene.value ? (currentScene.value.currentFrame || currentScene.value.frame_line[0]) : null
-  if (currentFrame) {
-    maskStart.value = currentFrame.start * step.value
-    maskWidth.value = (currentFrame.end - currentFrame.start) * step.value
-    activeFrame.value = currentFrame.start
-    dataSet.activefame = currentFrame.start
-    endframe.value = currentFrame.end
-    startframe.value = currentFrame.start
-  } else {
-    maskStart.value = 0
-    maskWidth.value = 0
-    activeFrame.value = 0
-    dataSet.activefame = 0
-    endframe.value = Infinity
-    startframe.value = 0
-  }
-  //重置所有状态
-  isStart.value = false;
-  document.querySelector('.Progress_line').style.width = 0
-}
+// const currentScene = ref(null)
+// const getMasks = () => {
+//   const currentFrame = currentScene.value ? (currentScene.value.currentFrame || currentScene.value.frame_line[0]) : null
+//   if (currentFrame) {
+//     maskStart.value = currentFrame.start * step.value
+//     maskWidth.value = (currentFrame.end - currentFrame.start) * step.value
+//     activeFrame.value = currentFrame.start
+//     dataSet.activefame = currentFrame.start
+//     endframe.value = currentFrame.end
+//     startframe.value = currentFrame.start
+//   } else {
+//     maskStart.value = 0
+//     maskWidth.value = 0
+//     activeFrame.value = 0
+//     dataSet.activefame = 0
+//     endframe.value = Infinity
+//     startframe.value = 0
+//   }
+//   //重置所有状态
+//   isStart.value = false;
+//   document.querySelector('.Progress_line').style.width = 0
+// }
 
 
 const dataSet = dataSetStore()
@@ -156,7 +156,7 @@ const offsetX = ref(0)
 
 const isShow = ref(false)
 
-const frames_num = ref()
+const frame_count = ref()
 
 const activeFrame = ref(dataSet.activefame)
 
@@ -170,30 +170,31 @@ watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
 },{deep:true})
 
-watch(()=>props.currentScene,(newVal)=>{
-  currentScene.value = newVal.value
-  getMasks()
-},{deep:true})
+// watch(()=>props.currentScene,(newVal)=>{
+//   currentScene.value = newVal.value
+//   getMasks()
+// },{deep:true})
 
 const step = computed(()=>{
-  const num = document.querySelector('.Progress_back').offsetWidth / (frames_num.value - 1)
+  const num = document.querySelector('.Progress_back').offsetWidth / (frame_count.value)
   // 进度条的步长 = 进度条渲染长度/帧数
+  console.log(document.querySelector('.Progress_back').offsetWidth , frame_count.value - 1, num, '进度条的步长')
   return num
 })
 
-if(dataSet.info.frames_num){
+if(dataSet.info.frame_count){
   isShow.value = true;
 }
 
 watch(info,(newVal)=>{
-  frames_num.value = newVal.frames_num-1;
+  frame_count.value = newVal.frame_count-1;
   document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px';
 },{deep:true})
 
 watch(()=>dataSet.activefame,(newVal,oldVal)=>{
   if(isStart.value){
     activeFrame.value = dataSet.activefame
-    if(activeFrame.value <= frames_num.value && activeFrame.value <= endframe.value){
+    if(activeFrame.value <= frame_count.value && activeFrame.value <= endframe.value){
       allWsSend(activeFrame.value, true, endframe.value)
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
     }else{
@@ -231,38 +232,19 @@ const getData = ()=>{
 const start=()=>{
   if(!loading.value){
     if(!isStart.value){
-      // 置为开启
-      if (endframe.value && endframe.value !== Infinity) {
-        // 单场景
-        if(activeFrame.value < endframe.value){
-          //未到最后一帧
-          dataSet.activefame ++
-          activeFrame.value = dataSet.activefame
-          allWsSend(activeFrame.value, false, endframe.value)
-          document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-          isStart.value = true
-        }else{
-          //到最后一帧之后重新开始
-          dataSet.activefame = startframe.value
-          isStart.value = true
-        }
-      } else {
-        // 全场景
-        if(activeFrame.value < frames_num.value){
-          //未到最后一帧
-          dataSet.activefame ++
-          activeFrame.value = dataSet.activefame
-          allWsSend(activeFrame.value, false, endframe.value)
-          document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-          isStart.value = true
-        }else{
-          //到最后一帧之后重新开始
-          dataSet.activefame = 0
-          isStart.value = true
-        }
+      if(activeFrame.value < frame_count.value){
+        dataSet.activefame ++
+        activeFrame.value = dataSet.activefame
+        allWsSend(activeFrame.value, false)
+        document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
+        isStart.value = true
+      }else if(activeFrame.value >= frame_count.value){
+        isStart.value = true
+        dataSet.activefame = 0
+      }else{
+        isStart.value = false;
       }
     }else{
-      // 置为暂停
       isStart.value = false
     }
   }
@@ -282,7 +264,7 @@ const prev=()=>{
 const next=()=>{
   isStart.value = false
   dataSet.activefame = activeFrame.value
-  if(activeFrame.value < frames_num.value && activeFrame.value < endframe.value){
+  if(activeFrame.value < frame_count.value && activeFrame.value < endframe.value){
     dataSet.activefame ++
     activeFrame.value = dataSet.activefame
     allWsSend(activeFrame.value, false, endframe.value)
@@ -295,14 +277,14 @@ const next=()=>{
 // 第一百帧的位置：step*100
 // 100-200帧的长度: step*(200-100)
 
-const maskStart = ref(0)
-const maskWidth = ref(0)
-const maskStyle = computed(() => {
-  const end = maskStart.value + maskWidth.value
-  return {
-    clipPath: `polygon(0% 0%, ${maskStart.value}px 0%, ${maskStart.value}px 100%, 0% 100%, 0% 0%, ${end}px 0%, ${end}px 100%, 100% 100%, 100% 0%)`
-  }
-})
+// const maskStart = ref(0)
+// const maskWidth = ref(0)
+// const maskStyle = computed(() => {
+//   const end = maskStart.value + maskWidth.value
+//   return {
+//     clipPath: `polygon(0% 0%, ${maskStart.value}px 0%, ${maskStart.value}px 100%, 0% 100%, 0% 0%, ${end}px 0%, ${end}px 100%, 100% 100%, 100% 0%)`
+//   }
+// })
 
 
 </script>
