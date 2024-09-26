@@ -34,7 +34,6 @@ const y = ref(document.documentElement.clientHeight - 620)
         <div class="container">
           <threeDView />
         </div>
-        <videoBarVue />
       </div>
     </div>
   </div>
