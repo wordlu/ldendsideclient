@@ -27,8 +27,13 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports" :currentSelectedSensor="currentSelectedSensor" />
-        <sensorConfigs ref="sensorConfigsRef" @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" />
+        <BasicScene :allports="allports"
+          :cloudpointparams="cloudpointparams"
+          :currentSelectedSensor="currentSelectedSensor"  />
+        <sensorConfigs ref="sensorConfigsRef" 
+          @changeProps="changeProps"
+          @update:leafNodes="handleLeafNodes" 
+          @setAllTreeKeys="setAllTreeKeys" />
         <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
       </div>
     </div>
@@ -115,6 +120,14 @@ interface Option {
   key: number
   label: string
   data: object
+}
+
+const cloudpointparams = ref({
+  color: "00ffff",
+  size: 0.1,
+})
+const changeProps = (obj) => {
+  cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
 const switchLoading = ref(false)

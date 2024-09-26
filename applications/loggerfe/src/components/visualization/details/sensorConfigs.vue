@@ -476,7 +476,6 @@ const changeColorProp = (value: string) => {
   // } else {
   //   setPropStorage({ colorProp: value, isFixColor: false })
   // }
-  console.log(value, 'changeColorProp')
   emit('changeProps', { color: value.slice(1) })
 }
 

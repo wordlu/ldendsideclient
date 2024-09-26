@@ -76,7 +76,7 @@
                       </div>
                     </el-form>
                 </el-tab-pane>
-                <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane>
+                <!-- <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane> -->
               </el-tabs>
             </div>
           </div>
