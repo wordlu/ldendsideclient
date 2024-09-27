@@ -4,19 +4,17 @@ import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
-import { createHub, connectWebSocket } from '../../components/socket/socket';
+import { connectWebSocketArray } from '../../components/socket/socket';
 import { ref , watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { dataSetStore } from '../../pinia/dataSet';
-const dataSet = dataSetStore();
-const activeCam = ref(dataSet.activeCam);
 
-watch(()=>dataSet.activeCam,(newVal)=>{
-  dataSet.value = newVal
-},{deep:true})
+const route = useRoute();
+const routeQuery = ref(route.query);
 
-// createHub();
-connectWebSocket()
 console.log("1:createHub")
+connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allport)
+
 
 function print(val) {
   document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'
@@ -32,37 +30,10 @@ const y = ref(document.documentElement.clientHeight - 620)
     <div class="view">
       <toolBarVue />
       <div class="main">
-        <Vue3DraggableResizable
-          :initW="400"
-          :initH="300"
-          :x="x"
-          :y="y"
-          v-model:w="w"
-          v-model:h="h"
-          v-model:active="active"
-          :draggable="true"
-          :resizable="true"
-          :parent="true"
-          @activated="print('activated')"
-          @deactivated="print('deactivated')"
-          @drag-start="print('drag-start')"
-          @resize-start="print('resize-start')"
-          @dragging="print('dragging')"
-          @resizing="print('resizing')"
-          @drag-end="print('drag-end')"
-          @resize-end="print('resize-end')"
-          style="z-index: 9999;border: 1px solid rgba(235, 233, 233, 0.2);"
-        >
-          <div class="draggable-container" id="draggable-container" style="color: #ffffff;width: 100%;height: 100%;">
-            <img id="activeCamImg" :src="activeCam.value" />
-          </div>
-        </Vue3DraggableResizable>
 
         <div class="container">
           <threeDView />
         </div>
-        <cameras />
-        <videoBarVue />
       </div>
     </div>
   </div>

@@ -15,7 +15,6 @@
           highlight-current
           @node-click="handleNodeClick"
           :props="defaultProps"
-          :render-content="renderContent"
           @check-change="handleCheckChange"
         />
       </div>
@@ -31,7 +30,7 @@
             class="demo-tabs"
             @tab-click="handleClick"
           >
-            <el-tab-pane label="设备配置" name="first">
+            <!-- <el-tab-pane label="设备配置" name="first">
                 <el-form :model="form" label-width="auto" style="max-width: 600px">
                   <el-form-item label="设备类型">
                     <el-select v-model="form.region" placeholder="please select your zone">
@@ -40,18 +39,31 @@
                     </el-select>
                   </el-form-item>
                   <div v-if="RemoteComponent">
-                    <!-- 动态渲染远程加载的组件 -->
                     <component :is="RemoteComponent"></component>
                   </div>
                 </el-form>
-            </el-tab-pane>
+            </el-tab-pane> -->
             <el-tab-pane label="显示设置" name="second">
               <!-- 可折叠配置 -->
               <!-- <el-collapse v-model="activeName"> -->
                 <!-- 显示设置 -->
                 <!-- <el-collapse-item name="viewSet" :title="t('visualize.visibleSet')"> -->
                   <div class="item-wrap">
-                    <span class="mr-2">{{ t('visualize.pointSize') }}</span>
+                    <span class="mr-6">视角</span>
+                    <div class="py-2">
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
+                        >XY</el-button
+                      >
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
+                        >XZ</el-button
+                      >
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
+                        >YZ</el-button
+                      >
+                    </div>
+                  </div>
+                  <div class="item-wrap">
+                    <span class="mr-2">点云大小</span>
                     <el-input-number
                       v-model="pointSize"
                       size="small"
@@ -60,47 +72,22 @@
                       :step="0.01"
                       @change="changePointSize" />
                   </div>
-                  <div class="item-wrap">
-                    <!-- 颜色维度 -->
+                  <!-- <div class="item-wrap">
                     <div class="flex mt-4">
-                      <span class="mr-2">{{ t('visualize.colorProp') }}</span>
+                      <span class="mr-2">颜色属性</span>
                       <el-select
                         v-model="colorProp"
-                        :placeholder="t('common.selectHolder')"
                         size="small"
                         @change="changeColorProp">
                         <el-option v-for="item in colorPropOpt" :key="item" :label="item" :value="item" />
                         <el-option key="isFixColor" lable="fixed" value="fixed"></el-option>
                       </el-select>
-                      <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-                      <div v-if="colorProp === 'fixed'" class="ml-4">
-                        <span class="mr-2">{{ t('common.colorVal') }}</span>
-                        <el-color-picker v-model="color" size="small" @change="changeColor" />
-                      </div>
                     </div>
-                    <!-- 最大值/最小值/自动 -->
-                    <div class="mt-4">
-                      <span class="mr-2">{{ t('visualize.minVal') }}</span>
-                      <el-input-number
-                        v-model="minColorPropVal"
-                        size="small"
-                        :disabled="autoColorRange"
-                        :min="-numberLimit"
-                        :max="maxColorPropVal"
-                        @change="changeMinColor" />
-                    </div>
-                    <div class="mt-4">
-                      <span class="mr-2">{{ t('visualize.maxVal') }}</span>
-                      <el-input-number
-                        v-model="maxColorPropVal"
-                        size="small"
-                        :disabled="autoColorRange"
-                        :min="minColorPropVal"
-                        :max="numberLimit"
-                        @change="changeMaxColor" />
-                      <span class="mr-2 ml-4">{{ t('visualize.auto') }}</span>
-                      <el-switch v-model="autoColorRange" @change="changeAuto" />
-                    </div>
+                  </div> -->
+                  <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
+                  <div v-if="colorProp === 'fixed'" class="item-wrap">
+                    <span class="mr-4">颜色值</span>
+                    <el-color-picker v-model="color" size="small" @change="changeColorProp" />
                   </div>
                 <!-- </el-collapse-item>
               </el-collapse> -->
@@ -113,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
 import { ElTree } from 'element-plus'
@@ -125,6 +112,8 @@ import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import Vue from 'vue/dist/vue.esm-bundler.js';
 import { Search } from "@element-plus/icons-vue"
+// import { changeProps } from '@/basic_data/visualization'
+
 const { t } = useI18n()
 
 interface Tree {
@@ -133,11 +122,14 @@ interface Tree {
   children?: Tree[]
 }
 
+
+const props = defineProps({
+  deviceids: Array
+});
+
 const form = reactive({})
 
-
-
-const activeNameTab = ref('first')
+const activeNameTab = ref('second')
 const RemoteComponent = ref<any>(null);
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
@@ -147,13 +139,30 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
-const emit = defineEmits(['update:leafNodes']);
+const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys', 'setDevicesHub']);
 
 const handleCheckChange = (node, checked) => {
   const checkedNodes = treeRef.value.getCheckedNodes();
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
   console.log(leafNodes, 'leafNodes')
-  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id })));
+  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
+};
+
+const allTreeKeys = ref([])
+
+const selectAllNodes = () => {
+  if (treeRef.value) {
+    treeRef.value.setCheckedKeys(allTreeKeys.value);
+    setTimeout(() => {
+      handleCheckChange()
+    })
+  }
+};
+
+const clearAllNodes = () => {
+  if (treeRef.value) {
+    treeRef.value.setCheckedKeys([]);
+  }
 };
 
 const handleNodeClick = (data: Tree) => {
@@ -190,38 +199,6 @@ const defaultProps = {
   label: 'label',
 }
 
-// 自定义树节点的渲染内容
-const renderContent = (h, { node, data }) => {
-   if (!data.children && data.devicedata) {
-    return h('div',{
-        style: 'display:flex;align-items:center;',
-      },
-      [
-      h('div', {
-        style: 'margin-right: 20px;',
-      },node.label), // 节点标签
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-    ]);
-  } else {
-    return h('span', node.label); // 非叶子节点只显示标签
-  }
-};
-
 const treedata = ref([])
 const sensorData = ref([])
 const name = ref('')
@@ -234,6 +211,7 @@ const queryCurrentDrivers = () => {
       console.log(datavalue, 'datavalue')
       name.value = datavalue[0].name
       const devicehub = datavalue[0]['device-hub']
+      emit('setDevicesHub', devicehub)
       const device = datavalue[0]['devices']
       sensorData.value = devicehub
       const devicehubdata = devicehub.map((item: any) => {
@@ -243,7 +221,8 @@ const queryCurrentDrivers = () => {
         }
       })
       treedata.value = totree(devicehubdata)
-      createSensorCanvas(treedata.value)
+      console.log(treedata.value, 'treedata')
+      // createSensorCanvas(treedata.value)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -254,29 +233,38 @@ const queryCurrentDrivers = () => {
 
 const totree = (data) => {
   const tree = [];
-  // 通过类型(type)分组
+  allTreeKeys.value = []
+  const allport = []
+  // 通过类型分组
   data.forEach(sensor => {
-    console.log(sensor, 'sensor')
-    // 查找当前type是否已经存在于树结构中
     let parent = tree.find(node => node.label === sensor.type);
     
-    // 如果没有找到，创建一个新的节点
+    // 创建父节点
     if (!parent) {
       parent = {
-        id: tree.length + 1,  // 自动生成id
-        label: sensor.type,   // 使用type作为label
+        id: sensor.type,
+        label: sensor.type,
         children: []
       };
       tree.push(parent);
     }
 
-    // 添加子节点（对应传感器的坐标点）
+    // 添加子节点
     parent.children.push({
-      id: parent.children.length + 1 + tree.length,  // 子节点id
+      id: sensor.type+'_'+sensor.id,
       devicedata: sensor.devicedata,
-      label: sensor.id,       // 用坐标作为label
+      label: sensor.id,
+      disabled: !sensor.devicedata
     });
+    if (sensor.devicedata) {
+      if (props.deviceids.includes(sensor.devicedata.id)) {
+        allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+      }
+      allport.push(sensor.devicedata['display-port'])
+    }
   });
+  selectAllNodes()
+  emit('setAllTreeKeys', allport)
   return tree;
 }
 
@@ -308,12 +296,12 @@ const showPopup = (sensor) => {
   alert(`Sensor Type: ${sensor.type}, Position: (${sensor.x}, ${sensor.y})`);
 };
 
-const createSensorCanvas = (treeData) => {
-  const canvas = sensorCanvas.value;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
-  drawSensors(ctx);
-}
+// const createSensorCanvas = (treeData) => {
+//   const canvas = sensorCanvas.value;
+//   const ctx = canvas.getContext("2d");
+//   ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
+//   drawSensors(ctx);
+// }
 
 // 画传感器
 const drawSensors = (ctx) => {
@@ -436,9 +424,9 @@ const getStorage = () => {
 const storageVal = getStorage()
 
 const activeName = ref<string>('dataSources')
-const pointSize = ref<number>(storageVal.pointSize || 0.01) // 点云大小
+const pointSize = ref<number>(storageVal.pointSize || 0.1) // 点云大小
 const colorProp = ref<string>(storageVal.isFixColor ? 'fixed' : storageVal.colorProp) // 颜色策略
-const color = ref<string>(storageVal.color || '#ff0000') // 固定颜色值
+const color = ref<string>('#00ffff') // 固定颜色值
 const minColorPropVal = ref<number>(storageVal.minColorPropVal || 0) // 颜色范围最小值
 const maxColorPropVal = ref<number>(storageVal.maxColorPropVal || 100) // 颜色范围最大值
 const autoColorRange = ref<boolean>(storageVal.autoColorRange || false) // 是否是自动赋色
@@ -450,23 +438,26 @@ const setPropStorage = (params: { [key: string]: string | number | boolean }) =>
       storageVal[key] = params[key]
     }
   }
-  changeProps(params)
+  console.log(params, 'changeProps')
+  // changeProps(params)
   if (storageVal) {
     localStorage.setItem('user_settings', JSON.stringify(storageVal))
   }
 }
 
 const changePointSize = (value: number) => {
-  setPropStorage({ pointSize: value })
+  // setPropStorage({ pointSize: value })
+  emit('changeProps', { size: value })
 }
 
 const changeColorProp = (value: string) => {
   // 如果选择的是固定颜色,则设置颜色值
-  if (value === 'fixed') {
-    setPropStorage({ colorProp: '', isFixColor: true })
-  } else {
-    setPropStorage({ colorProp: value, isFixColor: false })
-  }
+  // if (value === 'fixed') {
+  //   setPropStorage({ colorProp: '', isFixColor: true })
+  // } else {
+  //   setPropStorage({ colorProp: value, isFixColor: false })
+  // }
+  emit('changeProps', { color: value.slice(1) })
 }
 
 const changeColor = (value: string) => {
@@ -484,9 +475,36 @@ const changeMaxColor = (value: number) => {
 const changeAuto = (value: boolean) => {
   setPropStorage({ autoColorRange: value })
 }
+
+
+defineExpose({
+  selectAllNodes,
+  clearAllNodes
+});
+
 </script>
 
 <style scoped lang="scss">
+
+.item-wrap {
+  padding: 0 16px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+
+  .mr-2 {
+    margin-right: 14px;
+  }
+
+  .mr-4 {
+    margin-right: 28px;
+  }
+
+  .mr-6 {
+    margin-right: 42px;
+  }
+}
 
 .ml {
   padding-left: 20px;

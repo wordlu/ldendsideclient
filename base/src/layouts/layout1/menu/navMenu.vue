@@ -7,8 +7,6 @@
       :default-active="$route.path"
       :router="true"
       class="el-menu-vertical-demo"
-      @open="handleOpen"
-      @close="handleClose"
       :collapse="isCollapse"
       :default-openeds="opends"
     >
@@ -35,7 +33,6 @@
             v-for="(subMenuItemData, subMenuIndex) in subMenuItem.menuItem"
             :key="subMenuIndex"
             :index="subMenuItemData.index"
-            @click="setPath(subMenuItemData)"
           >{{ subMenuItemData.title }}</el-menu-item>
         </el-submenu>
         <el-menu-item
@@ -64,7 +61,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { generateTitle } from "@/utils/i18n";
 import Cookies from "js-cookie";
 import axios from 'axios';
 // import { func_gts_ingress } from "@/api/ingress"
@@ -103,99 +99,98 @@ export default {
     setIsCollapse () {
       this.isCollapse = !this.isCollapse;
     },
-    setPath (item) {
-    },
     async getAllMenu () {
-      // const data = await func_gts_ingress()
-      // this.ingress = data.data[0] ? data.data[0]['attributes']['ingress'] : ''
-      // if (this.ingress) {
-      //   this.ingressValue = this.ingress.split('://')[1].split('.')[0]
-      // }
-
-      // @wodelu: TODO-菜单权限
-      // if (window.location.pathname.indexOf("loggerfe") > -1) {
+      if (this.$route.path === "/loggerfe/root/index") {
+        this.subMenu = []
+      } else if(this.$route.query && this.$route.query.logger && this.$route.query.logger === 'trash') {
         this.subMenu = [
-        {
-          index: '1',
-          title: '系统管理',
-          type: 'elSubmenu',
-          policy: "menuSystemanage",
-          menuItem: [
-            {
-              index: '/systemanage/sysmanage',
-              title: '系统环境',
-              policy: "pagesystemanagesysmanage",
-            },
-            {
-              index: '/systemanage/devices',
-              title: '设备管理',
-              policy: "pagesystemanagedevices",
-            },
-            {
-              index: '/systemanage/drives',
-              title: '设备驱动管理',
-              policy: "pagesystemanagedrives",
-            },
-            {
-              index: '/systemanage/storages',
-              title: '存储管理',
-              policy: "pagesystemanagestorages",
-            },
-            {
-              index: '/systemanage/tags',
-              title: '标签管理',
-              policy: "pagesystemanagetags",
-            },
-            {
-              index: '/systemanage/collectiontemplates',
-              title: '采集模版管理',
-              policy: "pagesystemanagecollectiontemplates",
-            },
-            {
-              index: '/loggerfe/root/configs',
-              title: '采集配置',
-              policy: "pageloggerfeconfigs",
-            },
-          ]
-        },
-        {
-          index: '/loggerfe/root/index',
-          title: '采集',
-          type: 'elMenuItem',
-          policy: "menuloggerfeindex",
-        },
-        {
-          index: '3',
-          title: '监控',
-          type: 'elSubmenu',
-          policy: "menumonitor",
-          menuItem: [
-            {
-              index: '/systemanage/systemmonitor',
-              title: '系统监控',
-              policy: "pagesystemmonitor",
-            },
-            {
-              index: '/menumonitor/status',
-              title: '状态监控',
-              policy: "pagemenumonitorstatus",
-            },
-            {
-              index: '/menumonitor/logs',
-              title: '日志分析',
-              policy: "pagemenumonitorlogs",
-            },
-          ]
-        }
-      ]
+          {
+            index: '1',
+            title: '系统管理',
+            type: 'elSubmenu',
+            policy: "menuSystemanage",
+            menuItem: [
+              {
+                index: '/systemanage/drives?logger=trash',
+                title: '设备驱动管理',
+                policy: "pagesystemanagedrives",
+              },
+              {
+                index: '/systemanage/tags?logger=trash',
+                title: '标签管理',
+                policy: "pagesystemanagetags",
+              },
+              {
+                index: '/systemanage/collectiontemplates?logger=trash',
+                title: '采集模版管理',
+                policy: "pagesystemanagecollectiontemplates",
+              },
+            ]
+          }
+        ]
+      } else {
+        this.subMenu = [
+          {
+            index: '1',
+            title: '系统管理',
+            type: 'elSubmenu',
+            policy: "menuSystemanage",
+            menuItem: [
+              {
+                index: '/loggerfe/root/configs',
+                title: '采集配置',
+                policy: "pageloggerfeconfigs",
+              },
+              {
+                index: '/systemanage/devices',
+                title: '设备管理',
+                policy: "pagesystemanagedevices",
+              },
+              {
+                index: '/systemanage/storages',
+                title: '存储管理',
+                policy: "pagesystemanagestorages",
+              },
+              {
+                index: '/systemanage/sysmanage',
+                title: '系统环境',
+                policy: "pagesystemanagesysmanage",
+              },
+            ]
+          },
+          {
+            index: '/loggerfe/root/index',
+            title: '采集',
+            type: 'elMenuItem',
+            policy: "menuloggerfeindex",
+          },
+          {
+            index: '3',
+            title: '监控',
+            type: 'elSubmenu',
+            policy: "menumonitor",
+            menuItem: [
+              {
+                index: '/systemanage/systemmonitor',
+                title: '系统监控',
+                policy: "pagesystemmonitor",
+              },
+              {
+                index: '/systemanage/statusmonitor',
+                title: '状态监控',
+                policy: "pagestatusmonitor",
+              },
+              {
+                index: '/systemanage/logsanalyze',
+                title: '日志分析',
+                policy: "pagelogsanalyze",
+              },
+            ]
+          }
+        ]
+      }
+      
     },
-    handleOpen (key, keyPath) {
-      // console.log(key, keyPath);
-    },
-    handleClose (key, keyPath) {
-      // console.log(key, keyPath);
-    },
-    generateTitle,
   },
 };
 </script>

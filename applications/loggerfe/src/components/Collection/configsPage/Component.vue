@@ -33,7 +33,6 @@
               ref="treeRef"
               class="tree-content"
               :data="treedata"
-              show-checkbox
               default-expand-all
               node-key="id"
               :highlight-current="false"
@@ -77,7 +76,7 @@
                       </div>
                     </el-form>
                 </el-tab-pane>
-                <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane>
+                <!-- <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane> -->
               </el-tabs>
             </div>
           </div>
@@ -462,8 +461,7 @@ queryDeviceDrivers()
 
 const loadRemoteComponent = async () => {
   try {
-    // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
-    const response = await fetch(`http://logger.liangdao.ai.10.86.14.200.nip.io/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
     const { descriptor } = parse(vueFile);
     const script = compileScript(descriptor, { id: 'remote-component' });

@@ -72,11 +72,13 @@ const initThree = async () =>{
       intersects.forEach((item,index)=>{
         selectedObject.push(item.object)
         item.object.material.color.set( '#f00' );
+        
       })
     }else{
       selectedObject.forEach((item,index)=>{
         selectedObject.push(item)
         item.material.color.set( '#67C23A' );
+        
       })
       selectedObject = [];
     }
@@ -121,17 +123,6 @@ onBeforeUnmount(()=>{
 
 <template>
   <div id="threeDView">
-    <div class="loading-3d" v-if="loading">
-      <div class="preload-2">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-      <div class="loadingText">
-        {{ $t('数据解压中请耐心等待') }}...
-      </div>
-    </div>
     <div id="three"></div>
   </div>
 </template>

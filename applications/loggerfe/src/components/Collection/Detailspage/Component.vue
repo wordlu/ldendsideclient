@@ -6,15 +6,11 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">设备调试</div>
-          <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
-        </div>
-        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">设备采集</div>
-          <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
-        </div>
-        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
+        <el-button type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
+        <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
+        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
+        <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
     </div>
@@ -23,14 +19,19 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports"
+        <BasicScene :allports="allports" 
+          :datasetprefix="datasetprefix"  
+          :currentSelectedSensor="currentSelectedSensor" 
           :cloudpointparams="cloudpointparams"
-          :currentSelectedSensor="currentSelectedSensor"  />
+          :devicesHub="devicesHub"  />
         <sensorConfigs ref="sensorConfigsRef" 
-          @changeProps="changeProps"
+          @getCurrentPorts="getCurrentPorts" 
+          :deviceids="deviceids" 
           @update:leafNodes="handleLeafNodes" 
-          @setAllTreeKeys="setAllTreeKeys" />
-        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
+          @setAllTreeKeys="setAllTreeKeys" 
+          @changeProps="changeProps" 
+          @setDevicesHub=setDevicesHub />
+        <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
       </div>
     </div>
     <el-dialog
@@ -62,6 +63,7 @@
       :before-close="handleCheckTagsClose"
     >
       <el-table :data="taggingsTableData" height="360">
+        <!-- <el-table-column prop="tagid" label="标签ID" width="120"  show-overflow-tooltip /> -->
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
         <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/>
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
@@ -100,21 +102,20 @@
 </template>
 
 <script setup lang="ts">
-import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
-import { ref, computed, onMounted, onUnmounted  } from 'vue';
-import { addItem, findAll, deleteItem } from '@/api/jsonApi'
+import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage } from 'element-plus';
+import { ref, computed, onMounted } from 'vue';
+import { addItem, findAll, deleteItem, findItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
-import BasicScene from '@/components/visualization/index/BasicScene.vue'
-import DisplayPanel from '@/components/visualization/index/DisplayPanel.vue'
-import sensorConfigs from '@/components/visualization/index/sensorConfigs.vue'
-import tagConfigs from '@/components/visualization/index/tagConfigs.vue'
+import BasicScene from '@/components/visualization/details/BasicScene.vue'
+import DisplayPanel from '@/components/visualization/details/DisplayPanel.vue'
+import sensorConfigs from '@/components/visualization/details/sensorConfigs.vue'
+import tagConfigs from '@/components/visualization/details/tagConfigs.vue'
 import gostore from '@/services/governance-store'
 import { MoreFilled } from "@element-plus/icons-vue"
+import { useRoute } from 'vue-router';
 
-// 创建响应式变量
-const message = ref(null); // 用于存储 SSE 消息
-const error = ref(null);   // 用于存储错误信息
-let eventSource = null;    // 存储 EventSource 对象
+// 获取当前路由对象
+const route = useRoute();
 
 interface Option {
   key: number
@@ -130,10 +131,6 @@ const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
-const switchLoading = ref(false)
-const showRecordOnDevice = ref(false)
-const testDevice = ref(false)
-const startCollect = ref(false)
 const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
@@ -145,30 +142,18 @@ const taggingsTableData = ref([])
 
 const currentSelectedSensor = ref([])
 
-// 调试
-const testDeviceChange = (val) => {
-  switchLoading.value = true
-  if (val) {
-    startupDevice()
-  } else {
-    shutdownDevice()
-  }
+const devicesHub = ref([])
+const setDevicesHub = (keys) => {
+  devicesHub.value = keys
 }
 
-// 采集
-const startCollectChange = (val) => {
-  switchLoading.value = true
-  if (val) {
-    recordOnDevice()
-  } else {
-    recordOffDevice()
-  }
-}
 //iframe参数：所有端口
 const allports = ref([])
 const setAllTreeKeys = (keys) => {
   allports.value = keys
 }
+
+
 
 const handleLeafNodes = (leafNodes) => {
   selectedLeafNodes.value = leafNodes;
@@ -201,7 +186,7 @@ const checkTags = () => {
 
 const getTaggings = (lidarname: string) => {
   try {
-    findAll('/models/taggings', {}).then((res: any) => {
+    findAll('/models/taggings', {'filter[dataset]': route.params.id}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('taggings')
@@ -217,158 +202,15 @@ const getTaggings = (lidarname: string) => {
 const transferData = ref<Option[]>()
 const transferDataValue = ref([])
 const directive = ref('')
-// 开始调试
-const startupDevice = () => {
-  getCurrentPorts()
-  if (sensorConfigsRef.value) {
-    sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
-  }
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "startup",
-        "devices": [],
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = true
-    switchLoading.value = false
-    ElMessage({
-      message: "设备正在启动中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    // showRecordOnDevice.value = true
-    switchLoading.value = false
-    console.error(err, 'err')
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
 
-    ElMessage({
-      message: "启动设备失败"+errmsg,
-      type: 'error',
-    })
-  })
-}
-// 结束调试
-const shutdownDevice = () => {
-  getCurrentPorts()
-  if (sensorConfigsRef.value) {
-    sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
-  }
-  // directive.value = 'shutdown'
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "shutdown",
-        "devices":[],
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = false
-    switchLoading.value = false
-    ElMessage({
-      message: "设备关闭中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    switchLoading.value = false
-    // showRecordOnDevice.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
-    console.error(err, 'err')
-    ElMessage({
-      message: "关闭设备失败"+errmsg,
-      type: 'error',
-    })
-  })
-}
-// 开始采集
-const recordOnDevice = () => {
-  getCurrentPorts()
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "recordOn",
-        "devices": currentSelectedSensorId.value,
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = false
-    switchLoading.value = false
-    ElMessage({
-      message: "设备正在采集中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    console.error(err, 'err')
-    switchLoading.value = false
-    // showRecordOnDevice.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
-    ElMessage({
-      message: "设备采集失败"+errmsg,
-      type: 'error',
-    })
-  })
-}
-// 结束采集
-const recordOffDevice = () => {
-  getCurrentPorts()
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "recordOff",
-        "devices": currentSelectedSensorId.value,
-        "viewport": viewportId.value
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = true
-    switchLoading.value = false
-    ElMessage({
-      message: "设备正在结束采集中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    // showRecordOnDevice.value = true
-    switchLoading.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
-    console.error(err, 'err')
-    ElMessage({
-      message: "结束采集失败"+errmsg,
-      type: 'error',
-    })
-  })
-}
 
+// 获取当前勾选设备的port
 const currentSelectedSensorId = ref([])
-
 const getCurrentPorts = () => {
   currentSelectedSensor.value = selectedLeafNodes.value.map(node => node.port)
   currentSelectedSensorId.value = selectedLeafNodes.value.map(node => node.deviceid)
 }
 
-//获取设备树
-const queryCurrentDrivers = () => {
-  try {
-    findAll('/models/viewports', {}).then((res: any) => {
-      viewportId.value = res.data.data[0].id
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.error(error)
-  }
-}
 
 //获取标签列表
 const tagData = ref([])
@@ -393,6 +235,33 @@ const getTags = (lidarname: string) => {
     console.error(error)
   }
 }
+
+const datasetData = ref(null)
+const deviceids = ref([])
+const datasetprefix = ref('')
+const getDatasetDetails = () => {
+  try {
+    findItem('/models/datasets', route.params.id).then((res: any) => {
+      gostore.reset()
+      datasetData.value = gostore.sync(res.data)
+      datasetprefix.value = datasetData.value.prefix
+      getDevices()
+    }).catch((err: any) => {
+      console.error(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const getDevices = () => {
+  deviceids.value = datasetData.value.devices
+  // if (sensorConfigsRef.value) {
+  //   sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+  // }
+}
+
+getDatasetDetails()
 
 const handleSelectTag = (tagData: any) => {
   const currentTime = new Date().toISOString()
@@ -486,42 +355,9 @@ const formatter = (thistime: any, fmt: string) => {
 }
 
 onMounted(() => {
-  queryCurrentDrivers()
+  // queryCurrentDrivers()
   getTags()
-
-  eventSource =new EventSource(
-    `${window.server.mecPrefix}/api/logger/events/alert`,
-    { withCredentials: true }
-  )
-
-  // 监听服务器发送的消息
-  eventSource.onmessage = (event) => {
-    message.value = JSON.parse(event.data); // 更新最新消息
-    const title = message.value?.alerts[0]?.labels?.alertname
-    const content = message.value?.commonAnnotations?.summary
-    const severity = message.value?.alerts[0]?.labels?.severity
-    ElNotification({
-      title: title,
-      type: severity !== '2' ? 'warning' : 'error',
-      message: content,
-      duration: 0,
-      position: 'bottom-right',
-    })
-  };
-
-  // 监听错误事件
-  eventSource.onerror = () => {
-    error.value = '连接失败或服务器错误';
-    eventSource.close(); // 关闭连接
-  };
 })
-
-onUnmounted(() => {
-  // 在组件卸载时关闭 SSE 连接
-  if (eventSource) {
-    eventSource.close();
-  }
-});
 
 </script>
 

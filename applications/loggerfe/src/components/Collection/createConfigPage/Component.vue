@@ -175,7 +175,7 @@ const loadRemoteComponent = async () => {
   try {
     // Step 1: Fetch the remote .vue file content
     // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
-    const response = await fetch(`http://logger.liangdao.ai.10.86.14.200.nip.io/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
 
     // Step 2: Parse the .vue file using @vue/compiler-sfc
