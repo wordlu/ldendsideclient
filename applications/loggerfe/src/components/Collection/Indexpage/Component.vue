@@ -14,10 +14,6 @@
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
-        <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button> -->
-        <!-- <el-button v-show="showRecordOnDevice" type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
-        <el-button v-show="testDevice && !showRecordOnDevice" style="margin-left: 0;" type="primary" class="info-btn" @click="recordOffDevice">结束采集</el-button> -->
-        <!-- <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
@@ -66,7 +62,6 @@
       :before-close="handleCheckTagsClose"
     >
       <el-table :data="taggingsTableData" height="360">
-        <!-- <el-table-column prop="tagid" label="标签ID" width="120"  show-overflow-tooltip /> -->
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
         <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/>
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
@@ -105,8 +100,8 @@
 </template>
 
 <script setup lang="ts">
-import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage } from 'element-plus';
-import { ref, computed, onMounted } from 'vue';
+import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
+import { ref, computed, onMounted, onUnmounted  } from 'vue';
 import { addItem, findAll, deleteItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
@@ -115,6 +110,11 @@ import sensorConfigs from '@/components/visualization/index/sensorConfigs.vue'
 import tagConfigs from '@/components/visualization/index/tagConfigs.vue'
 import gostore from '@/services/governance-store'
 import { MoreFilled } from "@element-plus/icons-vue"
+
+// 创建响应式变量
+const message = ref(null); // 用于存储 SSE 消息
+const error = ref(null);   // 用于存储错误信息
+let eventSource = null;    // 存储 EventSource 对象
 
 interface Option {
   key: number
@@ -488,7 +488,39 @@ const formatter = (thistime: any, fmt: string) => {
 onMounted(() => {
   queryCurrentDrivers()
   getTags()
+
+  eventSource =new EventSource(
+    "http://logger.liangdao.ai.10.86.14.200.nip.io/api/logger/events/alert",
+    { withCredentials: true }
+  )
+
+  // 监听服务器发送的消息
+  eventSource.onmessage = (event) => {
+    message.value = JSON.parse(event.data); // 更新最新消息
+    const title = message.value?.alerts[0]?.labels?.alertname
+    const content = message.value?.commonAnnotations?.summary
+    ElNotification({
+      title: title,
+      type: 'warning',
+      message: content,
+      duration: 0,
+      position: 'bottom-right',
+    })
+  };
+
+  // 监听错误事件
+  eventSource.onerror = () => {
+    error.value = '连接失败或服务器错误';
+    eventSource.close(); // 关闭连接
+  };
 })
+
+onUnmounted(() => {
+  // 在组件卸载时关闭 SSE 连接
+  if (eventSource) {
+    eventSource.close();
+  }
+});
 
 </script>
 
