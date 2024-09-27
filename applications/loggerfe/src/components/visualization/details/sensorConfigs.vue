@@ -424,7 +424,7 @@ const getStorage = () => {
 const storageVal = getStorage()
 
 const activeName = ref<string>('dataSources')
-const pointSize = ref<number>(storageVal.pointSize || 0.01) // 点云大小
+const pointSize = ref<number>(storageVal.pointSize || 0.1) // 点云大小
 const colorProp = ref<string>(storageVal.isFixColor ? 'fixed' : storageVal.colorProp) // 颜色策略
 const color = ref<string>('#00ffff') // 固定颜色值
 const minColorPropVal = ref<number>(storageVal.minColorPropVal || 0) // 颜色范围最小值

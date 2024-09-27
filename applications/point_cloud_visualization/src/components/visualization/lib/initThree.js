@@ -46,7 +46,7 @@ export { scene , renderer , controls , camera }
 //创建相机
 export const setCamera = (width, height) => {
   camera = new THREE.PerspectiveCamera(80, width / height, 0.1, 3000)
-  camera.position.set(0, -10, 80)
+  camera.position.set(0, 10, 20)
   camera.lookAt(0, 0, 0)
   camera.up.set(0, 0, 1)
   
@@ -57,7 +57,9 @@ export const setCamera = (width, height) => {
 
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableRotate = false; 
+  controls.enableRotate = false; // 禁用旋转
+  controls.enableZoom = false; // 禁用缩放
+  controls.enablePan = false; // 禁用平移  
   controls.addEventListener('change',()=>{
     renderer.render(scene, camera)
   })
