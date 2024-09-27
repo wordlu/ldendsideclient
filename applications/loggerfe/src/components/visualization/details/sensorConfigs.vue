@@ -15,7 +15,6 @@
           highlight-current
           @node-click="handleNodeClick"
           :props="defaultProps"
-          :render-content="renderContent"
           @check-change="handleCheckChange"
         />
       </div>
@@ -49,6 +48,20 @@
               <!-- <el-collapse v-model="activeName"> -->
                 <!-- 显示设置 -->
                 <!-- <el-collapse-item name="viewSet" :title="t('visualize.visibleSet')"> -->
+                  <div class="item-wrap">
+                    <span class="mr-6">视角</span>
+                    <div class="py-2">
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
+                        >XY</el-button
+                      >
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
+                        >XZ</el-button
+                      >
+                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
+                        >YZ</el-button
+                      >
+                    </div>
+                  </div>
                   <div class="item-wrap">
                     <span class="mr-2">点云大小</span>
                     <el-input-number
@@ -185,38 +198,6 @@ const defaultProps = {
   children: 'children',
   label: 'label',
 }
-
-// 自定义树节点的渲染内容
-const renderContent = (h, { node, data }) => {
-   if (!data.children && data.devicedata) {
-    return h('div',{
-        style: 'display:flex;align-items:center;',
-      },
-      [
-      h('div', {
-        style: 'margin-right: 20px;',
-      },node.label), // 节点标签
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&theme=light&panelId=4&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=9&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=10&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-      h('iframe', {
-      src: `http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&var-device=${data.devicedata.key}&panelId=7&theme=light&kiosk&refresh=5s`,
-      style: 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;',
-      }),
-    ]);
-  } else {
-    return h('span', node.label); // 非叶子节点只显示标签
-  }
-};
 
 const treedata = ref([])
 const sensorData = ref([])
@@ -445,7 +426,7 @@ const storageVal = getStorage()
 const activeName = ref<string>('dataSources')
 const pointSize = ref<number>(storageVal.pointSize || 0.01) // 点云大小
 const colorProp = ref<string>(storageVal.isFixColor ? 'fixed' : storageVal.colorProp) // 颜色策略
-const color = ref<string>(storageVal.color || '#ff0000') // 固定颜色值
+const color = ref<string>('#00ffff') // 固定颜色值
 const minColorPropVal = ref<number>(storageVal.minColorPropVal || 0) // 颜色范围最小值
 const maxColorPropVal = ref<number>(storageVal.maxColorPropVal || 100) // 颜色范围最大值
 const autoColorRange = ref<boolean>(storageVal.autoColorRange || false) // 是否是自动赋色
@@ -518,6 +499,10 @@ defineExpose({
 
   .mr-4 {
     margin-right: 28px;
+  }
+
+  .mr-6 {
+    margin-right: 42px;
   }
 }
 

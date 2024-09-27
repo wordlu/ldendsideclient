@@ -3,18 +3,6 @@
     <div class="grid-content ml">
       <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="width: 200px;margin-bottom: 20px;"/>
       <div class="tree-area">
-        <!-- <div class="tree-area-tree">
-          <div class="type" v-for="(item, index) in treedata" :key="index">
-            <div class="type-title">{{ item.label }}:</div>
-            <div class="type-content" v-for="item2 in item.children" :key="item2.id" @click="handleNodeClick(item2.label)">
-              <div class="type-content-title">{{ item2.label }}</div>
-              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
-              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
-              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
-              <iframe src="http://10.86.24.49:30000/d-solo/6Sn55l6Sk/device_status?orgId=1&theme=light&var-device=device2&panelId=3&kiosk" width="60" height="60" frameborder="0"></iframe>
-            </div>
-          </div>
-        </div> -->
         <el-tree
           ref="treeRef"
           style="width: 300px"

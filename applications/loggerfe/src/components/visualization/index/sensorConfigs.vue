@@ -33,6 +33,20 @@
           >
             <el-tab-pane label="显示设置" name="second">
               <div class="item-wrap">
+                <span class="mr-6">视角</span>
+                <div class="py-2">
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
+                    >XY</el-button
+                  >
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
+                    >XZ</el-button
+                  >
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
+                    >YZ</el-button
+                  >
+                </div>
+              </div>
+              <div class="item-wrap">
                 <span class="mr-2">点云大小</span>
                 <el-input-number
                   v-model="pointSize"
@@ -478,6 +492,10 @@ defineExpose({
 
   .mr-4 {
     margin-right: 28px;
+  }
+
+  .mr-6 {
+    margin-right: 42px;
   }
 }
 

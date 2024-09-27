@@ -7,8 +7,6 @@
       :default-active="$route.path"
       :router="true"
       class="el-menu-vertical-demo"
-      @open="handleOpen"
-      @close="handleClose"
       :collapse="isCollapse"
       :default-openeds="opends"
     >
@@ -35,7 +33,6 @@
             v-for="(subMenuItemData, subMenuIndex) in subMenuItem.menuItem"
             :key="subMenuIndex"
             :index="subMenuItemData.index"
-            @click="setPath(subMenuItemData)"
           >{{ subMenuItemData.title }}</el-menu-item>
         </el-submenu>
         <el-menu-item
@@ -64,7 +61,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { generateTitle } from "@/utils/i18n";
 import Cookies from "js-cookie";
 import axios from 'axios';
 // import { func_gts_ingress } from "@/api/ingress"
@@ -89,6 +85,7 @@ export default {
   },
   watch: {
     activeRouter (n, o) {
+      debugger
       this.getAllMenu();
     },
     "$i18n.locale" (newValue) {
@@ -103,10 +100,10 @@ export default {
     setIsCollapse () {
       this.isCollapse = !this.isCollapse;
     },
-    setPath (item) {
-    },
     async getAllMenu () {
-      if(this.$route.query && this.$route.query.logger && this.$route.query.logger === 'trash') {
+      if (this.$route.path === "/loggerfe/root/index") {
+        this.subMenu = []
+      } else if(this.$route.query && this.$route.query.logger && this.$route.query.logger === 'trash') {
         this.subMenu = [
           {
             index: '1',
@@ -195,13 +192,6 @@ export default {
       }
       
     },
-    handleOpen (key, keyPath) {
-      // console.log(key, keyPath);
-    },
-    handleClose (key, keyPath) {
-      // console.log(key, keyPath);
-    },
-    generateTitle,
   },
 };
 </script>

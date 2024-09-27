@@ -6,7 +6,7 @@
         <el-radio-button label="设备监控" value="设备监控" />
       </el-radio-group>
     </div>
-    <iframe v-show="title === '系统监控'" class="system-monitor" src="http://10.86.24.49:30000/?orgId=1&kiosk&refresh=5s&theme=light" frameborder="0"></iframe>
+    <iframe v-show="title === '系统监控'" class="system-monitor" src="http://ld.10.86.24.49.nip.io/monitor/?orgId=1&kiosk&refresh=5s&theme=light" frameborder="0"></iframe>
 
     <div class="form-area" v-show="title === '设备监控'">
       <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
@@ -24,7 +24,7 @@
         </el-option-group>
       </el-select>
     </div>
-    <iframe v-show="title === '设备监控'" class="device-monitor" :src="'http://10.86.24.49:30000/d/O_ciWJgHz/device?orgId=1&var-device='+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
+    <iframe v-show="title === '设备监控'" class="device-monitor" :src="'http://ld.10.86.24.49.nip.io/monitor/d/O_ciWJgHz/device?orgId=1&var-device='+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
   </div>
 </template>
 

@@ -9,40 +9,6 @@
         />
       </div>
       <div class="login-nav-right">
-        <!-- <span style="font-size: 14px;font-weight: bold;">端侧基线产品</span> -->
-        <!-- <div
-          class="userSet"
-          @click="clickAccount"
-        >
-          <img
-            class="userImg"
-            :src="require('@/assets/images/Ellipse 1.png')"
-            alt=""
-          />
-          <span class="account">
-            {{ account }}
-          </span>
-          <svg-icon
-            icon-class="down"
-            class="down"
-            style="width: 16px; height: 16px; margin-left: 8px"
-          />
-          <div
-            class="dropdown"
-            v-if="showDropdown"
-          >
-            <div
-              class="dropdown-item"
-              @click="logout"
-            >
-              {{ $t('common["退出登录"]') }}
-            </div>
-          </div>
-        </div>
-        <lang-select
-          class="right-menu-item hover-effect"
-          style="margin-left: 10px; margin-top: 9px"
-        /> -->
       </div>
     </div>
     <div id="main">
@@ -96,7 +62,14 @@ export default {
       } else {
         this.navMenutype = "Dropdown";
       }
-      this.activeRouter = to.path;
+      if (to.path === "/loggerfe/root/index") {
+        const routeUrl = this.$router.resolve({ path: to.path }).href;
+        window.open(routeUrl, '_blank');
+        this.$router.push({ path: from.path });
+        window.location.reload();
+      } else {
+        this.activeRouter = to.path;
+      }
     },
   },
   created () {
