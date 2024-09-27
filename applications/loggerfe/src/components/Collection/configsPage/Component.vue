@@ -461,8 +461,7 @@ queryDeviceDrivers()
 
 const loadRemoteComponent = async () => {
   try {
-    // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
-    const response = await fetch(`http://logger.liangdao.ai.10.86.14.200.nip.io/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
     const { descriptor } = parse(vueFile);
     const script = compileScript(descriptor, { id: 'remote-component' });

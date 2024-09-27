@@ -29,8 +29,10 @@
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
           :data="data" style="width: 100%">
-          <el-table-column property="name" label="数据集名称" />
-          <el-table-column property="size" label="数据集规模"/>
+          <el-table-column property="name" label="数据集名称" width="200" show-overflow-tooltip />
+          <el-table-column property="size" label="数据集规模" align="center" >
+            <template #default="scope">{{ getSize(scope.row.size) }}</template>
+          </el-table-column>
           <el-table-column property="prefix" label="存储位置"/>
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
@@ -80,6 +82,12 @@ const activeRow = ref<Row>({})
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
+
+const getSize = (size: number) => {
+  if (size >= 0) return `${(size / 1024 / 1024).toFixed(2)}M`
+  if (size === -1) return '正在采集'
+  return '---'
+}
 
 const nextPage = () => {
   queryDevice(current.value + 1)

@@ -490,7 +490,7 @@ onMounted(() => {
   getTags()
 
   eventSource =new EventSource(
-    "http://logger.liangdao.ai.10.86.14.200.nip.io/api/logger/events/alert",
+    `${window.server.mecPrefix}/api/logger/events/alert`,
     { withCredentials: true }
   )
 

@@ -167,7 +167,9 @@ const defaultProps = {
   label: 'label',
 }
 
-const renderContentUrl = 'http://ld.10.86.24.49.nip.io/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=3s&kiosk&theme=light'
+const monitorPrefix = ref(window.server.monitorPrefix)
+
+const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=3s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {

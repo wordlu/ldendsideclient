@@ -32,7 +32,7 @@
         />
       </div>
     </div>
-    <iframe class="system-monitor" :src="'http://ld.10.86.24.49.nip.io/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device='+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput" frameborder="0"></iframe>
+    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput" frameborder="0"></iframe>
   </div>
 </template>
 
@@ -40,6 +40,9 @@
 import { ref } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
+
+
+const monitorPrefix = ref(window.server.monitorPrefix)
 
 const logsinput = ref('')
 const sensorvalue = ref('')

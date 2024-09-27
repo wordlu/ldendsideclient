@@ -85,7 +85,6 @@ export default {
   },
   watch: {
     activeRouter (n, o) {
-      debugger
       this.getAllMenu();
     },
     "$i18n.locale" (newValue) {

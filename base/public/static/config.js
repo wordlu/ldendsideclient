@@ -1,4 +1,4 @@
 window.server = {
-  monitorPrefix: '.10.86.14.200.nip.io',
-  ssoPrefix: 'sso.10.86.14.200.nip.io',
+  monitorPrefix: 'http://ld.10.86.24.49.nip.io/monitor',
+  mecPrefix: 'http://ld.10.86.24.49.nip.io',
 }

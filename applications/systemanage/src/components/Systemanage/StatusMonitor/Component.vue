@@ -1,12 +1,13 @@
 <template>
   <div class="container">
-    <iframe class="system-monitor" :src="'http://ld.10.86.24.49.nip.io/monitor/d/WqBw1Ef4k/alert-overview?orgId=1&kiosk&refresh=5s&theme=light'" frameborder="0"></iframe>
+    <iframe class="system-monitor" :src="`/monitor/d/WqBw1Ef4k/alert-overview?orgId=1&kiosk&refresh=5s&theme=light`" frameborder="0"></iframe>
   </div>
 </template>
 
 <script lang="ts" setup>
-
-
+import { ref } from 'vue';
+const monitorPrefix = ref(window.server.monitorPrefix)
+console.log(monitorPrefix.value,'window.server.monitorPrefix')
 </script>
 
 <style lang="scss" scoped>
