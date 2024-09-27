@@ -43,7 +43,7 @@ let isData = false;
 
 /**
  * @wodelu
- * 1. 传两个数组，一个所有ip，一个当前连接ip，去进行对比
+ * 1. 两个数组参数，一个为所有ip，一个为当前连接ip，进行对比
  */
 let connectedIPs = []
 
@@ -52,6 +52,7 @@ let webSockets  = {}
 let ipList = []
 
 let ipvalue = 'ws://10.86.24.49'
+let reconnectInterval = null;    
 
 export const connectWebSocketArray = (portarray, allport) => {
   const currentport = portarray ? portarray.split(',') : []
@@ -85,7 +86,8 @@ export const connectWebSocket = (ip) => {
   socket.onopen = () => {
     webSockets[ip].status = 'Connected';
     connectedIPs.push(ip);
-    console.log(`Connected to ${ip}`);
+    clearInterval(reconnectInterval);
+    console.log(`socket.onopen: Connected to ${ip}`);
   };
 
   socket.onmessage = (event) => {
@@ -101,11 +103,27 @@ export const connectWebSocket = (ip) => {
     if (index > -1) {
       connectedIPs.splice(index, 1);
     }
-    console.log(`Disconnected from ${ip}`);
+    if (!reconnectInterval) {
+      reconnectInterval = setInterval(() => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          console.log('尝试重新连接 WebSocket...');
+          connectWebSocket(ip);
+        }
+      }, 10000);
+    }
+    console.log(`socket.onclose: Disconnected from ${ip}`);
   };
 
   socket.onerror = (error) => {
-    console.error('WebSocket error:', error)
+    if (!reconnectInterval) {
+      reconnectInterval = setInterval(() => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          console.log('尝试重新连接 WebSocket...');
+          connectWebSocket(ip);
+        }
+      }, 10000);
+    }
+    console.error('socket.onerror: WebSocket error:', error)
   }
 }
 
