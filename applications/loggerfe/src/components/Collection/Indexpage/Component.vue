@@ -499,9 +499,10 @@ onMounted(() => {
     message.value = JSON.parse(event.data); // 更新最新消息
     const title = message.value?.alerts[0]?.labels?.alertname
     const content = message.value?.commonAnnotations?.summary
+    const severity = message.value?.alerts[0]?.labels?.severity
     ElNotification({
       title: title,
-      type: 'warning',
+      type: severity !== '2' ? 'warning' : 'error',
       message: content,
       duration: 0,
       position: 'bottom-right',

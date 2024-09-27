@@ -5,10 +5,8 @@
 </template>
 
 <script lang="ts">
-/* eslint-disable */
-// @ts-nocheck
+
 import { Vue } from 'vue-class-component';
-// import HelloWorld from './components/HelloWorld.vue';
 
 export default class App extends Vue {}
 
