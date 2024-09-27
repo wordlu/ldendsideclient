@@ -1,0 +1,7 @@
+// @use './styles/element/index.scss' as *;
+@import 'styles/common.scss';
+@import 'styles/media.scss';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

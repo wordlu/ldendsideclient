@@ -1,0 +1,40 @@
+<script setup>
+import { ref } from 'vue';
+import { dataSetStore } from '../../pinia/dataSet';
+const dataSet = dataSetStore();
+const activeCamInfo = ref(dataSet.activeCamInfo);
+
+const cutActiveCam = (value)=>{
+  dataSet.activeCam.cam = value
+  dataSet.activeCam.value = dataSet.activeCamInfo[value]
+}
+</script>
+
+<template>
+  <div id="cameras">
+    <div class="cameras-item" v-for="(key,value) in activeCamInfo" :key="value" @click="cutActiveCam(value)">
+      <img :src="key" style="width: 100%;">
+    </div>
+  </div>
+</template>
+
+<style lang="scss">
+#cameras{
+  width: 400px;
+  height: 250px;
+  background: #191919;
+  position: absolute;
+  right: 8px;
+  bottom: 65px;
+  z-index: 999;
+  display: flex;
+  flex-wrap: wrap;
+  .cameras-item{
+    width: 200px;
+    height: 125px;
+    color: aliceblue;
+    box-shadow: 0px 0px 2px 0px rgba(235, 233, 233, 0.2);
+    cursor: pointer;
+  }
+}
+</style>
