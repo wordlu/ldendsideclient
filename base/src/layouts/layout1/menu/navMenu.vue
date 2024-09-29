@@ -177,7 +177,7 @@ export default {
               },
               {
                 index: '/systemanage/statusmonitor',
-                title: '状态监控',
+                title: '事件监控',
                 policy: "pagestatusmonitor",
               },
               {
