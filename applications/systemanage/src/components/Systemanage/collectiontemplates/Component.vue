@@ -11,7 +11,8 @@
             <b class="title">采集模版管理<span class="count">({{ count }})</span></b>
           </div>
           <div class="info-btn-group">
-            <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button>
+            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button> -->
+            <el-button disabled class="info-btn">拉取采集模版</el-button>
           </div>
         </div>
       </div>

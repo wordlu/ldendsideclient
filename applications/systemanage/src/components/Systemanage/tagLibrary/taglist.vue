@@ -11,56 +11,19 @@
             <b class="title">标签管理<span class="count"></span></b>
           </div>
           <div class="info-btn-group">
-            <el-button type="primary" class="info-btn" @click="trigger">拉取标签</el-button>
+            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取标签</el-button> -->
+            <el-button disabled class="info-btn">拉取标签</el-button>
           </div>
         </div>
       </div>
       <div class="mid-panel">
         <el-input v-model="search.input" class="search-bar" placeholder="搜索标签名称" :prefix-icon="Search" clearable />
-        <!-- <div class="mid-group">
-          <div class="ver-mid">
-            <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
-          </div>
-          <el-text size="large">{{ current + 1 }}</el-text>
-          <div class="ver-mid">
-            <el-button type="text" :disabled="current === 0" :icon="ArrowLeftBold" @click="prevPage" />
-          </div>
-        </div> -->
       </div>
     </div>
-    <!-- 头部 -->
-    <!-- <div class="header">
-      <div class="title">
-        <div class="Grey-Background-box">
-          <img src="/icon/default/标签库图标.svg" style="width: 40px;height: 40px;" alt="">
-        </div>
-        <span>标签管理</span>
-      </div>
-      <div class="btn-add">
-        <el-button type="primary" @click="openAddtagsTrip()">
-         拉取标签
-        </el-button>
-      </div>
-    </div> -->
-    
-    <!-- 筛选 -->
-    <!-- <div class="search">
-      <div class="search-input">
-        <el-input
-          :placeholder="$t(`common['搜索标签名称']`)"
-          style="height:40px;width:320px"
-          clearable
-          v-model="search.input">
-        </el-input>
-      </div>
-    </div> -->
-
     <!-- 列表 -->
     <div class="table_list">
       <tagTable :reList="reList" :search="search" @showDetailClick="showDetailClick" />
     </div>
-    <!-- <addTripTags @setAddTagsInnerVisible="setAddTagsInnerVisibleTrip" :innerVisible="addTagsInnerVisibleTrip" v-if="addTagsInnerVisibleTrip"/> -->
-    <!--  -->
     <el-dialog
       id="addTags"
       width="30%"
