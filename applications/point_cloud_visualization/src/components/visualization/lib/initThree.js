@@ -57,9 +57,9 @@ export const setCamera = (width, height) => {
 
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableRotate = false; // 禁用旋转
-  controls.enableZoom = false; // 禁用缩放
-  controls.enablePan = false; // 禁用平移  
+  // controls.enableRotate = false; // 禁用旋转
+  // controls.enableZoom = false; // 禁用缩放
+  // controls.enablePan = false; // 禁用平移  
   controls.addEventListener('change',()=>{
     renderer.render(scene, camera)
   })
