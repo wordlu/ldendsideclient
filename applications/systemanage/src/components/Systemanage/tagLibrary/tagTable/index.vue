@@ -314,7 +314,7 @@ export default {
 
     /* 01 Netural/N700 */
 
-    color: #2D2F39;
+    // color: #2D2F39;
 
 
     /* Inside auto layout */

@@ -66,7 +66,7 @@
         <!-- <el-table-column prop="tagid" label="标签ID" width="120"  show-overflow-tooltip /> -->
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
         <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/>
-        <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
+        <!-- <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/> -->
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss") }}</template>
         </el-table-column>
