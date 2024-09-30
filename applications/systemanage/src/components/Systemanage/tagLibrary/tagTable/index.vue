@@ -6,6 +6,7 @@
       style="width: 100%;height: calc(100% - 70px);overflow: auto;">
       <el-table-column
         label="标签"
+        align="center"
         width="210px">
         <template #default="scope">
           <div class="table-icon">
@@ -19,62 +20,43 @@
         </template>
       </el-table-column>
       <el-table-column
-        prop="size"
+        prop="name"
         align="center"
-        label="标签名称">
+        label="名称">
         <template #default="scope">
           {{ scope.row.name }}
         </template>
       </el-table-column>
       <el-table-column
-        prop="updated"
-        label="备注">
+        prop="category"
+        align="center"
+        label="类型">
         <template #default="scope">
           <!-- {{ scope.row.notes }} -->
           {{ scope.row.category }}
         </template>
       </el-table-column>
       <el-table-column
-        prop="updated"
-        label="时间">
+        prop="created"
+        align="center"
+        label="创建时间">
         <template #default="scope">
           {{ formatter(scope.row.created,"yyyy-MM-dd hh:mm:ss") }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="操作"
-        width="50px">
-        <template>
-          <el-dropdown trigger="click" @click="handleCommand">
-            <span class="el-dropdown-link">
-              <el-icon class="el-icon--right"><MoreFilled /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item :icon="Plus">Action 1</el-dropdown-item>
-                <el-dropdown-item :icon="CirclePlusFilled">
-                  Action 2
-                </el-dropdown-item>
-                <el-dropdown-item :icon="CirclePlus">Action 3</el-dropdown-item>
-                <el-dropdown-item :icon="Check">Action 4</el-dropdown-item>
-                <el-dropdown-item :icon="CircleCheck">Action 5</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-
         </template>
       </el-table-column>
     </el-table>
 
     <div class="paging">
-      <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        v-model:current-page.sync="currentPage"
-        :page-size="10"
-        layout="prev, pager, next, jumper"
-        :total="total">
-      </el-pagination>
+      <el-config-provider :locale="locale">
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          v-model:current-page.sync="currentPage"
+          :page-size="10"
+          layout="total, prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </el-config-provider>
     </div>
   </div>
 </template>
@@ -82,9 +64,9 @@
 <script>
 import { h, ref } from 'vue'
 import { findAll} from '@/api/jsonApi'
-
+import zhCn from "element-plus/es/locale/lang/zh-cn"
 import gostore from '@/services/governance-store'
-import { ElMessageBox, ElSwitch } from 'element-plus'
+import { ElMessageBox, ElSwitch, ElConfigProvider } from 'element-plus'
 export default {
   props:{
     search:Object,
@@ -125,6 +107,11 @@ export default {
   },
   created(){
     this.getList()
+  },
+  setup() {
+    return {
+      locale: zhCn,
+    };
   },
   methods: {
     filterTags(tags){
@@ -280,9 +267,9 @@ export default {
 .tag_table{
   height: 100%;
   padding-top: 15px;
-  .el-table__header-wrapper{
-    display: none;
-  }
+  // .el-table__header-wrapper{
+  //   display: none;
+  // }
   .table-icon{
     .icon-item{
       min-width: 32px;
@@ -327,7 +314,7 @@ export default {
 
     /* 01 Netural/N700 */
 
-    color: #2D2F39;
+    // color: #2D2F39;
 
 
     /* Inside auto layout */

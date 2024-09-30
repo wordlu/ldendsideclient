@@ -1,5 +1,7 @@
 <template>
-  <div class="index-page">
+  <div class="index-page" 
+    :element-loading-text="loadingtext"
+    v-loading="pageLoading" >
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
@@ -63,7 +65,7 @@
     >
       <el-table :data="taggingsTableData" height="360">
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
-        <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/>
+        <!-- <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/> -->
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss") }}</template>
@@ -110,7 +112,10 @@ import sensorConfigs from '@/components/visualization/index/sensorConfigs.vue'
 import tagConfigs from '@/components/visualization/index/tagConfigs.vue'
 import gostore from '@/services/governance-store'
 import { MoreFilled } from "@element-plus/icons-vue"
+import { useRouter } from 'vue-router';
 
+// 获取当前路由对象
+const router = useRouter();
 // 创建响应式变量
 const message = ref(null); // 用于存储 SSE 消息
 const error = ref(null);   // 用于存储错误信息
@@ -130,6 +135,8 @@ const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
+const loadingtext = ref('')
+const pageLoading = ref(false)
 const switchLoading = ref(false)
 const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
@@ -236,6 +243,8 @@ const startupDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
+    pageLoading.value = true
+    loadingtext.value = '设备启动中，请稍后...'
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
@@ -303,6 +312,8 @@ const recordOnDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
+    pageLoading.value = true
+    loadingtext.value = '设备采集中，请稍后...'
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
@@ -334,6 +345,8 @@ const recordOffDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
+    pageLoading.value = true
+    loadingtext.value = '设备结束采集中，请稍后...'
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
@@ -485,6 +498,11 @@ const formatter = (thistime: any, fmt: string) => {
   return fmt
 }
 
+const gotologsanalyze = () => {
+  const routeUrl = router.resolve({ path: '/systemanage/statusmonitor' }).href;
+  window.open(routeUrl, '_blank');
+}
+
 onMounted(() => {
   queryCurrentDrivers()
   getTags()
@@ -500,13 +518,24 @@ onMounted(() => {
     const title = message.value?.alerts[0]?.labels?.alertname
     const content = message.value?.commonAnnotations?.summary
     const severity = message.value?.alerts[0]?.labels?.severity
-    ElNotification({
-      title: title,
-      type: severity !== '2' ? 'warning' : 'error',
-      message: content,
-      duration: 0,
-      position: 'bottom-right',
-    })
+    const state = message.value?.alerts[0]?.labels?.state
+
+    if (state === '0') {
+      pageLoading.value = false
+      ElNotification({
+        title: '收到一条新事件',
+        type: severity !== '2' ? 'warning' : 'error',
+        message: content,
+        duration: 5000,
+        position: 'bottom-right',
+        onClick() {
+          gotologsanalyze();
+        },
+      })
+    } else if (state == '1') {
+      pageLoading.value = false
+    }
+    
   };
 
   // 监听错误事件

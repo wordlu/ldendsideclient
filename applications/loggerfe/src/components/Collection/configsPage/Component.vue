@@ -60,7 +60,6 @@
                 v-model="activeName"
                 type="card"
                 class="demo-tabs"
-                @tab-click="handleClick"
               >
                 <el-tab-pane label="设备配置" name="first">
                     <el-form :model="form" label-width="auto" style="max-width: 600px">
@@ -221,12 +220,6 @@ const onSubmit = async () => {
   }
 }
 
-
-
-const handleClick = (tab: TabsPaneContext, event: Event) => {
-  console.log(tab, event)
-}
-
 const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 const selectedNode = ref(null);
@@ -347,7 +340,7 @@ const totree = () => {
     // 如果没有找到，创建一个新的节点
     if (!parent) {
       parent = {
-        id: tree.length + 1,  // 自动生成id
+        id: sensor.type,  // 自动生成id
         label: sensor.type,   // 使用type作为label
         children: []
       };
@@ -356,7 +349,7 @@ const totree = () => {
 
     // 添加子节点（对应传感器的坐标点）
     parent.children.push({
-      id: parent.children.length + 1 + tree.length,  // 子节点id
+      id: sensor.type+'_'+sensor.id,  // 子节点id
       label: sensor.id,   
       type: sensor.type    // 用坐标作为label
     });
@@ -380,7 +373,9 @@ const resizeCanvas = () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await queryDeviceDrivers()
+  queryCurrentDrivers()
   resizeCanvas();
   // 监听 parent 大小变化
   watchEffect(() => {
@@ -390,7 +385,8 @@ onMounted(() => {
 
 // 弹窗提示
 const showPopup = (sensor) => {
-  alert(`Sensor Type: ${sensor.type}, Position: (${sensor.x}, ${sensor.y})`);
+  const node = treeRef.value.getNode(sensor.type+'_'+sensor.id);
+  handleNodeClick(node.data, node)
 };
 
 const createSensorCanvas = (treeData) => {
@@ -454,10 +450,6 @@ const handleCanvasClick = (event) => {
     }
   });
 };
-
-
-queryCurrentDrivers()
-queryDeviceDrivers()
 
 const loadRemoteComponent = async () => {
   try {
