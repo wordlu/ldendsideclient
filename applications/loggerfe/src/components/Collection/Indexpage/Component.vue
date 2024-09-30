@@ -1,5 +1,7 @@
 <template>
-  <div class="index-page" v-loading="pageLoading">
+  <div class="index-page" 
+    :element-loading-text="loadingtext"
+    v-loading="pageLoading" >
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
@@ -133,6 +135,7 @@ const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
+const loadingtext = ref('')
 const pageLoading = ref(false)
 const switchLoading = ref(false)
 const showRecordOnDevice = ref(false)
@@ -241,6 +244,7 @@ const startupDevice = () => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
     pageLoading.value = true
+    loadingtext.value = '设备启动中，请稍后...'
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
@@ -309,7 +313,7 @@ const recordOnDevice = () => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
     pageLoading.value = true
-
+    loadingtext.value = '设备采集中，请稍后...'
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
@@ -342,6 +346,7 @@ const recordOffDevice = () => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
     pageLoading.value = true
+    loadingtext.value = '设备结束采集中，请稍后...'
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
