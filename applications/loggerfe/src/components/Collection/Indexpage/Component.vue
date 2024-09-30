@@ -499,7 +499,7 @@ const formatter = (thistime: any, fmt: string) => {
 }
 
 const gotologsanalyze = () => {
-  const routeUrl = router.resolve({ path: '/systemanage/logsanalyze' }).href;
+  const routeUrl = router.resolve({ path: '/systemanage/statusmonitor' }).href;
   window.open(routeUrl, '_blank');
 }
 
@@ -526,7 +526,7 @@ onMounted(() => {
         title: '收到一条新事件',
         type: severity !== '2' ? 'warning' : 'error',
         message: content,
-        duration: 0,
+        duration: 5000,
         position: 'bottom-right',
         onClick() {
           gotologsanalyze();
