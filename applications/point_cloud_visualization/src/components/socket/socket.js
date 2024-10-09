@@ -51,7 +51,8 @@ let webSockets  = {}
 
 let ipList = []
 
-let ipvalue = 'ws://10.86.24.49'
+// let ipvalue = 'ws://10.86.24.49'
+let ipvalue = `ws://${window.parent.location.hostname}`
 let reconnectInterval = null;    
 
 export const connectWebSocketArray = (portarray, allport) => {

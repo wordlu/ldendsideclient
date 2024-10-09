@@ -14,7 +14,7 @@ function getQueryString(name) {
   return null;
 }
 
-const podUrl = ref('ws://ld.10.86.24.49.nip.io/replay/');
+const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
