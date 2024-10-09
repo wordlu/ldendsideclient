@@ -145,9 +145,9 @@ const getSensoronfigs = (lidarname: string) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')
-      if(datavalue.length > 0) {
+      if(datavalue.length > 0 && datavalue[0].type === 'lidar') {
         setConfigValue.value = false
-        loadRemoteComponent()
+        // loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
