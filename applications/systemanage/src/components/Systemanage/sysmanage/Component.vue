@@ -13,22 +13,22 @@
         </div>
       </div>
       <div class="cards">
-        <el-row :gutter="8" class="rows">
+        <el-row :gutter="8" class="sys-rows rows">
           <el-col :span="25">
             <el-card shadow="always">
-              <div class="title">总CPU</div>
+              <div class="title">CPU</div>
               <div class="content">{{ data.cpus }}</div>
             </el-card>
           </el-col>
           <el-col :span="25">
             <el-card shadow="always">
-              <div class="title">总内存</div>
+              <div class="title">内存</div>
               <div class="content">{{ data.mems }}</div>
             </el-card>
           </el-col>
           <el-col :span="25">
             <el-card shadow="always">
-              <div class="title">总存储</div>
+              <div class="title">硬盘</div>
               <div class="content">{{ data.storages }}</div>
             </el-card>
           </el-col>
@@ -76,13 +76,37 @@ import gostore from '@/services/governance-store'
 const data = reactive({})
 const networkInterfaces = ref([])
 
-const queryEnvs = () => {
+
+const queryCurrentDrivers = () => {
   try {
-    findAll('/sys/envs', {}).then((res: any) => {
+    findAll('/models/viewports', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      const datavalue = gostore.findAll('envs')
-      Object.assign(data, datavalue[0]);
+      const datavalue = gostore.findAll('viewports')
+      if(datavalue.length > 0) {
+        querySystemInfos(datavalue[0].id)
+      }
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const querySystemInfos = (id: any) => {
+  try {
+    findAll('/sys/system-infos', {'filter[viewport]': id}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('system-infos')
+      const sysinfos = datavalue[0].infos
+      const sysconfigs = sysinfos.find(it => it.name === '系统配置')?.items
+      data.version = sysinfos.find(it => it.name === '产品版本')?.value
+      data.sysversion = sysinfos.find(it => it.name === '系统版本')?.value
+      data.storages = sysconfigs.find(it => it.name === '硬盘')?.value
+      data.mems = sysconfigs.find(it => it.name === '内存')?.value
+      data.cpus = sysconfigs.find(it => it.name === 'CPU')?.value
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -90,6 +114,21 @@ const queryEnvs = () => {
     console.log(error)
   }
 }
+
+// const queryEnvs = () => {
+//   try {
+//     findAll('/sys/envs', {}).then((res: any) => {
+//       gostore.reset()
+//       gostore.sync(res.data)
+//       const datavalue = gostore.findAll('envs')
+//       Object.assign(data, datavalue[0]);
+//     }).catch((err: any) => {
+//       console.log(err, 'err')
+//     })
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 
 const queryNetworkInterfaces = () => {
   try {
@@ -106,8 +145,10 @@ const queryNetworkInterfaces = () => {
   }
 }
 
-queryEnvs()
+// queryEnvs()
 queryNetworkInterfaces()
+queryCurrentDrivers()
+
 </script>
 
 <style lang="scss" scoped>
@@ -129,6 +170,15 @@ queryNetworkInterfaces()
   }
 
   .cards {
+
+    .sys-rows {
+      
+      ::v-deep .el-card__body {
+        height: 100px;
+      }
+
+    }
+
     .rows {
       margin-bottom: 10px;
 
