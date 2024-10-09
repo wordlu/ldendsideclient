@@ -49,6 +49,7 @@
                 <span class="mr-2">点云大小</span>
                 <el-input-number
                   v-model="pointSize"
+                  class="size-input"
                   size="small"
                   :min="0.0001"
                   :max="10"
@@ -472,6 +473,14 @@ defineExpose({
 
   .mr-6 {
     margin-right: 42px;
+  }
+
+  .size-input {
+    width: 180px;
+
+    ::v-deep .el-input__wrapper {
+      width: 180px;
+    }
   }
 }
 
