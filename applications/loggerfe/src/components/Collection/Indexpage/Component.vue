@@ -9,7 +9,7 @@
     <div class="panel">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">设备调试</div>
+          <div style="margin-right: 4px;">设备初始化</div>
           <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
