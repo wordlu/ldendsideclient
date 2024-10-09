@@ -1,38 +1,48 @@
 <template>
   <div class="container">
-    <div class="form-area">
-      <div>
-        <el-input v-model="logsinput" style="width: 240px" placeholder="搜索日志" />
-      </div>
-
-      <div style="margin-left: 20px;">
-        <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
-          <el-option-group
-            v-for="group in options"
-            :key="group.label"
-            :label="group.label"
+    <el-form  label-width="auto" :inline="true">
+      <div class="form-area">
+        <el-form-item label="传感器">
+          <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
+            <el-option-group
+              v-for="group in options"
+              :key="group.label"
+              :label="group.label"
+            >
+              <el-option
+                v-for="item in group.options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-option-group>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="应用">
+          <el-select
+            v-model="containerValue"
           >
-            <el-option
-              v-for="item in group.options"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-option-group>
-        </el-select>
+            <el-option label="设备" value="device" />
+            <el-option label="可视化" value="display" />
+            <el-option label="监控" value="monitor" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="datetimerange"
+            range-separator="To"
+            start-placeholder="Start date"
+            end-placeholder="End date"
+          />
+        </el-form-item>
+        
+        <el-form-item label="搜索">
+          <el-input v-model="logsinput" style="width: 240px" placeholder="搜索日志内容" />
+        </el-form-item>
       </div>
-      
-      <div style="width: 300px; margin-left: 20px;">
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          range-separator="To"
-          start-placeholder="Start date"
-          end-placeholder="End date"
-        />
-      </div>
-    </div>
-    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput" frameborder="0"></iframe>
+    </el-form>
+    <iframe class="system-monitor" :src="`http://ld.10.86.24.61.nip.io/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput+'&container='+containerValue" frameborder="0"></iframe>
   </div>
 </template>
 
@@ -46,6 +56,7 @@ const monitorPrefix = ref(window.server.monitorPrefix)
 
 const logsinput = ref('')
 const sensorvalue = ref('')
+const containerValue = ref('device')
 const options = ref([])
 // 获取当前时间和前一小时的时间
 const currentTime = new Date();
