@@ -30,67 +30,36 @@
             class="demo-tabs"
             @tab-click="handleClick"
           >
-            <!-- <el-tab-pane label="设备配置" name="first">
-                <el-form :model="form" label-width="auto" style="max-width: 600px">
-                  <el-form-item label="设备类型">
-                    <el-select v-model="form.region" placeholder="please select your zone">
-                      <el-option label="Zone one" value="shanghai" />
-                      <el-option label="Zone two" value="beijing" />
-                    </el-select>
-                  </el-form-item>
-                  <div v-if="RemoteComponent">
-                    <component :is="RemoteComponent"></component>
-                  </div>
-                </el-form>
-            </el-tab-pane> -->
             <el-tab-pane label="显示设置" name="second">
-              <!-- 可折叠配置 -->
-              <!-- <el-collapse v-model="activeName"> -->
-                <!-- 显示设置 -->
-                <!-- <el-collapse-item name="viewSet" :title="t('visualize.visibleSet')"> -->
-                  <div class="item-wrap">
-                    <span class="mr-6">视角</span>
-                    <div class="py-2">
-                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
-                        >XY</el-button
-                      >
-                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
-                        >XZ</el-button
-                      >
-                      <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
-                        >YZ</el-button
-                      >
-                    </div>
-                  </div>
-                  <div class="item-wrap">
-                    <span class="mr-2">点云大小</span>
-                    <el-input-number
-                      v-model="pointSize"
-                      size="small"
-                      :min="0.0001"
-                      :max="10"
-                      :step="0.01"
-                      @change="changePointSize" />
-                  </div>
-                  <!-- <div class="item-wrap">
-                    <div class="flex mt-4">
-                      <span class="mr-2">颜色属性</span>
-                      <el-select
-                        v-model="colorProp"
-                        size="small"
-                        @change="changeColorProp">
-                        <el-option v-for="item in colorPropOpt" :key="item" :label="item" :value="item" />
-                        <el-option key="isFixColor" lable="fixed" value="fixed"></el-option>
-                      </el-select>
-                    </div>
-                  </div> -->
-                  <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-                  <div v-if="colorProp === 'fixed'" class="item-wrap">
-                    <span class="mr-4">颜色值</span>
-                    <el-color-picker v-model="color" size="small" @change="changeColorProp" />
-                  </div>
-                <!-- </el-collapse-item>
-              </el-collapse> -->
+              <div class="item-wrap">
+                <span class="mr-6">视角</span>
+                <div class="py-2">
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
+                    >XY</el-button
+                  >
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
+                    >XZ</el-button
+                  >
+                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
+                    >YZ</el-button
+                  >
+                </div>
+              </div>
+              <div class="item-wrap">
+                <span class="mr-2">点云大小</span>
+                <el-input-number
+                  v-model="pointSize"
+                  size="small"
+                  :min="0.0001"
+                  :max="10"
+                  :step="0.01"
+                  @change="changePointSize" />
+              </div>
+              <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
+              <div v-if="colorProp === 'fixed'" class="item-wrap">
+                <span class="mr-4">颜色值</span>
+                <el-color-picker v-model="color" size="small" @change="changeColorProp" />
+              </div>
             </el-tab-pane>
           </el-tabs>
         </div>
