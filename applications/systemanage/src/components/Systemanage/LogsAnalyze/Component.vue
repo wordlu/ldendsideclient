@@ -2,7 +2,7 @@
   <div class="container">
     <el-form  label-width="auto" :inline="true">
       <div class="form-area">
-        <el-form-item label="传感器">
+        <el-form-item label="设备">
           <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
             <el-option-group
               v-for="group in options"
@@ -28,13 +28,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="时间">
-          <el-date-picker
-            v-model="dateRange"
-            type="datetimerange"
-            range-separator="To"
-            start-placeholder="Start date"
-            end-placeholder="End date"
-          />
+          <el-config-provider :locale="locale">
+            <el-date-picker
+              :clearable="false"
+              v-model="dateRange"
+              type="datetimerange"
+              range-separator="-"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              :disabledDate="disabledDateFn"
+            />
+          </el-config-provider>
         </el-form-item>
         
         <el-form-item label="搜索">
@@ -47,11 +51,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
+import zhCn from "element-plus/es/locale/lang/zh-cn"
 
-
+const locale = zhCn
 const monitorPrefix = ref(window.server.monitorPrefix)
 
 const logsinput = ref('')
@@ -67,6 +72,10 @@ const dateRange = ref([oneHourBefore, currentTime]);
 
 const getTimestamp = (date: Date) => {
   return Math.floor(date.getTime())
+}
+
+const disabledDateFn = (time: any) => {
+    return time.getTime() > currentTime.getTime()
 }
 
 const queryCurrentDrivers = () => {
