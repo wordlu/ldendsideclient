@@ -13,7 +13,8 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
-          <el-button type="primary" style="margin-left: 30px;" @click="startupDevice">设备初始化</el-button>
+          <el-button type="primary" style="margin-left: 30px;" @click="startupDevice">启动设备</el-button>
+          <el-button type="primary" style="margin-left: 30px;" @click="shutdownDevice">关闭设备</el-button>
         </div>
       </div>
     </div>
@@ -515,7 +516,7 @@ const loadRemoteComponent = async () => {
 };
 
 
-// 设备初始化
+// 启动设备
 const startupDevice = () => {
   const params = {
     "data": {
@@ -542,10 +543,44 @@ const startupDevice = () => {
   }).catch((err: any) => {
     pageLoading.value = false
     console.error(err, 'err')
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+    const errmsg = err?.response?.data?.errors[0]?.detail
 
     ElMessage({
-      message: "启动设备失败"+errmsg,
+      message: "启动设备失败: "+errmsg,
+      type: 'error',
+    })
+
+    // @wodelu:TODO
+    setTimeout(() => {
+      pageLoading.value = false
+      const routeUrl = router.resolve({ path: '/loggerfe/root/index' }).href;
+      window.open(routeUrl, '_blank');
+    }, 100)
+  })
+}
+
+// 关闭设备
+const shutdownDevice = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "shutdown",
+        "devices":[],
+        "viewport": currentViewport.value.id
+      }
+    }
+  }
+  addItem('/models/actions', params).then((res: any) => {
+    ElMessage({
+      message: "设备关闭中",
+      type: 'success',
+    })
+  }).catch((err: any) => {
+    const errmsg = err?.response?.data?.errors[0]?.detail
+    console.error(err, 'err')
+    ElMessage({
+      message: "关闭设备失败"+errmsg,
       type: 'error',
     })
   })

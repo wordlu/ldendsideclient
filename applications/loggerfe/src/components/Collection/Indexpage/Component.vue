@@ -8,16 +8,16 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+        <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备初始化</div>
           <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
-        </div>
+        </div> -->
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
-        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
-        <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
+        <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <el-button class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
     </div>
     <div
@@ -103,7 +103,7 @@
 
 <script setup lang="ts">
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
-import { ref, computed, onMounted, onUnmounted  } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, onUnmounted  } from 'vue';
 import { addItem, findAll, deleteItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
@@ -253,7 +253,7 @@ const startupDevice = () => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
     console.error(err, 'err')
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+    const errmsg = err?.response?.data?.errors[0]?.detail
 
     ElMessage({
       message: "启动设备失败"+errmsg,
@@ -288,7 +288,7 @@ const shutdownDevice = () => {
   }).catch((err: any) => {
     switchLoading.value = false
     // showRecordOnDevice.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+    const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
     ElMessage({
       message: "关闭设备失败"+errmsg,
@@ -322,7 +322,7 @@ const recordOnDevice = () => {
     console.error(err, 'err')
     switchLoading.value = false
     // showRecordOnDevice.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+    const errmsg = err?.response?.data?.errors[0]?.detail
     ElMessage({
       message: "设备采集失败"+errmsg,
       type: 'error',
@@ -354,7 +354,7 @@ const recordOffDevice = () => {
   }).catch((err: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
-    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+    const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
     ElMessage({
       message: "结束采集失败"+errmsg,
@@ -503,7 +503,16 @@ const gotologsanalyze = () => {
   window.open(routeUrl, '_blank');
 }
 
+// 监听浏览器事件
+function handleBeforeUnload(event) {
+  event.preventDefault();
+  event.returnValue = ''; // 某些浏览器需要设置一个返回值来触发提示框
+}
+
 onMounted(() => {
+  window.top.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
   queryCurrentDrivers()
   getTags()
 
@@ -544,6 +553,11 @@ onMounted(() => {
     eventSource.close(); // 关闭连接
   };
 })
+
+onBeforeUnmount(() => {
+  window.top.removeEventListener('beforeunload', handleBeforeUnload);
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
 
 onUnmounted(() => {
   // 在组件卸载时关闭 SSE 连接
