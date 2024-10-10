@@ -1,6 +1,8 @@
 <!--采集配置 -->
 <template>
-  <div class="config-container">
+  <div class="config-container"  
+    :element-loading-text="loadingtext"
+    v-loading="pageLoading" >
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集配置</el-breadcrumb-item>
@@ -11,7 +13,7 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
-          <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" /> -->
+          <el-button type="primary" style="margin-left: 30px;" @click="startupDevice">设备初始化</el-button>
         </div>
       </div>
     </div>
@@ -112,6 +114,10 @@ interface Tree {
   label: string
   children?: Tree[]
 }
+
+const loadingtext = ref('')
+const pageLoading = ref(false)
+
 const router = useRouter();
 const form = reactive({})
 
@@ -508,6 +514,43 @@ const loadRemoteComponent = async () => {
   }
 };
 
+
+// 设备初始化
+const startupDevice = () => {
+  const params = {
+    "data": {
+      "type": "actions",
+      "attributes": {
+        "command": "startup",
+        "devices": [],
+        "viewport": currentViewport.value.id
+      }
+    }
+  }
+  addItem('/models/actions', params).then((res: any) => {
+    pageLoading.value = true
+    loadingtext.value = '设备启动中，请稍后...'
+    ElMessage({
+      message: "设备正在启动中，即将跳转采集页面",
+      type: 'success',
+    })
+    setTimeout(() => {
+      pageLoading.value = false
+      const routeUrl = router.resolve({ path: '/loggerfe/root/index' }).href;
+      window.open(routeUrl, '_blank');
+    }, 2000)
+  }).catch((err: any) => {
+    pageLoading.value = false
+    console.error(err, 'err')
+    const errmsg = err?.response?.data?.errors[0]?.detail[0]?.msg
+
+    ElMessage({
+      message: "启动设备失败"+errmsg,
+      type: 'error',
+    })
+  })
+}
+
 </script>
 <style scoped lang="scss">
 .config-container {
@@ -607,7 +650,7 @@ const loadRemoteComponent = async () => {
       width: 100%;
       display: flex;
       flex-direction: row;
-      justify-content: space-between;
+      // justify-content: space-between;
 
       .info-detail {
         display: flex;
