@@ -50,8 +50,9 @@
                 <el-input-number
                   v-model="pointSize"
                   class="size-input"
+                  :precision="2"
                   size="small"
-                  :min="0.0001"
+                  :min="0.01"
                   :max="10"
                   :step="0.01"
                   @change="changePointSize" />
