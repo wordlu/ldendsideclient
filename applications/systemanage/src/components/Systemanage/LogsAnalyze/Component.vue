@@ -37,6 +37,9 @@
               start-placeholder="开始时间"
               end-placeholder="结束时间"
               :disabledDate="disabledDateFn"
+              :disabled-hours="disabledHours"
+              :disabled-minutes="disabledMinutes"
+              :disabled-seconds="disabledSeconds"
             />
           </el-config-provider>
         </el-form-item>
@@ -74,8 +77,33 @@ const getTimestamp = (date: Date) => {
   return Math.floor(date.getTime())
 }
 
+// 禁用大于当前日期的日期
 const disabledDateFn = (time: any) => {
     return time.getTime() > currentTime.getTime()
+}
+
+// 禁用小时
+const disabledHours = () => {
+  const hours = currentTime.getHours()
+  return Array.from({ length: 24 }, (_, i) => i).filter(h => h > hours)
+}
+
+// 禁用分钟
+const disabledMinutes = (hour) => {
+  if (hour === currentTime.getHours()) {
+    const minutes = currentTime.getMinutes()
+    return Array.from({ length: 60 }, (_, i) => i).filter(m => m > minutes)
+  }
+  return []
+}
+
+// 禁用秒
+const disabledSeconds = (hour, minute) => {
+  if (hour === currentTime.getHours() && minute === currentTime.getMinutes()) {
+    const seconds = currentTime.getSeconds()
+    return Array.from({ length: 60 }, (_, i) => i).filter(s => s > seconds)
+  }
+  return []
 }
 
 const queryCurrentDrivers = () => {
