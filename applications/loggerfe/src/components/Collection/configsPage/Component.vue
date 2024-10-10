@@ -13,8 +13,6 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
-          <el-button type="primary" style="margin-left: 30px;" @click="startupDevice">启动设备</el-button>
-          <el-button type="primary" style="margin-left: 30px;" @click="shutdownDevice">关闭设备</el-button>
         </div>
       </div>
     </div>
@@ -515,76 +513,6 @@ const loadRemoteComponent = async () => {
   }
 };
 
-
-// 启动设备
-const startupDevice = () => {
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "startup",
-        "devices": [],
-        "viewport": currentViewport.value.id
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    pageLoading.value = true
-    loadingtext.value = '设备启动中，请稍后...'
-    ElMessage({
-      message: "设备正在启动中，即将跳转采集页面",
-      type: 'success',
-    })
-    setTimeout(() => {
-      pageLoading.value = false
-      const routeUrl = router.resolve({ path: '/loggerfe/root/index' }).href;
-      window.open(routeUrl, '_blank');
-    }, 2000)
-  }).catch((err: any) => {
-    pageLoading.value = false
-    console.error(err, 'err')
-    const errmsg = err?.response?.data?.errors[0]?.detail
-
-    ElMessage({
-      message: "启动设备失败: "+errmsg,
-      type: 'error',
-    })
-
-    // @wodelu:TODO
-    setTimeout(() => {
-      pageLoading.value = false
-      const routeUrl = router.resolve({ path: '/loggerfe/root/index' }).href;
-      window.open(routeUrl, '_blank');
-    }, 100)
-  })
-}
-
-// 关闭设备
-const shutdownDevice = () => {
-  const params = {
-    "data": {
-      "type": "actions",
-      "attributes": {
-        "command": "shutdown",
-        "devices":[],
-        "viewport": currentViewport.value.id
-      }
-    }
-  }
-  addItem('/models/actions', params).then((res: any) => {
-    ElMessage({
-      message: "设备关闭中",
-      type: 'success',
-    })
-  }).catch((err: any) => {
-    const errmsg = err?.response?.data?.errors[0]?.detail
-    console.error(err, 'err')
-    ElMessage({
-      message: "关闭设备失败"+errmsg,
-      type: 'error',
-    })
-  })
-}
 
 </script>
 <style scoped lang="scss">

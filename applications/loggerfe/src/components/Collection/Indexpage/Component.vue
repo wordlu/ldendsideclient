@@ -8,10 +8,10 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备初始化</div>
           <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
-        </div> -->
+        </div>
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
@@ -504,14 +504,14 @@ const gotologsanalyze = () => {
 }
 
 // 监听浏览器事件
-function handleBeforeUnload(event) {
-  event.preventDefault();
-  event.returnValue = ''; // 某些浏览器需要设置一个返回值来触发提示框
-}
+// function handleBeforeUnload(event) {
+//   event.preventDefault();
+//   event.returnValue = ''; // 某些浏览器需要设置一个返回值来触发提示框
+// }
 
 onMounted(() => {
-  window.top.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('beforeunload', handleBeforeUnload);
+  // window.top.addEventListener('beforeunload', handleBeforeUnload);
+  // window.addEventListener('beforeunload', handleBeforeUnload);
 
   queryCurrentDrivers()
   getTags()
@@ -554,10 +554,10 @@ onMounted(() => {
   };
 })
 
-onBeforeUnmount(() => {
-  window.top.removeEventListener('beforeunload', handleBeforeUnload);
-  window.removeEventListener('beforeunload', handleBeforeUnload);
-});
+// onBeforeUnmount(() => {
+//   window.top.removeEventListener('beforeunload', handleBeforeUnload);
+//   window.removeEventListener('beforeunload', handleBeforeUnload);
+// });
 
 onUnmounted(() => {
   // 在组件卸载时关闭 SSE 连接
