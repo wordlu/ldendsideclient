@@ -28,7 +28,7 @@
     </el-form>
     <div class="btn-panel">
       <el-button type="primary" @click="onSubmit">保存</el-button>
-      <el-button>取消</el-button>
+      <el-button @click="onCancel">取消</el-button>
     </div>
   </div>
 </template>
@@ -39,11 +39,12 @@ import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compil
 import { reactive, onMounted } from 'vue'
 import { findAll, addItem, patchItem } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus'
 import * as ElementPlus from 'element-plus'; 
 import('element-plus/dist/index.css');
 const route = useRoute();
+const router = useRouter()
 
 const form = reactive({})
 
@@ -84,6 +85,10 @@ const getRemoteFormData = () => {
     console.error('远程组件加载错误，无法获取表单数据');
   }
 };
+
+const onCancel = () => {
+  router.push({ path: '/loggerfe/root/configs' })
+}
 
 const onSubmit = async () => {
   getRemoteFormData()
