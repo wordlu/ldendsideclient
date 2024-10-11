@@ -29,6 +29,7 @@
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs ref="sensorConfigsRef" 
+          :viewportId="viewportId"
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />
@@ -104,7 +105,7 @@
 <script setup lang="ts">
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
 import { ref, computed, onMounted, onBeforeUnmount, onUnmounted  } from 'vue';
-import { addItem, findAll, deleteItem } from '@/api/jsonApi'
+import { addItem, findAll, findItem, deleteItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
 import DisplayPanel from '@/components/visualization/index/DisplayPanel.vue'
@@ -256,7 +257,7 @@ const startupDevice = () => {
     const errmsg = err?.response?.data?.errors[0]?.detail
 
     ElMessage({
-      message: "启动设备失败"+errmsg,
+      message: "启动设备失败: "+errmsg,
       type: 'error',
     })
   })
@@ -291,7 +292,7 @@ const shutdownDevice = () => {
     const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
     ElMessage({
-      message: "关闭设备失败"+errmsg,
+      message: "关闭设备失败: "+errmsg,
       type: 'error',
     })
   })
@@ -324,7 +325,7 @@ const recordOnDevice = () => {
     // showRecordOnDevice.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail
     ElMessage({
-      message: "设备采集失败"+errmsg,
+      message: "设备采集失败: "+errmsg,
       type: 'error',
     })
   })
@@ -357,7 +358,7 @@ const recordOffDevice = () => {
     const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
     ElMessage({
-      message: "结束采集失败"+errmsg,
+      message: "结束采集失败: "+errmsg,
       type: 'error',
     })
   })
@@ -375,6 +376,35 @@ const queryCurrentDrivers = () => {
   try {
     findAll('/models/viewports', {}).then((res: any) => {
       viewportId.value = res.data.data[0].id
+      getCurrentStatus(viewportId.value)
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+// 获取设备调试、采集状态
+const getCurrentStatus = (viewportId: string) => {
+  try {
+    findItem('/viewport_status', viewportId).then((res: any) => {
+      testDevice.value = res.data.isluanching || false
+      startCollect.value = res.data.isrecording || false
+
+      if(testDevice.value && !startCollect.value) {
+        // 设备调试初始化中但未采集，自动勾选全部设备
+        if (sensorConfigsRef.value) {
+          sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+        }
+      } else if (testDevice.value && startCollect.value) {
+        // 设备采集中，勾选状态为采集中的设备
+        const isrecordingNodes = res.data.details.filter((item: any) => item.isrecording)
+        if (sensorConfigsRef.value) {
+          sensorConfigsRef.value.selectSomeNodes(isrecordingNodes); // 调用子组件的方法
+        }
+      }
+
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -535,7 +565,7 @@ onMounted(() => {
         title: '收到一条新事件',
         type: severity !== '2' ? 'warning' : 'error',
         message: content,
-        duration: 5000,
+        duration: 8000,
         position: 'bottom-right',
         onClick() {
           gotologsanalyze();

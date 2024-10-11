@@ -72,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
-import { ElTree } from 'element-plus'
+import { ElTree, ElMessage } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-import { findAll } from '@/api/jsonApi'
+import { findAll, findItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
@@ -92,10 +92,9 @@ interface Tree {
   children?: Tree[]
 }
 
-
-// const props = defineProps({
-//   deviceids: Array
-// });
+const props = defineProps({
+  viewportId: String
+});
 
 const form = reactive({})
 
@@ -111,10 +110,9 @@ const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 
-const handleCheckChange = (node, checked) => {
+const handleCheckChange = async(data, checked) => {
   const checkedNodes = treeRef.value.getCheckedNodes();
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
-  console.log(leafNodes, 'leafNodes')
   emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
 };
 
@@ -122,12 +120,16 @@ const allTreeKeys = ref([])
 
 const selectAllNodes = () => {
   if (treeRef.value) {
-    treeRef.value.setCheckedKeys(allTreeKeys.value);
-    // setTimeout(() => {
-    //   handleCheckChange()
-    // })
+    treeRef.value.setCheckedKeys(allTreeKeys.value.map(node => node.value));
   }
 };
+
+const selectSomeNodes = (isrecordingNodes) => {
+  const isrecordingArr = isrecordingNodes.map((node) => node.deviceKey);
+  if (treeRef.value) {
+    treeRef.value.setCheckedKeys(allTreeKeys.value.filter(it => isrecordingArr.includes(it.key)).map(node => node.value));
+  }
+}
 
 const clearAllNodes = () => {
   if (treeRef.value) {
@@ -171,7 +173,7 @@ const defaultProps = {
 
 const monitorPrefix = ref(window.server.monitorPrefix)
 
-const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=3s&kiosk&theme=light`
+const renderContentUrl = `http://ld.10.86.24.61.nip.io/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
@@ -262,11 +264,11 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      // if (props.deviceids.includes(sensor.devicedata.id)) {
-      //   allTreeKeys.value.push(sensor.type+'_'+sensor.id)
-      // }
       allport.push(sensor.devicedata['display-port'])
-      allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+      allTreeKeys.value.push({
+        key:sensor.id,
+        value:sensor.type+'_'+sensor.id
+      })
     }
   });
   // selectAllNodes()
@@ -477,7 +479,8 @@ const changeAuto = (value: boolean) => {
 
 defineExpose({
   selectAllNodes,
-  clearAllNodes
+  clearAllNodes,
+  selectSomeNodes
 });
 
 </script>
