@@ -110,8 +110,35 @@ const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 
-const handleCheckChange = async(data, checked) => {
+const isPageChecked = ref(true)
+const isProgrammaticChange = ref(false);
+/**
+ * 正常流程：
+ * 1.勾选节点的时候，判断当前页面是否为采集状态
+ * 2.若为采集中，则提示不可修改，并取消操作
+ * 3.目前问题：无法分辨是程序执行过程中的点击还是用户点击
+ */
+const handleCheckChange = async(data, checked, indeterminate) => {
+  if (isProgrammaticChange.value) {
+    // 如果是程序触发的变更，直接跳过
+    return;
+  }
+  if (isPageChecked.value && !data.children) {
+    const currentStatus = await findItem('/viewport_status', props.viewportId)
+    if (currentStatus.data.isrecording) {
+      ElMessage.warning('采集中，不可修改')
+      isProgrammaticChange.value = true; // 标志位设置为程序操作
+      treeRef.value.setChecked(data.id, !checked);
+      setTimeout(() => {
+        isProgrammaticChange.value = false; // 恢复为正常
+      })
+      return;
+    }
+    
+  }
+  //获取叶子节点信息并传递给父级组件
   const checkedNodes = treeRef.value.getCheckedNodes();
+  console.log(checkedNodes)
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
   emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
 };
@@ -120,25 +147,34 @@ const allTreeKeys = ref([])
 
 const selectAllNodes = () => {
   if (treeRef.value) {
+    isPageChecked.value = false
     treeRef.value.setCheckedKeys(allTreeKeys.value.map(node => node.value));
+    setTimeout(() => {
+      isPageChecked.value = true
+    })
   }
 };
 
 const selectSomeNodes = (isrecordingNodes) => {
   const isrecordingArr = isrecordingNodes.map((node) => node.deviceKey);
   if (treeRef.value) {
+    isPageChecked.value = false
     treeRef.value.setCheckedKeys(allTreeKeys.value.filter(it => isrecordingArr.includes(it.key)).map(node => node.value));
+    setTimeout(() => {
+      isPageChecked.value = true
+    })
   }
 }
 
+// 取消所有选中
 const clearAllNodes = () => {
   if (treeRef.value) {
     treeRef.value.setCheckedKeys([]);
   }
 };
 
+// 点击树节点
 const handleNodeClick = (data: Tree) => {
-  console.log(data)
   getSensoronfigs(data.label)
 }
 
