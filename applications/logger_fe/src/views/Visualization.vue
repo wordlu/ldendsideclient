@@ -183,7 +183,7 @@ const status = ['collect', 'push_data', 'push_and_collect', 'connect']
 
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportId.value = res.data.data[0].id
       console.log(viewportId.value, 'viewportId')
     }).catch((err: any) => {

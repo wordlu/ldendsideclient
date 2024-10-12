@@ -1,51 +1,70 @@
 <template>
   <div class="container">
-    <div class="form-area">
-      <div>
-        <el-input v-model="logsinput" style="width: 240px" placeholder="搜索日志" />
-      </div>
-
-      <div style="margin-left: 20px;">
-        <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
-          <el-option-group
-            v-for="group in options"
-            :key="group.label"
-            :label="group.label"
+    <el-form  label-width="auto" :inline="true">
+      <div class="form-area">
+        <el-form-item label="设备">
+          <el-select v-model="sensorvalue" placeholder="Select" style="width: 240px">
+            <el-option-group
+              v-for="group in options"
+              :key="group.label"
+              :label="group.label"
+            >
+              <el-option
+                v-for="item in group.options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-option-group>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="应用">
+          <el-select
+            v-model="containerValue"
           >
-            <el-option
-              v-for="item in group.options"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+            <el-option label="设备" value="device" />
+            <el-option label="可视化" value="display" />
+            <el-option label="监控" value="monitor" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="时间">
+          <el-config-provider :locale="locale">
+            <el-date-picker
+              :clearable="false"
+              v-model="dateRange"
+              type="datetimerange"
+              range-separator="-"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              :disabledDate="disabledDateFn"
+              :disabled-hours="disabledHours"
+              :disabled-minutes="disabledMinutes"
+              :disabled-seconds="disabledSeconds"
             />
-          </el-option-group>
-        </el-select>
+          </el-config-provider>
+        </el-form-item>
+        
+        <el-form-item label="搜索">
+          <el-input v-model="logsinput" style="width: 240px" placeholder="搜索日志内容" />
+        </el-form-item>
       </div>
-      
-      <div style="width: 300px; margin-left: 20px;">
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          range-separator="To"
-          start-placeholder="Start date"
-          end-placeholder="End date"
-        />
-      </div>
-    </div>
-    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput" frameborder="0"></iframe>
+    </el-form>
+    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput+'&var-container='+containerValue" frameborder="0"></iframe>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
+import zhCn from "element-plus/es/locale/lang/zh-cn"
 
-
+const locale = zhCn
 const monitorPrefix = ref(window.server.monitorPrefix)
 
 const logsinput = ref('')
 const sensorvalue = ref('')
+const containerValue = ref('device')
 const options = ref([])
 // 获取当前时间和前一小时的时间
 const currentTime = new Date();
@@ -56,6 +75,35 @@ const dateRange = ref([oneHourBefore, currentTime]);
 
 const getTimestamp = (date: Date) => {
   return Math.floor(date.getTime())
+}
+
+// 禁用大于当前日期的日期
+const disabledDateFn = (time: any) => {
+    return time.getTime() > currentTime.getTime()
+}
+
+// 禁用小时
+const disabledHours = () => {
+  const hours = currentTime.getHours()
+  return Array.from({ length: 24 }, (_, i) => i).filter(h => h > hours)
+}
+
+// 禁用分钟
+const disabledMinutes = (hour) => {
+  if (hour === currentTime.getHours()) {
+    const minutes = currentTime.getMinutes()
+    return Array.from({ length: 60 }, (_, i) => i).filter(m => m > minutes)
+  }
+  return []
+}
+
+// 禁用秒
+const disabledSeconds = (hour, minute) => {
+  if (hour === currentTime.getHours() && minute === currentTime.getMinutes()) {
+    const seconds = currentTime.getSeconds()
+    return Array.from({ length: 60 }, (_, i) => i).filter(s => s > seconds)
+  }
+  return []
 }
 
 const queryCurrentDrivers = () => {

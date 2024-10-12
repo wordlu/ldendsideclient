@@ -15,7 +15,7 @@
     </div>
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
-      <el-form-item label="设备类型">
+      <el-form-item label="设备驱动类型">
         <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
           <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
@@ -24,39 +24,11 @@
       <div v-if="RemoteComponent">
         <!-- 动态渲染远程加载的组件 -->
         <component :is="RemoteComponent" ref="remoteComponentRef"></component>
-
-        <!-- 展示从远程组件获取的表单数据 -->
-        <!-- <el-form :model="form" label-width="auto" ref="formRef" style="max-width: 600px">
-          <el-form-item label="host_name">
-            <el-input v-model="form.host_name" />
-          </el-form-item>
-          <el-form-item label="points_topic">
-            <el-input v-model="form.points_topic" />
-          </el-form-item>
-          <el-form-item label="timestamp_mode">
-            <el-input v-model="form.timestamp_mode" />
-          </el-form-item>
-          <el-form-item label="ptp_utc_tai_offset">
-            <el-input v-model="form.ptp_utc_tai_offset" />
-          </el-form-item>
-          <el-form-item label="point_type">
-            <el-input v-model="form.point_type" />
-          </el-form-item>
-          <el-form-item label="receive_topic">
-            <el-input v-model="form.receive_topic" />
-          </el-form-item>
-          <el-form-item label="save_topic">
-            <el-input v-model="form.save_topic" />
-          </el-form-item>
-          <el-form-item label="bag_file_name">
-            <el-input v-model="form.bag_file_name" />
-          </el-form-item>
-        </el-form> -->
       </div>
     </el-form>
     <div class="btn-panel">
       <el-button type="primary" @click="onSubmit">保存</el-button>
-      <el-button>取消</el-button>
+      <el-button @click="onCancel">取消</el-button>
     </div>
   </div>
 </template>
@@ -67,11 +39,12 @@ import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compil
 import { reactive, onMounted } from 'vue'
 import { findAll, addItem, patchItem } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus'
 import * as ElementPlus from 'element-plus'; 
 import('element-plus/dist/index.css');
 const route = useRoute();
+const router = useRouter()
 
 const form = reactive({})
 
@@ -113,19 +86,24 @@ const getRemoteFormData = () => {
   }
 };
 
+const onCancel = () => {
+  router.push({ path: '/loggerfe/root/configs' })
+}
+
 const onSubmit = async () => {
   getRemoteFormData()
   try {
-    const deviceparams = {
-      "points_topic": form.points_topic,
-      "host_name": form.host_name,
-      "timestamp_mode": form.timestamp_mode,
-      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-      "point_type": form.point_type,
-      "receive_topic": form.receive_topic,
-      "save_topic": form.save_topic,
-      "bag_file_name": form.bag_file_name,
-    }
+    // const deviceparams = {
+    //   "points_topic": form.points_topic,
+    //   "host_name": form.host_name,
+    //   "timestamp_mode": form.timestamp_mode,
+    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+    //   "point_type": form.point_type,
+    //   "receive_topic": form.receive_topic,
+    //   "save_topic": form.save_topic,
+    //   "bag_file_name": form.bag_file_name,
+    // }
+    const {type, ...deviceparams} = form
     const params = {
       data: {
         type: 'devices',

@@ -49,9 +49,11 @@
               <div class="item-wrap">
                 <span class="mr-2">点云大小</span>
                 <el-input-number
+                  class="size-input"
                   v-model="pointSize"
+                  :precision="2"
                   size="small"
-                  :min="0.0001"
+                  :min="0.01"
                   :max="10"
                   :step="0.01"
                   @change="changePointSize" />
@@ -70,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits } from 'vue'
+import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
-import { ElTree } from 'element-plus'
+import { ElTree, ElMessage } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-import { findAll } from '@/api/jsonApi'
+import { findAll, findItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
@@ -90,10 +92,9 @@ interface Tree {
   children?: Tree[]
 }
 
-
-// const props = defineProps({
-//   deviceids: Array
-// });
+const props = defineProps({
+  viewportId: String
+});
 
 const form = reactive({})
 
@@ -109,10 +110,36 @@ const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 
-const handleCheckChange = (node, checked) => {
+const isPageChecked = ref(true)
+const isProgrammaticChange = ref(false);
+/**
+ * 正常流程：
+ * 1.勾选节点的时候，判断当前页面是否为采集状态
+ * 2.若为采集中，则提示不可修改，并取消操作
+ * 3.目前问题：无法分辨是程序执行过程中的点击还是用户点击
+ */
+const handleCheckChange = async(data, checked, indeterminate) => {
+  if (isProgrammaticChange.value) {
+    // 如果是程序触发的变更，直接跳过
+    return;
+  }
+  if (isPageChecked.value && !data.children) {
+    const currentStatus = await findItem('/viewport_status', props.viewportId)
+    if (currentStatus.data.isrecording) {
+      ElMessage.warning('采集中，不可修改')
+      isProgrammaticChange.value = true; // 标志位设置为程序操作
+      treeRef.value.setChecked(data.id, !checked);
+      setTimeout(() => {
+        isProgrammaticChange.value = false; // 恢复为正常
+      })
+      return;
+    }
+    
+  }
+  //获取叶子节点信息并传递给父级组件
   const checkedNodes = treeRef.value.getCheckedNodes();
+  console.log(checkedNodes)
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
-  console.log(leafNodes, 'leafNodes')
   emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
 };
 
@@ -120,21 +147,34 @@ const allTreeKeys = ref([])
 
 const selectAllNodes = () => {
   if (treeRef.value) {
-    treeRef.value.setCheckedKeys(allTreeKeys.value);
-    // setTimeout(() => {
-    //   handleCheckChange()
-    // })
+    isPageChecked.value = false
+    treeRef.value.setCheckedKeys(allTreeKeys.value.map(node => node.value));
+    setTimeout(() => {
+      isPageChecked.value = true
+    })
   }
 };
 
+const selectSomeNodes = (isrecordingNodes) => {
+  const isrecordingArr = isrecordingNodes.map((node) => node.deviceKey);
+  if (treeRef.value) {
+    isPageChecked.value = false
+    treeRef.value.setCheckedKeys(allTreeKeys.value.filter(it => isrecordingArr.includes(it.key)).map(node => node.value));
+    setTimeout(() => {
+      isPageChecked.value = true
+    })
+  }
+}
+
+// 取消所有选中
 const clearAllNodes = () => {
   if (treeRef.value) {
     treeRef.value.setCheckedKeys([]);
   }
 };
 
+// 点击树节点
 const handleNodeClick = (data: Tree) => {
-  console.log(data)
   getSensoronfigs(data.label)
 }
 
@@ -144,9 +184,9 @@ const getSensoronfigs = (lidarname: string) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')
-      if(datavalue.length > 0) {
+      if(datavalue.length > 0 && datavalue[0].type === 'lidar') {
         setConfigValue.value = false
-        loadRemoteComponent()
+        // loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
@@ -169,7 +209,7 @@ const defaultProps = {
 
 const monitorPrefix = ref(window.server.monitorPrefix)
 
-const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=3s&kiosk&theme=light`
+const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
@@ -208,7 +248,7 @@ const sensorData = ref([])
 const name = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {include: 'devices'}).then((res: any) => {
+    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -260,11 +300,11 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      // if (props.deviceids.includes(sensor.devicedata.id)) {
-      //   allTreeKeys.value.push(sensor.type+'_'+sensor.id)
-      // }
       allport.push(sensor.devicedata['display-port'])
-      allTreeKeys.value.push(sensor.type+'_'+sensor.id)
+      allTreeKeys.value.push({
+        key:sensor.id,
+        value:sensor.type+'_'+sensor.id
+      })
     }
   });
   // selectAllNodes()
@@ -430,7 +470,7 @@ const storageVal = getStorage()
 const activeName = ref<string>('dataSources')
 const pointSize = ref<number>(storageVal.pointSize || 0.01) // 点云大小
 const colorProp = ref<string>(storageVal.isFixColor ? 'fixed' : storageVal.colorProp) // 颜色策略
-const color = ref<string>(storageVal.color || '#ff0000') // 固定颜色值
+const color = ref<string>(storageVal.color || '#00ffff') // 固定颜色值
 const minColorPropVal = ref<number>(storageVal.minColorPropVal || 0) // 颜色范围最小值
 const maxColorPropVal = ref<number>(storageVal.maxColorPropVal || 100) // 颜色范围最大值
 const autoColorRange = ref<boolean>(storageVal.autoColorRange || false) // 是否是自动赋色
@@ -475,7 +515,8 @@ const changeAuto = (value: boolean) => {
 
 defineExpose({
   selectAllNodes,
-  clearAllNodes
+  clearAllNodes,
+  selectSomeNodes
 });
 
 </script>
@@ -498,6 +539,14 @@ defineExpose({
 
   .mr-6 {
     margin-right: 42px;
+  }
+
+  .size-input {
+    width: 180px;
+
+    ::v-deep .el-input__wrapper {
+      width: 180px;
+    }
   }
 }
 

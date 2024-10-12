@@ -1,6 +1,8 @@
 <!--采集配置 -->
 <template>
-  <div class="config-container">
+  <div class="config-container"  
+    :element-loading-text="loadingtext"
+    v-loading="pageLoading" >
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集配置</el-breadcrumb-item>
@@ -11,14 +13,15 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
-          <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" /> -->
         </div>
       </div>
     </div>
     <el-row class="config-content">
-      <el-col :span="8">
+      <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
+          <img ref="backgroundImage" src="/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
           <canvas 
+            style="position: absolute;"
             ref="sensorCanvas" 
             @click="handleCanvasClick"
           >
@@ -63,7 +66,7 @@
               >
                 <el-tab-pane label="设备配置" name="first">
                     <el-form :model="form" label-width="auto" style="max-width: 600px">
-                      <el-form-item label="设备类型">
+                      <el-form-item label="设备驱动类型">
                         <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
                           <!-- <el-option label="Zone one" value="shanghai" /> -->
                           <el-option v-for="item in driversdataOptions" :key="item.id" :label="item.name" :value="item.id" />
@@ -112,6 +115,10 @@ interface Tree {
   label: string
   children?: Tree[]
 }
+
+const loadingtext = ref('')
+const pageLoading = ref(false)
+
 const router = useRouter();
 const form = reactive({})
 
@@ -166,16 +173,17 @@ const getRemoteFormData = () => {
 const onSubmit = async () => {
   getRemoteFormData()
   try {
-    const deviceparams = {
-      "points_topic": form.points_topic,
-      "host_name": form.host_name,
-      "timestamp_mode": form.timestamp_mode,
-      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-      "point_type": form.point_type,
-      "receive_topic": form.receive_topic,
-      "save_topic": form.save_topic,
-      "bag_file_name": form.bag_file_name,
-    }
+    // const deviceparams = {
+    //   "points_topic": form.points_topic,
+    //   "host_name": form.host_name,
+    //   "timestamp_mode": form.timestamp_mode,
+    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+    //   "point_type": form.point_type,
+    //   "receive_topic": form.receive_topic,
+    //   "save_topic": form.save_topic,
+    //   "bag_file_name": form.bag_file_name,
+    // }
+    const {type, ...deviceparams} = form
     const params = {
       data: {
         type: 'devices',
@@ -287,15 +295,16 @@ const getSensoronfigs = (nodedata) => {
 }
 
 const setFormData = (details: any) => {
-  form.points_topic = details['device-params'].points_topic
-  form.host_name = details['device-params'].host_name
-  form.timestamp_mode = details['device-params'].timestamp_mode
-  form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
-  form.point_type = details['device-params'].point_type
-  form.receive_topic = details['device-params'].receive_topic
-  form.save_topic = details['device-params'].save_topic
-  form.bag_file_name = details['device-params'].bag_file_name
   form.type = details.driver
+  Object.assign(form, details['device-params']);
+  // form.points_topic = details['device-params'].points_topic
+  // form.host_name = details['device-params'].host_name
+  // form.timestamp_mode = details['device-params'].timestamp_mode
+  // form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
+  // form.point_type = details['device-params'].point_type
+  // form.receive_topic = details['device-params'].receive_topic
+  // form.save_topic = details['device-params'].save_topic
+  // form.bag_file_name = details['device-params'].bag_file_name
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)
@@ -312,7 +321,7 @@ const name = ref('')
 const currentViewport = ref(null)
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -361,6 +370,7 @@ const totree = () => {
 
 // 获取canvas的ref
 const sensorCanvas = ref(null);
+const backgroundImage = ref(null);
 const parent = ref(null);
 
 const resizeCanvas = () => {
@@ -385,8 +395,12 @@ onMounted(async () => {
 
 // 弹窗提示
 const showPopup = (sensor) => {
+  
   const node = treeRef.value.getNode(sensor.type+'_'+sensor.id);
-  handleNodeClick(node.data, node)
+  if (node) {
+    handleNodeClick(node.data, node)
+  }
+
 };
 
 const createSensorCanvas = (treeData) => {
@@ -398,6 +412,16 @@ const createSensorCanvas = (treeData) => {
 
 // 画传感器
 const drawSensors = (ctx) => {
+  // 获取图片宽高
+  const imageWidth = backgroundImage.value.clientWidth
+  const imageHeight = backgroundImage.value.clientHeight
+
+  // 更新 canvas 大小
+  sensorCanvas.value.width = imageWidth
+  sensorCanvas.value.height = imageHeight
+
+
+
   sensorData.value.forEach((sensor) => {
     let color;
     switch (sensor.type) {
@@ -411,21 +435,29 @@ const drawSensors = (ctx) => {
         color = 'blue';
     }
 
+    // @wodelu:TODO 计算适应缩放后的坐标
+    const scaleX = imageWidth / imageWidth
+    const scaleY = imageHeight / imageHeight
+    const adjustedX = sensor.x * scaleX
+    const adjustedY = sensor.y * scaleY
+
+    
     // 绘制圆形
     ctx.beginPath();
-    ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
+    // ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
+    ctx.arc(adjustedX, adjustedY, 10, 0, 2 * Math.PI) // 半径为5
     ctx.fillStyle = color;
     ctx.fill();
     ctx.closePath();
 
     // 绘制 ID
     ctx.font = '12px Arial';
-    ctx.fillStyle = 'white'; // 白色字体
+    ctx.fillStyle = 'black'; // 白色字体
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
-    const textX = sensor.x + 15; // 文字x坐标，偏移圆形
-    const textY = sensor.y; // 文字y坐标，与圆形对齐
+    const textX = adjustedX + 15; // 文字x坐标，偏移圆形
+    const textY = adjustedY // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
   });
@@ -445,7 +477,7 @@ const handleCanvasClick = (event) => {
       (x - sensor.x) ** 2 + (y - sensor.y) ** 2
     );
     // 如果点击位置在传感器范围内
-    if (distance < 10) {
+    if (distance < 20) {
       showPopup(sensor);
     }
   });
@@ -508,6 +540,7 @@ const loadRemoteComponent = async () => {
   }
 };
 
+
 </script>
 <style scoped lang="scss">
 .config-container {
@@ -542,7 +575,11 @@ const loadRemoteComponent = async () => {
     background: #99a9bf;
   }
   .bg-black {
-    background: #000;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
   }
   .ml {
     padding-left: 20px;
@@ -607,7 +644,7 @@ const loadRemoteComponent = async () => {
       width: 100%;
       display: flex;
       flex-direction: row;
-      justify-content: space-between;
+      // justify-content: space-between;
 
       .info-detail {
         display: flex;

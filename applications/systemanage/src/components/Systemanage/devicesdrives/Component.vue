@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索设备名称" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="search" class="search-bar" placeholder="搜索设备驱动名称" @change="change" @input="change" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />

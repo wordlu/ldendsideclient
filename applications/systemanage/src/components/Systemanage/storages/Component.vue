@@ -84,8 +84,19 @@ const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
 const getSize = (size: number) => {
-  if (size >= 0) return `${(size / 1024 / 1024).toFixed(2)}M`
-  if (size === -1) return '正在采集'
+  if (size >= 0) {
+    if (size < 1024) {
+      return `${size} B`;                      // 小于1KB，显示为B
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(2)} KB`; // 小于1MB，显示为KB
+    } else if (size < 1024 * 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(2)} MB`; // 小于1GB，显示为MB
+    } else {
+      return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`; // 大于等于1GB，显示为GB
+    }
+  } else if (size === -1) {
+    return '正在采集'
+  }
   return '---'
 }
 

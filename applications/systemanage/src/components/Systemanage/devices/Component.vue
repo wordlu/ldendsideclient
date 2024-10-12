@@ -16,7 +16,7 @@
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索设备名称" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="search" class="search-bar" placeholder="搜索设备驱动" @change="change" @input="change" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -32,7 +32,7 @@
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
           :data="data" style="width: 100%">
-          <el-table-column property="name" label="设备名称" />
+          <el-table-column property="name" label="设备驱动类型" />
           <el-table-column property="brand" label="品牌"/>
           <el-table-column property="model" label="型号"/>
         </el-table>

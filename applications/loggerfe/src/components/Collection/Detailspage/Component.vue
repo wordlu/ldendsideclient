@@ -1,8 +1,9 @@
 <template>
   <div class="index-page">
     <el-breadcrumb :separator-icon="ArrowRight">
-      <el-breadcrumb-item >系统管理</el-breadcrumb-item>
-      <el-breadcrumb-item>采集</el-breadcrumb-item>
+      <el-breadcrumb-item>系统管理</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/systemanage/storages' }">存储管理</el-breadcrumb-item>
+      <el-breadcrumb-item>数据详情</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
