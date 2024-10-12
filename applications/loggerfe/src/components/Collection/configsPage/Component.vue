@@ -171,16 +171,17 @@ const getRemoteFormData = () => {
 const onSubmit = async () => {
   getRemoteFormData()
   try {
-    const deviceparams = {
-      "points_topic": form.points_topic,
-      "host_name": form.host_name,
-      "timestamp_mode": form.timestamp_mode,
-      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-      "point_type": form.point_type,
-      "receive_topic": form.receive_topic,
-      "save_topic": form.save_topic,
-      "bag_file_name": form.bag_file_name,
-    }
+    // const deviceparams = {
+    //   "points_topic": form.points_topic,
+    //   "host_name": form.host_name,
+    //   "timestamp_mode": form.timestamp_mode,
+    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+    //   "point_type": form.point_type,
+    //   "receive_topic": form.receive_topic,
+    //   "save_topic": form.save_topic,
+    //   "bag_file_name": form.bag_file_name,
+    // }
+    const {type, ...deviceparams} = form
     const params = {
       data: {
         type: 'devices',
@@ -292,15 +293,16 @@ const getSensoronfigs = (nodedata) => {
 }
 
 const setFormData = (details: any) => {
-  form.points_topic = details['device-params'].points_topic
-  form.host_name = details['device-params'].host_name
-  form.timestamp_mode = details['device-params'].timestamp_mode
-  form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
-  form.point_type = details['device-params'].point_type
-  form.receive_topic = details['device-params'].receive_topic
-  form.save_topic = details['device-params'].save_topic
-  form.bag_file_name = details['device-params'].bag_file_name
   form.type = details.driver
+  Object.assign(form, details['device-params']);
+  // form.points_topic = details['device-params'].points_topic
+  // form.host_name = details['device-params'].host_name
+  // form.timestamp_mode = details['device-params'].timestamp_mode
+  // form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
+  // form.point_type = details['device-params'].point_type
+  // form.receive_topic = details['device-params'].receive_topic
+  // form.save_topic = details['device-params'].save_topic
+  // form.bag_file_name = details['device-params'].bag_file_name
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)

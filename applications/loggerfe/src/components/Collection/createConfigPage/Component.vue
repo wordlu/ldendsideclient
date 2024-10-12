@@ -93,16 +93,17 @@ const onCancel = () => {
 const onSubmit = async () => {
   getRemoteFormData()
   try {
-    const deviceparams = {
-      "points_topic": form.points_topic,
-      "host_name": form.host_name,
-      "timestamp_mode": form.timestamp_mode,
-      "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-      "point_type": form.point_type,
-      "receive_topic": form.receive_topic,
-      "save_topic": form.save_topic,
-      "bag_file_name": form.bag_file_name,
-    }
+    // const deviceparams = {
+    //   "points_topic": form.points_topic,
+    //   "host_name": form.host_name,
+    //   "timestamp_mode": form.timestamp_mode,
+    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
+    //   "point_type": form.point_type,
+    //   "receive_topic": form.receive_topic,
+    //   "save_topic": form.save_topic,
+    //   "bag_file_name": form.bag_file_name,
+    // }
+    const {type, ...deviceparams} = form
     const params = {
       data: {
         type: 'devices',
