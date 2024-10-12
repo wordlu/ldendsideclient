@@ -17,9 +17,11 @@
       </div>
     </div>
     <el-row class="config-content">
-      <el-col :span="8">
+      <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
+          <img ref="backgroundImage" src="http://ld.10.86.24.61.nip.io/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
           <canvas 
+            style="position: absolute;"
             ref="sensorCanvas" 
             @click="handleCanvasClick"
           >
@@ -368,6 +370,7 @@ const totree = () => {
 
 // 获取canvas的ref
 const sensorCanvas = ref(null);
+const backgroundImage = ref(null);
 const parent = ref(null);
 
 const resizeCanvas = () => {
@@ -392,8 +395,12 @@ onMounted(async () => {
 
 // 弹窗提示
 const showPopup = (sensor) => {
+  
   const node = treeRef.value.getNode(sensor.type+'_'+sensor.id);
-  handleNodeClick(node.data, node)
+  if (node) {
+    handleNodeClick(node.data, node)
+  }
+
 };
 
 const createSensorCanvas = (treeData) => {
@@ -405,6 +412,16 @@ const createSensorCanvas = (treeData) => {
 
 // 画传感器
 const drawSensors = (ctx) => {
+  // 获取图片宽高
+  const imageWidth = backgroundImage.value.clientWidth
+  const imageHeight = backgroundImage.value.clientHeight
+
+  // 更新 canvas 大小
+  sensorCanvas.value.width = imageWidth
+  sensorCanvas.value.height = imageHeight
+
+
+
   sensorData.value.forEach((sensor) => {
     let color;
     switch (sensor.type) {
@@ -418,21 +435,29 @@ const drawSensors = (ctx) => {
         color = 'blue';
     }
 
+    // @wodelu:TODO 计算适应缩放后的坐标
+    const scaleX = imageWidth / imageWidth
+    const scaleY = imageHeight / imageHeight
+    const adjustedX = sensor.x * scaleX
+    const adjustedY = sensor.y * scaleY
+
+    
     // 绘制圆形
     ctx.beginPath();
-    ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
+    // ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
+    ctx.arc(adjustedX, adjustedY, 10, 0, 2 * Math.PI) // 半径为5
     ctx.fillStyle = color;
     ctx.fill();
     ctx.closePath();
 
     // 绘制 ID
     ctx.font = '12px Arial';
-    ctx.fillStyle = 'white'; // 白色字体
+    ctx.fillStyle = 'black'; // 白色字体
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
-    const textX = sensor.x + 15; // 文字x坐标，偏移圆形
-    const textY = sensor.y; // 文字y坐标，与圆形对齐
+    const textX = adjustedX + 15; // 文字x坐标，偏移圆形
+    const textY = adjustedY // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
   });
@@ -452,7 +477,7 @@ const handleCanvasClick = (event) => {
       (x - sensor.x) ** 2 + (y - sensor.y) ** 2
     );
     // 如果点击位置在传感器范围内
-    if (distance < 10) {
+    if (distance < 20) {
       showPopup(sensor);
     }
   });
@@ -550,7 +575,10 @@ const loadRemoteComponent = async () => {
     background: #99a9bf;
   }
   .bg-black {
-    background: #000;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .ml {
     padding-left: 20px;
