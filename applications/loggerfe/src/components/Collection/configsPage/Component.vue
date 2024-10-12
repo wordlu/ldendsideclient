@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" src="http://ld.10.86.24.61.nip.io/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
+          <img ref="backgroundImage" src="/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
