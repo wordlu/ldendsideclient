@@ -374,7 +374,7 @@ const getCurrentPorts = () => {
 //获取设备树
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportId.value = res.data.data[0].id
       getCurrentStatus(viewportId.value)
     }).catch((err: any) => {

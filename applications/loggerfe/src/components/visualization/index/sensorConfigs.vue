@@ -248,7 +248,7 @@ const sensorData = ref([])
 const name = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {include: 'devices'}).then((res: any) => {
+    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
