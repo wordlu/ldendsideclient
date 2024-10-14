@@ -13,8 +13,9 @@ function getQueryString(name) {
   }
   return null;
 }
-
+// 数据回显
 const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
+// const podUrl = ref(`ws://loggertrash/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
@@ -39,49 +40,16 @@ let refAllGroup = { //当前帧目标物组合
 
 let isData = false;
 
-// 创建 hub
-export const createHub = async ()=>{
-  // await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
-  //   service_name: "func-visualization",
-  //   client_name: getQueryString('client_name')
-  // }).then(res=>{
-  //   // hub 通道创建成功后才会初始化socket
-  //   if(res.data.data.status == "Succeeded"){
-  //     console.log("2:hub通道创建成功,获取pod_url")
-  //     podUrl.value = res.data.data.pod_url;
-  //     initSocket()
-  //   }
-  // })
-  initSocket()
-}
-
-// 执行点云压缩命令
-// export const pcdencode = ()=>{
-//   encodeWs = new WebSocket(`${podUrl.value}pcdencode`);
-//   console.log("6:启动点云压缩通道")
-// }
-
-// 初始化socket
-export const initSocket = ()=>{
+// 初始化socket,原initSocket
+export const createHub = ()=>{
   ws = new WebSocket(`${podUrl.value}info`);
   dataSet = dataSetStore();
   ws.onopen = function() {
     console.log("3:连接websocket")
     // 发送数据集id
-    // ws.send(JSON.stringify({dataset: 'LD28df9ba7',"app_name": "dataset"}));
     let options = {
       dataset: getQueryString('dataset')
-      // app_name: getQueryString('app_name'),
-      // client_name: getQueryString('client_name'),
     }
-
-    // if(getQueryString('endtime')){
-    //   options.end_ts = parseTimestamp(getQueryString('endtime')) 
-    // }
-
-    // if(getQueryString('starttime')){
-    //   options.start_ts = parseTimestamp(getQueryString('starttime'))
-    // }
     ws.send(JSON.stringify(options))
     console.log("4:websocket发送消息"+JSON.stringify(options))
   };

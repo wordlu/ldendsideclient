@@ -249,16 +249,17 @@ export const DrawPoint = (arr) => {
 
 // Draco 解压pcd数据创建数据
 export const DracoPoint = async (arr) =>{
+  // 加载Draco解码器模块
   const decoderModule = await DracoDecoderModule();
-
+  // 初始化解码缓冲区:将输入的数组arr转换为Uint8Array，并初始化解码缓冲区
   const buffer = new decoderModule.DecoderBuffer();
-
   buffer.Init(new Uint8Array(arr), arr.byteLength);
-  
+  // 创建一个Draco解码器实例
   const decoder = new decoderModule.Decoder();
+  // 获取编码数据的几何类型（三角形网格或点云
   const geometryType = decoder.GetEncodedGeometryType(buffer);
 
-  // Decode the encoded geometry.
+  // 根据几何类型，创建相应的输出几何对象，并调用相应的解码函数。
   let outputGeometry;
   let status;
   if (geometryType == decoderModule.TRIANGULAR_MESH) {
@@ -269,6 +270,7 @@ export const DracoPoint = async (arr) =>{
     status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
   }
 
+  // 遍历预定义的属性ID和类型，获取并解析几何属性
   const attributeIDs = {
     position: 'POSITION',
     intensity: 'GENERIC'
@@ -301,19 +303,21 @@ export const DracoPoint = async (arr) =>{
     }
   }
 
+  // 调用createGeometry函数，将解码后的几何数据转换为可用的几何对象
   createGeometry(geometry_draco)
-
+  // 释放解码器、几何对象和缓冲区的资源
   decoderModule.destroy(outputGeometry);
   decoderModule.destroy(decoder);
   decoderModule.destroy(buffer);
 }
+
 
 function createGeometry(geometryData) {
   let attribute = geometryData
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
-
+  // 此方法上一帧的数据会被新的数据覆盖。这是因为Three.js的BufferAttribute对象是直接修改顶点数据的，而不是创建新的几何体
   geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
 }
 

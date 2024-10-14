@@ -51,8 +51,8 @@ let webSockets  = {}
 
 let ipList = []
 
-// let ipvalue = 'ws://10.86.24.49'
 let ipvalue = `ws://${window.parent.location.hostname}`
+// let ipvalue = `ws://loggertrash`
 let reconnectInterval = null;    
 
 export const connectWebSocketArray = (portarray, allport) => {
@@ -153,21 +153,21 @@ const disconnectFromAllIPs = (lists) => {
 
 
 // 创建 hub
-export const createHub = async ()=>{
-  // console.log("parent.window.server.domain", parent.window.server.domain)
-  // await Post(`http://dms${parent.window.server.domain}/api/func_pods_hub/`,{
-  await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
-    service_name: "func-visualization",
-    client_name: getQueryString('client_name')
-  }).then(res=>{
-    // hub 通道创建成功后才会初始化socket
-    if(res.data.data.status == "Succeeded"){
-      console.log("2:hub通道创建成功,获取pod_url")
-      podUrl.value = res.data.data.pod_url;
-      initSocket()
-    }
-  })
-}
+// export const createHub = async ()=>{
+//   // console.log("parent.window.server.domain", parent.window.server.domain)
+//   // await Post(`http://dms${parent.window.server.domain}/api/func_pods_hub/`,{
+//   await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
+//     service_name: "func-visualization",
+//     client_name: getQueryString('client_name')
+//   }).then(res=>{
+//     // hub 通道创建成功后才会初始化socket
+//     if(res.data.data.status == "Succeeded"){
+//       console.log("2:hub通道创建成功,获取pod_url")
+//       podUrl.value = res.data.data.pod_url;
+//       initSocket()
+//     }
+//   })
+// }
 
 // 执行点云压缩命令
 export const pcdencode = ()=>{
