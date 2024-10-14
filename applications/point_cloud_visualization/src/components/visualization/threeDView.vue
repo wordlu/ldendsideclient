@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount } from 'vue';
 import * as THREE from 'three';
-import { scene , renderer , setCamera , setControls , renderObjBox , setPointCloud , renderDUTBox } from './lib/initThree';
+import { scene, renderer, setCamera, setControls, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '../../pinia/dataSet.js';
@@ -28,6 +28,7 @@ const initThree = async () =>{
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
 
   setPointCloud(); //  创建点云并添加到场景中
+  setPointCloud2(); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);

@@ -2,7 +2,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/initThree';
+import { DracoPoint, renderODBox, scene, renderObjBox, renderDUTBox } from '../visualization/lib/initThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -51,8 +51,8 @@ let webSockets  = {}
 
 let ipList = []
 
-let ipvalue = `ws://${window.parent.location.hostname}`
-// let ipvalue = `ws://loggertrash`
+// let ipvalue = `ws://${window.parent.location.hostname}`
+let ipvalue = `ws://loggertrash`
 let reconnectInterval = null;    
 
 export const connectWebSocketArray = (portarray, allport) => {
@@ -70,7 +70,7 @@ export const connectWebSocketArray = (portarray, allport) => {
     connectToAllIPs(connectlist)
   }
 }
-
+let urlval = ''
 export const connectWebSocket = (ip) => {
   if (webSockets[ip] && webSockets[ip].status === 'Connected') {
     console.log(`Already connected to ${ip}`);
@@ -92,10 +92,19 @@ export const connectWebSocket = (ip) => {
   };
 
   socket.onmessage = (event) => {
-    // 点云数据
-    reader.readAs('ArrayBuffer',event.data,function(result){
-      DracoPoint(result)
-    });
+    if (!urlval || urlval == ip) {
+      urlval = ip
+      // 点云数据
+      reader.readAs('ArrayBuffer',event.data,function(result){
+        DracoPoint(result)
+      });
+    } else {
+      // 点云数据
+      reader.readAs('ArrayBuffer',event.data,function(result){
+        DracoPoint(result, 2)
+      });
+    }
+    
   }
 
   socket.onclose = () => {

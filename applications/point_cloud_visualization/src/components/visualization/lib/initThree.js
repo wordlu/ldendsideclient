@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 let camera,controls;
 
 let geometry = new THREE.BufferGeometry()//创建图形对象
+let geometry2 = new THREE.BufferGeometry()//创建图形对象
 let geometry_draco; // draco 图形对象
 let vertices = new Float32Array()//创建图形的顶点对象
 let attribue = new THREE.BufferAttribute(vertices, 3)//创建属性对象
@@ -230,11 +231,24 @@ const cloudpointparams = getQueryString('cloudpointparams') ? JSON.parse(getQuer
 export const setPointCloud = () => {
   console.log(cloudpointparams)
   let material = new THREE.PointsMaterial({
-    color: `#${cloudpointparams.color}` || '#00ffff',//模型颜色
-    size: Number(cloudpointparams.size) || 0.1 //模型大小
+    color: `#${cloudpointparams.color}` || '#0cf36d',//模型颜色
+    size: Number(cloudpointparams.size) || 0.01 //模型大小
   });//配置模型的材质对象        
   function initpoint() {
     let points = new THREE.Points(geometry, material)//将上述对象配置到点模型对象上
+    scene.add(points)
+  }
+  initpoint() //  创建点云并添加到场景中
+}
+
+export const setPointCloud2 = () => {
+  console.log(cloudpointparams)
+  let material = new THREE.PointsMaterial({
+    color: '#ff01f3',//模型颜色
+    size: 0.01 //模型大小
+  });//配置模型的材质对象        
+  function initpoint() {
+    let points = new THREE.Points(geometry2, material)//将上述对象配置到点模型对象上
     scene.add(points)
   }
   initpoint() //  创建点云并添加到场景中
@@ -248,7 +262,7 @@ export const DrawPoint = (arr) => {
 }
 
 // Draco 解压pcd数据创建数据
-export const DracoPoint = async (arr) =>{
+export const DracoPoint = async (arr, type) =>{
   // 加载Draco解码器模块
   const decoderModule = await DracoDecoderModule();
   // 初始化解码缓冲区:将输入的数组arr转换为Uint8Array，并初始化解码缓冲区
@@ -304,21 +318,24 @@ export const DracoPoint = async (arr) =>{
   }
 
   // 调用createGeometry函数，将解码后的几何数据转换为可用的几何对象
-  createGeometry(geometry_draco)
+  createGeometry(geometry_draco, type)
   // 释放解码器、几何对象和缓冲区的资源
   decoderModule.destroy(outputGeometry);
   decoderModule.destroy(decoder);
   decoderModule.destroy(buffer);
 }
 
-
-function createGeometry(geometryData) {
+function createGeometry(geometryData, type) {
   let attribute = geometryData
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
   // 此方法上一帧的数据会被新的数据覆盖。这是因为Three.js的BufferAttribute对象是直接修改顶点数据的，而不是创建新的几何体
-  geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  if (type === 2) {
+    geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  } else {
+    geometry2.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  }
 }
 
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {
