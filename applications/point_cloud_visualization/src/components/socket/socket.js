@@ -1,3 +1,6 @@
+/**
+ * 实时可视化
+ */
 import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';

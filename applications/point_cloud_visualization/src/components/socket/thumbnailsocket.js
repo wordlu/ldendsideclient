@@ -1,3 +1,6 @@
+/**
+ * 可视化回放
+ */
 import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
@@ -57,21 +60,13 @@ export const createHub = ()=>{
   ws.onmessage = function(evt) {
     try{
       console.log("5:websocket接收到消息"+evt.data)
-      // 初始化数据
+      // 初始化数据，获取设备信息
       dataSet.info = JSON.parse(evt.data);
       const devicesHub = getQueryString('deviceshub') ? JSON.parse(getQueryString('deviceshub')) : [];
       const lidarDevices = devicesHub.filter(item => item.type == 'lidar').map(it => it.id);
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
       dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
-      // dataSet.activePcdInfo.meta_key = Object.keys(dataSet.info.meta_json.pcd)[0];
-      // dataSet.activePcdInfo.meta_val = Object.values(dataSet.info.meta_json.pcd)[0];
-      // 启动pcd压缩通道
-      // pcdencode()
-      // // 启动点云通道
-      // initPcdSocket()
-      // // 启动视觉通道
-      // initCamSocket()
       initAllSocket()
       dataSet.loading = false
     }catch(err){

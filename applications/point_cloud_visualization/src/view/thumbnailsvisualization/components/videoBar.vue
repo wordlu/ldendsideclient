@@ -25,6 +25,7 @@
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
+        <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
       </div>
       <!-- <div id="thumbnails" ref="thumbnailsContainer"></div> -->
     </div>
@@ -116,36 +117,7 @@ const loadThumbnails = () => {
   }
 };
 
-onMounted(async () => {
-  // data.value = await getDataval()
-  
-  // loadThumbnails();
-});
-
-// 遮挡
-// const currentScene = ref(null)
-// const getMasks = () => {
-//   const currentFrame = currentScene.value ? (currentScene.value.currentFrame || currentScene.value.frame_line[0]) : null
-//   if (currentFrame) {
-//     maskStart.value = currentFrame.start * step.value
-//     maskWidth.value = (currentFrame.end - currentFrame.start) * step.value
-//     activeFrame.value = currentFrame.start
-//     dataSet.activefame = currentFrame.start
-//     endframe.value = currentFrame.end
-//     startframe.value = currentFrame.start
-//   } else {
-//     maskStart.value = 0
-//     maskWidth.value = 0
-//     activeFrame.value = 0
-//     dataSet.activefame = 0
-//     endframe.value = Infinity
-//     startframe.value = 0
-//   }
-//   //重置所有状态
-//   isStart.value = false;
-//   document.querySelector('.Progress_line').style.width = 0
-// }
-
+onMounted(async () => {});
 
 const dataSet = dataSetStore()
 
@@ -157,8 +129,11 @@ const offsetX = ref(0)
 const isShow = ref(false)
 
 const frame_count = ref()
+const time_value = ref('00:00')
 
-const activeFrame = ref(dataSet.activefame)
+const activeFrame = ref(dataSet.activefame) // 当前帧
+
+const frame_duration = ref(0) //每帧的时长
 
 const moveFrame = ref()
 
@@ -169,11 +144,6 @@ const loading = ref(dataSet.loading)
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
 },{deep:true})
-
-// watch(()=>props.currentScene,(newVal)=>{
-//   currentScene.value = newVal.value
-//   getMasks()
-// },{deep:true})
 
 const step = computed(()=>{
   const num = document.querySelector('.Progress_back').offsetWidth / (frame_count.value)
@@ -186,9 +156,60 @@ if(dataSet.info.frame_count){
   isShow.value = true;
 }
 
+const getTimeValue = (start_time, end_time) => {
+  if (!start_time || !end_time || end_time < start_time) return '00:00:00';
+  const startTime = new Date(start_time);
+  const endTime = new Date(end_time);
+  const durationMs = endTime - startTime;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    // 超过1小时，显示为 "HH:mm:ss"
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    // 不超过1小时，显示为 "mm:ss"
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+}
+
+// 计算当前帧对应的时间（毫秒转秒）
+const currentTime = computed(() => {
+  return activeFrame.value * frame_duration.value;
+});
+
+// 将时间戳转换为格式化字符串，显示为 "秒.毫秒" 格式
+const currentTimeString = computed(() => {
+  const durationMs = currentTime.value;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    // 超过1小时，显示为 "HH:mm:ss"
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    // 不超过1小时，显示为 "mm:ss"
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+  // const seconds = Math.floor(currentTime.value / 1000);
+  // const milliseconds = currentTime.value % 1000;
+  // return `${seconds}.${String(milliseconds).padStart(3, '0')}s`;
+});
+
 watch(info,(newVal)=>{
+
+  // 处理帧数
   frame_count.value = newVal.frame_count-1;
   document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px';
+
+  // 计算总时长
+  time_value.value = getTimeValue(newVal.start_time, newVal.end_time);
+  //计算每帧的时长
+  frame_duration.value = (newVal.end_time - newVal.start_time) / frame_count.value;
 },{deep:true})
 
 watch(()=>dataSet.activefame,(newVal,oldVal)=>{
