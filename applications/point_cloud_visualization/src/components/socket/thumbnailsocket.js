@@ -170,7 +170,7 @@ export const initAllSocket = ()=>{
   allWs.onopen = function() {
     console.log("7:开启点云数据通道all")
     // 发送数据集id
-    allWsSend(0);
+    allWsSend(0, 0, 0, 1);
   };
 
   allWs.onclose = function() {
@@ -187,14 +187,16 @@ export const initAllSocket = ()=>{
 }
 
 let urlval = ''
+let request_count = 10
 //获取视觉数据并渲染
-export const allWsSend = (frame,play,endframe)=>{
+export const allWsSend = (frame,play,endframe,request_count_val)=>{
+  
   try{
     let options = {
       "dataset": getQueryString('dataset'),
       "devices": dataSet.info.devices,
       "request_index": frame,
-      "request_count": 1 
+      "request_count": request_count_val || request_count
       // frame_index:frame,
       // pcd: dataSet.info.meta_json.pcd,
       // cam: dataSet.info.meta_json.cam,
@@ -216,23 +218,18 @@ export const allWsSend = (frame,play,endframe)=>{
     console.log("8:all websocket发送消息"+JSON.stringify(options))
 
     allWs.onmessage = async function(evt) {
-      console.log("9:all websocket接收消息"+evt.data)
-      // console.log("env.data",evt.data)
+      // console.log("9:all websocket接收消息"+evt.data)
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
-        console.log("10:all websocket接收到string格式数据")
+        console.log("10:all websocket接收到string格式数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
-        /**
-         * od 真值数据
-         * kpi 包含ref&dut ref是待测数据 dut是真值数据
-         */
-        // dataSet.odInfo = splitInfo.od?splitInfo.od:[];
-        // dataSet.kpiInfo = splitInfo.kpi?splitInfo.kpi:[];
+        
       }else{
         console.log("10:all websocket接收到ArrayBuffer格式数据")
+        console.log(urlval,splitInfo.frame_index, "=====urlval")
         // 点云数据
         reader.readAs('ArrayBuffer',evt.data,function(result){
-          for(let key in splitInfo){
+          // for(let key in splitInfo){
 
             // activeCamInfo 当前帧的摄像头数据
             // if(dataSet.activeCamInfo.hasOwnProperty(key)){
@@ -249,11 +246,14 @@ export const allWsSend = (frame,play,endframe)=>{
             //   DracoPoint(result)
             // }
             dataSet.lidarDevices.forEach((key,index)=>{
+              if (key === "frame_index") return;
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
               if (!urlval || urlval == key) {
                 urlval = key
+                console.log("渲染点云1")
                 DracoPoint(res)
               } else {
+                console.log("渲染点云2")
                 DracoPoint(res, 2)
               }
             })
@@ -266,77 +266,14 @@ export const allWsSend = (frame,play,endframe)=>{
             //     dataSet.activeCam.value = url
             //   }
             // })
-          }
+          // }
         });
-
-        // 生成车辆的框
-        // odAllGroup = renderODBox(dataSet.odInfo,odAllGroup,dataSet.activefame-1);
-        // if(odAllGroup.list.length > 0){
-        //   console.log("生成车辆的框od")
-        //   console.log(odAllGroup, dataSet.activefame-1)
-        //   for(let i=0;i<odAllGroup.list.length;i++){
-            
-        //     if(i == dataSet.activefame-1){
-        //       console.log("生成车辆的框od--if")
-        //       odAllGroup.list[i].forEach((item,index)=>{
-        //         odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-        //         odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-        //         odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-        //         group.add(odAllGroup[`allGroup_${i}_${index}`]);
-        //       })
-        //     }else{
-        //       console.log("生成车辆的框od--else")
-        //       if (odAllGroup.list[i]) {
-        //         odAllGroup.list[i].forEach((item,index)=>{
-        //           group.remove(odAllGroup[`allGroup_${i}_${index}`]);
-        //           delete odAllGroup[`allGroup_${i}_${index}`];
-        //         })
-        //       }
-        //     }
-        //   }
-        // }
-
-        // refAllGroup = renderObjBox(dataSet.kpiInfo,refAllGroup);
-        // if(refAllGroup.list.length > 0){
-        //   for(let i=0;i<refAllGroup.list.length;i++){
-        //     if(i == dataSet.activefame-1){
-        //       refAllGroup.list[i].forEach((item,index)=>{
-        //         refAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-        //         refAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-        //         refAllGroup[`allGroup_${i}_${index}`].add(item.line);
-        //         group.add(refAllGroup[`allGroup_${i}_${index}`]);
-        //       })
-        //     }else{
-        //       refAllGroup.list[i].forEach((item,index)=>{
-        //         group.remove(refAllGroup[`allGroup_${i}_${index}`]);
-        //         delete refAllGroup[`allGroup_${i}_${index}`];
-        //       })
-        //     }
-        //   }
-        // }
         
-        // dutAllGroup = renderDUTBox(dataSet.kpiInfo,dutAllGroup);
-        // if(dutAllGroup.list.length > 0){
-        //   for(let i=0;i<dutAllGroup.list.length;i++){
-        //     if(i == dataSet.activefame-1){
-        //       dutAllGroup.list[i].forEach((item,index)=>{
-        //         dutAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-        //         dutAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-        //         dutAllGroup[`allGroup_${i}_${index}`].add(item.line);
-        //         group.add(dutAllGroup[`allGroup_${i}_${index}`]);
-        //       })
-        //     }else{
-        //       dutAllGroup.list[i].forEach((item,index)=>{
-        //         group.remove(dutAllGroup[`allGroup_${i}_${index}`]);
-        //         delete dutAllGroup[`allGroup_${i}_${index}`];
-        //       })
-        //     }
-        //   }
-        // }
-        console.log("判断结束：",endframe, dataSet.activefame, play)
-        if (play && dataSet.activefame <= endframe) {
-          dataSet.activefame++
-        }
+      }
+
+      console.log("判断结束：",endframe, dataSet.activefame, play)
+      if (play && dataSet.activefame <= endframe && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
+        dataSet.activefame = dataSet.activefame + request_count
       }
     };
   }catch(err){

@@ -25,6 +25,7 @@
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
+        <!-- <span>{{activeFrame }}</span> -->
         <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
       </div>
       <!-- <div id="thumbnails" ref="thumbnailsContainer"></div> -->
@@ -247,7 +248,7 @@ const setProgressPosUp = ()=>{
 }
 
 const getData = ()=>{
-  allWsSend(activeFrame.value, false, endframe.value);
+  allWsSend(activeFrame.value, false, endframe.value, 1);
 }
 
 const start=()=>{
@@ -256,7 +257,7 @@ const start=()=>{
       if(activeFrame.value < frame_count.value){
         dataSet.activefame ++
         activeFrame.value = dataSet.activefame
-        allWsSend(activeFrame.value, false)
+        // allWsSend(activeFrame.value, false)
         document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
         isStart.value = true
       }else if(activeFrame.value >= frame_count.value){
@@ -277,7 +278,7 @@ const prev=()=>{
   if(activeFrame.value > 0 && activeFrame.value > startframe.value){
     dataSet.activefame --
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value)
+    allWsSend(activeFrame.value, false, endframe.value, 1)
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }
@@ -288,7 +289,7 @@ const next=()=>{
   if(activeFrame.value < frame_count.value && activeFrame.value < endframe.value){
     dataSet.activefame ++
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value)
+    allWsSend(activeFrame.value, false, endframe.value, 1)
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }

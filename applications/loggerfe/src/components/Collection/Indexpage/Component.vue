@@ -325,7 +325,7 @@ const recordOnDevice = () => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
     pageLoading.value = true
-    loadingtext.value = '设备采集中，请稍后...'
+    loadingtext.value = '设备采集开启中，请稍后...'
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
