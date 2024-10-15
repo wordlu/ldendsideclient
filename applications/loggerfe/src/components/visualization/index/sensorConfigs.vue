@@ -2,7 +2,15 @@
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
       <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
-     <div class="title">配置信息</div>
+     <div class="title-area">
+      <span class="title">配置信息</span>
+      <div class="status-title">
+        <span class="status-title-item">设备</span>
+        <span class="status-title-item">数据</span>
+        <span class="status-title-item">显示</span>
+        <span class="status-title-item">存储</span>
+      </div>
+     </div>
 
       <div class="tree-area">
         <el-tree
@@ -209,7 +217,7 @@ const defaultProps = {
 
 const monitorPrefix = ref(window.server.monitorPrefix)
 
-const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
+const renderContentUrl = `http://loggertrash/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
@@ -570,13 +578,28 @@ defineExpose({
   overflow: auto;
   padding-right: 20px;
 
-  .title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #5A5E72;
-    margin-bottom: 10px;
-    text-align: left;
+  .title-area {
+    display: flex;
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #5A5E72;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .status-title {
+      margin-left: 70px;
+
+      .status-title-item {
+        font-size: 12px;
+        margin-left: 5px;
+      }
+    }
   }
+
+  
 
 }
 
