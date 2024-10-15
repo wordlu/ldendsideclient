@@ -92,14 +92,13 @@ export const connectWebSocket = (ip) => {
   };
 
   socket.onmessage = (event) => {
+    // @wodelu:TODO: 目前逻辑只有两颗雷达，判断是第一颗还是第二颗，分别渲染
     if (!urlval || urlval == ip) {
       urlval = ip
-      // 点云数据
       reader.readAs('ArrayBuffer',event.data,function(result){
         DracoPoint(result)
       });
     } else {
-      // 点云数据
       reader.readAs('ArrayBuffer',event.data,function(result){
         DracoPoint(result, 2)
       });
@@ -160,23 +159,6 @@ const disconnectFromAllIPs = (lists) => {
   });
 };
 
-
-// 创建 hub
-// export const createHub = async ()=>{
-//   // console.log("parent.window.server.domain", parent.window.server.domain)
-//   // await Post(`http://dms${parent.window.server.domain}/api/func_pods_hub/`,{
-//   await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
-//     service_name: "func-visualization",
-//     client_name: getQueryString('client_name')
-//   }).then(res=>{
-//     // hub 通道创建成功后才会初始化socket
-//     if(res.data.data.status == "Succeeded"){
-//       console.log("2:hub通道创建成功,获取pod_url")
-//       podUrl.value = res.data.data.pod_url;
-//       initSocket()
-//     }
-//   })
-// }
 
 // 执行点云压缩命令
 export const pcdencode = ()=>{

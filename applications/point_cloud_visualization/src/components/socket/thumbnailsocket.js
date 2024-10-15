@@ -64,7 +64,6 @@ export const createHub = ()=>{
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
       dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
-      console.log(dataSet, '=========')
       // dataSet.activePcdInfo.meta_key = Object.keys(dataSet.info.meta_json.pcd)[0];
       // dataSet.activePcdInfo.meta_val = Object.values(dataSet.info.meta_json.pcd)[0];
       // 启动pcd压缩通道
@@ -192,6 +191,7 @@ export const initAllSocket = ()=>{
   // dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
+let urlval = ''
 //获取视觉数据并渲染
 export const allWsSend = (frame,play,endframe)=>{
   try{
@@ -231,8 +231,8 @@ export const allWsSend = (frame,play,endframe)=>{
          * od 真值数据
          * kpi 包含ref&dut ref是待测数据 dut是真值数据
          */
-        dataSet.odInfo = splitInfo.od?splitInfo.od:[];
-        dataSet.kpiInfo = splitInfo.kpi?splitInfo.kpi:[];
+        // dataSet.odInfo = splitInfo.od?splitInfo.od:[];
+        // dataSet.kpiInfo = splitInfo.kpi?splitInfo.kpi:[];
       }else{
         console.log("10:all websocket接收到ArrayBuffer格式数据")
         // 点云数据
@@ -253,89 +253,91 @@ export const allWsSend = (frame,play,endframe)=>{
             // if(dataSet.activePcdInfo.meta_key == key){
             //   DracoPoint(result)
             // }
-
             dataSet.lidarDevices.forEach((key,index)=>{
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-              DracoPoint(res)
-            })
-
-            dataSet.cameraDevices.forEach((key,index)=>{
-              const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-              let url = arrayBufferToBase64(res)
-              dataSet.activeCamInfo[key] = url
-              if(dataSet.activeCam.cam == key){
-                dataSet.activeCam.value = url
+              if (!urlval || urlval == key) {
+                urlval = key
+                DracoPoint(res)
+              } else {
+                DracoPoint(res, 2)
               }
             })
 
-           
+            // dataSet.cameraDevices.forEach((key,index)=>{
+            //   const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+            //   let url = arrayBufferToBase64(res)
+            //   dataSet.activeCamInfo[key] = url
+            //   if(dataSet.activeCam.cam == key){
+            //     dataSet.activeCam.value = url
+            //   }
+            // })
           }
         });
 
         // 生成车辆的框
-        odAllGroup = renderODBox(dataSet.odInfo,odAllGroup,dataSet.activefame-1);
-        if(odAllGroup.list.length > 0){
-          console.log("生成车辆的框od")
-          console.log(odAllGroup, dataSet.activefame-1)
-          for(let i=0;i<odAllGroup.list.length;i++){
+        // odAllGroup = renderODBox(dataSet.odInfo,odAllGroup,dataSet.activefame-1);
+        // if(odAllGroup.list.length > 0){
+        //   console.log("生成车辆的框od")
+        //   console.log(odAllGroup, dataSet.activefame-1)
+        //   for(let i=0;i<odAllGroup.list.length;i++){
             
-            if(i == dataSet.activefame-1){
-              console.log("生成车辆的框od--if")
-              odAllGroup.list[i].forEach((item,index)=>{
-                odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(odAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              console.log("生成车辆的框od--else")
-              if (odAllGroup.list[i]) {
-                odAllGroup.list[i].forEach((item,index)=>{
-                  group.remove(odAllGroup[`allGroup_${i}_${index}`]);
-                  delete odAllGroup[`allGroup_${i}_${index}`];
-                })
-              }
-            }
-          }
-        }
+        //     if(i == dataSet.activefame-1){
+        //       console.log("生成车辆的框od--if")
+        //       odAllGroup.list[i].forEach((item,index)=>{
+        //         odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+        //         odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+        //         odAllGroup[`allGroup_${i}_${index}`].add(item.line);
+        //         group.add(odAllGroup[`allGroup_${i}_${index}`]);
+        //       })
+        //     }else{
+        //       console.log("生成车辆的框od--else")
+        //       if (odAllGroup.list[i]) {
+        //         odAllGroup.list[i].forEach((item,index)=>{
+        //           group.remove(odAllGroup[`allGroup_${i}_${index}`]);
+        //           delete odAllGroup[`allGroup_${i}_${index}`];
+        //         })
+        //       }
+        //     }
+        //   }
+        // }
 
-        refAllGroup = renderObjBox(dataSet.kpiInfo,refAllGroup);
-        if(refAllGroup.list.length > 0){
-          for(let i=0;i<refAllGroup.list.length;i++){
-            if(i == dataSet.activefame-1){
-              refAllGroup.list[i].forEach((item,index)=>{
-                refAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                refAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                refAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(refAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              refAllGroup.list[i].forEach((item,index)=>{
-                group.remove(refAllGroup[`allGroup_${i}_${index}`]);
-                delete refAllGroup[`allGroup_${i}_${index}`];
-              })
-            }
-          }
-        }
+        // refAllGroup = renderObjBox(dataSet.kpiInfo,refAllGroup);
+        // if(refAllGroup.list.length > 0){
+        //   for(let i=0;i<refAllGroup.list.length;i++){
+        //     if(i == dataSet.activefame-1){
+        //       refAllGroup.list[i].forEach((item,index)=>{
+        //         refAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+        //         refAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+        //         refAllGroup[`allGroup_${i}_${index}`].add(item.line);
+        //         group.add(refAllGroup[`allGroup_${i}_${index}`]);
+        //       })
+        //     }else{
+        //       refAllGroup.list[i].forEach((item,index)=>{
+        //         group.remove(refAllGroup[`allGroup_${i}_${index}`]);
+        //         delete refAllGroup[`allGroup_${i}_${index}`];
+        //       })
+        //     }
+        //   }
+        // }
         
-        dutAllGroup = renderDUTBox(dataSet.kpiInfo,dutAllGroup);
-        if(dutAllGroup.list.length > 0){
-          for(let i=0;i<dutAllGroup.list.length;i++){
-            if(i == dataSet.activefame-1){
-              dutAllGroup.list[i].forEach((item,index)=>{
-                dutAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                dutAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                dutAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(dutAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              dutAllGroup.list[i].forEach((item,index)=>{
-                group.remove(dutAllGroup[`allGroup_${i}_${index}`]);
-                delete dutAllGroup[`allGroup_${i}_${index}`];
-              })
-            }
-          }
-        }
+        // dutAllGroup = renderDUTBox(dataSet.kpiInfo,dutAllGroup);
+        // if(dutAllGroup.list.length > 0){
+        //   for(let i=0;i<dutAllGroup.list.length;i++){
+        //     if(i == dataSet.activefame-1){
+        //       dutAllGroup.list[i].forEach((item,index)=>{
+        //         dutAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+        //         dutAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+        //         dutAllGroup[`allGroup_${i}_${index}`].add(item.line);
+        //         group.add(dutAllGroup[`allGroup_${i}_${index}`]);
+        //       })
+        //     }else{
+        //       dutAllGroup.list[i].forEach((item,index)=>{
+        //         group.remove(dutAllGroup[`allGroup_${i}_${index}`]);
+        //         delete dutAllGroup[`allGroup_${i}_${index}`];
+        //       })
+        //     }
+        //   }
+        // }
         console.log("判断结束：",endframe, dataSet.activefame, play)
         if (play && dataSet.activefame <= endframe) {
           dataSet.activefame++
