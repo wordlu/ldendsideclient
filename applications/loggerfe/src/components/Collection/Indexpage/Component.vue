@@ -154,11 +154,22 @@ const taggingsTableData = ref([])
 const currentSelectedSensor = ref([])
 
 // 调试
-const testDeviceChange = (val) => {
+const testDeviceChange = async (val) => {
   switchLoading.value = true
   if (val) {
     startupDevice()
   } else {
+    const currentStatus = await findItem('/viewport_status', viewportId.value)
+    // 若为采集中，不可关闭
+    if (currentStatus.data.isrecording) {
+      ElMessage({
+        message: "设备正在采集中，请先停止采集",
+        type: 'error',
+      })
+      switchLoading.value = false;
+      testDevice.value = true
+      return;
+    }
     shutdownDevice()
   }
 }
@@ -263,7 +274,7 @@ const startupDevice = () => {
   })
 }
 // 结束调试
-const shutdownDevice = () => {
+const shutdownDevice = async () => {
   getCurrentPorts()
   if (sensorConfigsRef.value) {
     sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
@@ -620,6 +631,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     margin: 20px 0;
+    color: #606266;
   }
 
   &-top {

@@ -595,6 +595,7 @@ defineExpose({
       .status-title-item {
         font-size: 12px;
         margin-left: 5px;
+        color: #606266;
       }
     }
   }
