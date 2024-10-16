@@ -14,14 +14,14 @@
         <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
 
-        <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
+        <!-- <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
           标定
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item v-for="item in calibrationTemplates" :key="item.id" @click="handleClickCaliType(item)">{{ item.name }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
-        </el-dropdown>
+        </el-dropdown> -->
       </div>
     </div>
     <div
@@ -192,24 +192,24 @@ const checkTags = () => {
   checkTagsDialogVisible.value = true
 }
 
-const handleClickCaliType = (calitype) => {
-  window.history.pushState(null, '', `/loggerfe/datasetdetail/${route.params.id}/${calitype.id}`)
-}
+// const handleClickCaliType = (calitype) => {
+//   window.history.pushState(null, '', `/loggerfe/datasetdetail/${route.params.id}/${calitype.id}`)
+// }
 
-const calibrationTemplates = ref([])
-const queryCalibrationTemplates = (page: number) => {
-  try {
-    findAll(`/sys/calibration-templates`).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      calibrationTemplates.value = gostore.findAll('calibration-templates')
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.log(error)
-  }
-}
+// const calibrationTemplates = ref([])
+// const queryCalibrationTemplates = (page: number) => {
+//   try {
+//     findAll(`/sys/calibration-templates`).then((res: any) => {
+//       gostore.reset()
+//       gostore.sync(res.data)
+//       calibrationTemplates.value = gostore.findAll('calibration-templates')
+//     }).catch((err: any) => {
+//       console.log(err, 'err')
+//     })
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 
 const getTaggings = (lidarname: string) => {
   try {
@@ -383,9 +383,9 @@ const formatter = (thistime: any, fmt: string) => {
 }
 
 onMounted(() => {
+  // queryCalibrationTemplates()
   // queryCurrentDrivers()
   getTags()
-  queryCalibrationTemplates()
 })
 
 </script>
