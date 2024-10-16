@@ -8,6 +8,7 @@ import storagesPage from '../components/Systemanage/storages/Component.vue'
 import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
 import tagLibListPage from '../components/Systemanage/tagLibrary/taglist.vue'
 import collectiontemplatesPage from '../components/Systemanage/collectiontemplates/Component.vue'
+import calitemplatesPage from '../components/Systemanage/calitemplates/Component.vue'
 import layout from '../layout/Component.vue'
 
 const router = createRouter({
@@ -40,6 +41,10 @@ const router = createRouter({
         {
           path: 'collectiontemplates',
           component: collectiontemplatesPage
+        },
+        {
+          path: 'calitemplates',
+          component: calitemplatesPage
         },
         {
           path: 'systemmonitor',
