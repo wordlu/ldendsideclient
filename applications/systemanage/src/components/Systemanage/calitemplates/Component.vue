@@ -73,16 +73,16 @@ const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
 const nextPage = () => {
-  queryDeviceDrivers(current.value + 1)
+  queryCalibrationTemplates(current.value + 1)
 }
 
 const prevPage = () => {
-  queryDeviceDrivers(current.value - 1)
+  queryCalibrationTemplates(current.value - 1)
 }
 
 onMounted(() => {
   queryCurrentDrivers()
-  // queryDeviceDrivers(current.value)
+  // queryCalibrationTemplates(current.value)
 })
 
 const trigger = () => {
@@ -98,7 +98,7 @@ const queryCurrentDrivers = () => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
       viewportId.value = datavalue[0]?.id
-      queryDeviceDrivers(current.value)
+      queryCalibrationTemplates(current.value)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -109,12 +109,12 @@ const queryCurrentDrivers = () => {
 
 
 
-const queryDeviceDrivers = (page: number) => {
+const queryCalibrationTemplates = (page: number) => {
   try {
     const params = {
       offset: step.value * page,
       limit: step.value,
-      sort: '-created',
+      // sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
     findAll(`/sys/calibration-templates`, params).then((res: any) => {
@@ -134,7 +134,7 @@ const queryDeviceDrivers = (page: number) => {
 
 
 const change = () => {
-  queryDeviceDrivers(0)
+  queryCalibrationTemplates(0)
 }
 
 const formatter = (thistime: any, fmt: string) => {

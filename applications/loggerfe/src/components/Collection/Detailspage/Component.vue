@@ -13,6 +13,15 @@
         <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
+
+        <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
+          标定
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item v-for="item in calibrationTemplates" :key="item.id" @click="handleClickCaliType(item)">{{ item.name }}</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
     <div
@@ -154,8 +163,6 @@ const setAllTreeKeys = (keys) => {
   allports.value = keys
 }
 
-
-
 const handleLeafNodes = (leafNodes) => {
   selectedLeafNodes.value = leafNodes;
   getCurrentPorts()
@@ -183,6 +190,25 @@ const confirmAddTags = () => {
 const checkTags = () => {
   getTaggings()
   checkTagsDialogVisible.value = true
+}
+
+const handleClickCaliType = (calitype) => {
+  window.history.pushState(null, '', `/loggerfe/datasetdetail/${route.params.id}/${calitype.id}`)
+}
+
+const calibrationTemplates = ref([])
+const queryCalibrationTemplates = (page: number) => {
+  try {
+    findAll(`/sys/calibration-templates`).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      calibrationTemplates.value = gostore.findAll('calibration-templates')
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 const getTaggings = (lidarname: string) => {
@@ -294,6 +320,7 @@ const handleSelectTag = (tagData: any) => {
   })
 }
 
+// 已打标签的操作列
 const handleCommand = (command, row) => {
   if(command == '删除'){  
     const params = {
@@ -358,6 +385,7 @@ const formatter = (thistime: any, fmt: string) => {
 onMounted(() => {
   // queryCurrentDrivers()
   getTags()
+  queryCalibrationTemplates()
 })
 
 </script>
@@ -384,6 +412,17 @@ onMounted(() => {
     display: flex;
     flex-direction: row;
     margin: 20px 0;
+
+    .info-btn {
+      margin-right: 10px;
+    }
+
+    .cali-btn {
+      ::v-deep .el-button {
+        background: #FF7900;
+        border-color: #FF7900;
+      }
+    }
   }
 
   &-top {
