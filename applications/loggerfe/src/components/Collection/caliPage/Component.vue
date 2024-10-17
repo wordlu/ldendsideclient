@@ -50,7 +50,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0 20px;
+  padding: 0 10px;
 
   .cali-iframe-container {
     margin-top: 20px;

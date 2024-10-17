@@ -130,7 +130,7 @@ interface Option {
 
 const cloudpointparams = ref({
   color: "00ffff",
-  size: 0.1,
+  size: 0.01,
 })
 const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)

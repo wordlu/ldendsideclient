@@ -1,21 +1,19 @@
 <template>
-  <div id="thumbvisualization">
-    <!-- <topBarVue  @currentSceneClick="currentSceneClick" /> -->
+  <div id="calivisualization">
     <div class="view">
-      <toolBarVue/>
       <div class="main">
         <div class="container">
           <threeDView />
         </div>
         <videoBarVue :currentScene="currentScene"/>
       </div>
+      <toolBarVue/>
     </div>
   </div>
 </template>
 
 <script setup>
 import toolBarVue from "./components/toolBar.vue";
-import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
@@ -47,7 +45,7 @@ const y = ref(document.documentElement.clientHeight - 620)
 
 
 <style lang="scss">
-#thumbvisualization{
+#calivisualization{
   width: 100%;
   height: 100%;
   .view{
@@ -57,11 +55,18 @@ const y = ref(document.documentElement.clientHeight - 620)
     #toolBar{
       height: 100%;
     }
+    #toolBar{
+      width: 600px;
+      height: 100%;
+      background: #fff;
+      border-radius: 0 12px 12px 0;
+      padding-left: 20px;
+    }
     .main{
       flex: 1;
       height: 100%;
       background: #000000;
-      border-radius: 12px;
+      border-radius: 12px 0 0 12px;
       position: relative;
       .container{
         width: 100%;
