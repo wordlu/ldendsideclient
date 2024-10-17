@@ -203,11 +203,7 @@ const selOptions: selOptType[] = [
   { name: 'move', value: 'move', icon: 'bx:move' },
   { name: 'addToArea', value: 'union', icon: 'bi:union' },
   { name: 'subFromArea', value: 'intersection', icon: 'bi:subtract' },
-  {
-    name: 'intersectArea',
-    value: 'difference',
-    icon: 'icon-park-solid:intersection',
-  },
+  { name: 'intersectArea', value: 'difference', icon: 'icon-park-solid:intersection',},
 ]
 
 // 应用选择辅助器参数
@@ -259,18 +255,17 @@ const polarChange = (value: number) => {
 
 // 改变选择模式
 const selModeChange = (value: string) => {
-  debugger
-  // switch (value) {
-  //   case 'move': // 移动模式
-  //     cancelArea()
-  //     break
-  //   case 'select': // 选择模式
-  //     setSelectMode('union')
-  //     break
-  //   default:
-  //     setSelectMode(value)
-  // }
-  // pcControlStore.setSelMode(value)
+  switch (value) {
+    case 'move': // 移动模式
+      cancelArea()
+      break
+    case 'select': // 选择模式
+      setSelectMode('union')
+      break
+    default:
+      setSelectMode(value)
+  }
+  pcControlStore.setSelMode(value)
 }
 
 </script>

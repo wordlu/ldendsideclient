@@ -42,7 +42,7 @@ animate()
 // //创建一个WebGL渲染器
 const renderer = new THREE.WebGLRenderer()
 
-export { scene , renderer , controls , camera }
+export { scene , renderer , controls , camera, points1, points2, }
 
 //创建相机
 export const setCamera = (width, height) => {
@@ -228,28 +228,34 @@ export const getQueryString = (name) => {
 }
 const cloudpointparams = getQueryString('cloudpointparams') ? JSON.parse(getQueryString('cloudpointparams')) : {}
 
+let material1 = new THREE.PointsMaterial({
+  color: `#${cloudpointparams.color}` || '#0cf36d',//模型颜色
+  // size: Number(cloudpointparams.size) || 0.01 //模型大小
+  size: 0.001 //模型大小
+});//配置模型的材质对象   
+
+let material2 = new THREE.PointsMaterial({
+  color: '#ff01f3',//模型颜色
+  size: 0.01 //模型大小
+});//配置模型的材质对象 
+
+let points1 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
+let points2 = new THREE.Points(geometry2, material2)//将上述对象配置到点模型对象上
+
 export const setPointCloud = () => {
   console.log(cloudpointparams)
-  let material = new THREE.PointsMaterial({
-    color: `#${cloudpointparams.color}` || '#0cf36d',//模型颜色
-    size: Number(cloudpointparams.size) || 0.01 //模型大小
-  });//配置模型的材质对象        
+      
   function initpoint() {
-    let points = new THREE.Points(geometry, material)//将上述对象配置到点模型对象上
-    scene.add(points)
+    scene.add(points1)
   }
   initpoint() //  创建点云并添加到场景中
 }
 
 export const setPointCloud2 = () => {
   console.log(cloudpointparams)
-  let material = new THREE.PointsMaterial({
-    color: '#ff01f3',//模型颜色
-    size: 0.01 //模型大小
-  });//配置模型的材质对象        
+         
   function initpoint() {
-    let points = new THREE.Points(geometry2, material)//将上述对象配置到点模型对象上
-    scene.add(points)
+    scene.add(points2)
   }
   initpoint() //  创建点云并添加到场景中
 }
