@@ -1,10 +1,24 @@
+<template>
+  <div id="threeDView" ref="container">
+    <div id="three" ></div>
+    <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas>
+  </div>
+</template>
+
 <script setup>
-import { onMounted , ref , computed , watch , onBeforeUnmount } from 'vue';
+import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import { points1, points2, camera, scene, renderer, setCamera, setControls, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
+import { points1, points2, camera, scene, renderer, setCamera, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '../../pinia/dataSet.js';
+
+const props = defineProps({
+  isCali: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const dataSet = dataSetStore();
 
@@ -12,6 +26,10 @@ const loading = ref(dataSet.loading)
 
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
+},{deep:true})
+
+watch(()=>props.isCali,(newVal)=>{
+  setControlsEnable(!newVal)
 },{deep:true})
 
 const initThree = async () =>{
@@ -156,20 +174,24 @@ const onMouseUp = () => {
 
 // 绘制选择框
 const drawSelectionBox = () => {
-  const ctx = overlayCanvas.value.getContext('2d');
-  ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height);
-  ctx.strokeStyle = 'red';
-  ctx.strokeRect(
-    startPoint.x,
-    startPoint.y,
-    endPoint.x - startPoint.x,
-    endPoint.y - startPoint.y
-  );
+  
+  if(props.isCali) {
+    const ctx = overlayCanvas.value.getContext('2d');
+    ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height);
+    ctx.strokeStyle = 'red';
+    ctx.strokeRect(
+      startPoint.x,
+      startPoint.y,
+      endPoint.x - startPoint.x,
+      endPoint.y - startPoint.y
+    );
+  }
 };
 let selectedPoints = [], selectedIndices = [];
 
 // 判断哪些点在框内，并返回下标
 const selectPointsInBox = () => {
+  console.log('判断哪些点在框内，并返回下标')
   const rect = new THREE.Box2(
     new THREE.Vector2(Math.min(startPoint.x, endPoint.x), Math.min(startPoint.y, endPoint.y)),
     new THREE.Vector2(Math.max(startPoint.x, endPoint.x), Math.max(startPoint.y, endPoint.y))
@@ -198,13 +220,6 @@ const selectPointsInBox = () => {
 
 
 </script>
-
-<template>
-  <div id="threeDView" ref="container">
-    <div id="three" ></div>
-    <canvas ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas>
-  </div>
-</template>
 
 <style lang="scss">
 #threeDView{

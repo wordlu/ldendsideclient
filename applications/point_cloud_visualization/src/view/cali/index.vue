@@ -3,11 +3,11 @@
     <div class="view">
       <div class="main">
         <div class="container">
-          <threeDView />
+          <threeDView :isCali="isCali" />
         </div>
         <videoBarVue :currentScene="currentScene"/>
       </div>
-      <toolBarVue/>
+      <toolBarVue @selModeChange="selModeChange" />
     </div>
   </div>
 </template>
@@ -20,6 +20,8 @@ import cameras from "../../components/camera/cameras.vue";
 import { createHub } from '../../components/socket/calisocket';
 import { ref , watch } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
+
+const isCali = ref(false);
 const dataSet = dataSetStore();
 const activeCam = ref(dataSet.activeCam);
 const currentScene = ref({})
@@ -30,6 +32,10 @@ const currentSceneClick = (data) => {
 watch(()=>dataSet.activeCam,(newVal)=>{
   dataSet.value = newVal
 },{deep:true})
+
+const selModeChange = (val) => {
+  isCali.value = (val === 'union')
+}
 
 createHub();
 console.log("1:createHub")

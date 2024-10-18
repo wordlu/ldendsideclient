@@ -67,6 +67,12 @@ export const setControls = (camera) => {
   return controls
 }
 
+export const setControlsEnable = (val) => {
+  controls.enableRotate = val; // 禁用旋转
+  controls.enableZoom = val; // 禁用缩放
+  controls.enablePan = val; // 禁用平移 
+}
+
 //设置obj box框对象的方法
 export const renderObjBox = (data,allGroup) => {
   let group = new Array()
