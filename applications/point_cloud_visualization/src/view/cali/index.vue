@@ -3,11 +3,11 @@
     <div class="view">
       <div class="main">
         <div class="container">
-          <threeDView :isCali="isCali" />
+          <threeDView :isCali="isCali" :singleDevice="singleDevice" />
         </div>
-        <videoBarVue :currentScene="currentScene"/>
+        <videoBarVue v-show="showVideoBar" :currentScene="currentScene"/>
       </div>
-      <toolBarVue @selModeChange="selModeChange" />
+      <toolBarVue @selModeChange="selModeChange" @activeTabClick="activeTabClick" />
     </div>
   </div>
 </template>
@@ -37,6 +37,19 @@ watch(()=>dataSet.activeCam,(newVal)=>{
 
 const selModeChange = (val) => {
   isCali.value = (val === 'union')
+}
+const showVideoBar = ref(true)
+const singleDevice = ref('')
+const activeTabClick = (val) => {
+  singleDevice.value = ''
+  showVideoBar.value = (val === 0)
+  if (val === 1) {
+    // 源
+    singleDevice.value = route.query.devicename
+  } else if (val === 2) {
+    // 目标
+    singleDevice.value = 'mainlidar'
+  }
 }
 
 createHub();

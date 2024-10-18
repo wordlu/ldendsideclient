@@ -84,30 +84,23 @@
             </div>
           </div>
           <el-steps :active="active" finish-status="success" style="margin: 20px;">
-            <el-step title="设置源" @click="next(0)" ></el-step>
-            <el-step title="设置目标" @click="next(1)" ></el-step>
-            <el-step title="结果" @click="next(2)"></el-step>
+            <el-step title="选择点云" @click="next(0)" ></el-step>
+            <el-step title="设置源" @click="next(1)" ></el-step>
+            <el-step title="设置目标" @click="next(2)" ></el-step>
+            <el-step title="结果" @click="next(3)"></el-step>
           </el-steps>
           <el-descriptions border :column="1" v-show="active === 0">
-            <el-descriptions-item label="地面点">
-              <el-button type="primary" size="small">设置点云</el-button>
-              <el-button type="primary" size="small">清除点云</el-button>
+            <el-descriptions-item label="源">
+              {{ $route.query.devicename }}
             </el-descriptions-item>
-            <el-descriptions-item label="目标检测">
-              <el-button type="primary" size="small">添加目标</el-button>
-              <el-button type="primary" size="small">上传目标</el-button>
-              <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
-                <el-table-column prop="date" label="序号" width="40" align="center" />
-                <el-table-column prop="name" label="可见性" align="center" />
-                <el-table-column prop="address" label="操作" width="60" align="center" >
-                  <template #default="scope">
-                    <el-button link type="danger" size="small">删除</el-button>
-                  </template>
-                </el-table-column>  
-              </el-table>
+            <el-descriptions-item label="目标">
+              mainlidar
+            </el-descriptions-item>
+            <el-descriptions-item label="当前帧点云">
+              {{ dataSet.activefame }}
             </el-descriptions-item>
             <el-descriptions-item label="完成">
-              <el-button type="primary" size="small" @click="next">完成</el-button>
+              <el-button type="primary" size="small" @click="next(1)">完成</el-button>
             </el-descriptions-item>
           </el-descriptions>
           <el-descriptions border :column="1" v-show="active === 1">
@@ -129,19 +122,35 @@
               </el-table>
             </el-descriptions-item>
             <el-descriptions-item label="完成">
-              <el-button type="primary" size="small"  @click="next">完成</el-button>
+              <el-button type="primary" size="small" @click="next(2)">完成</el-button>
             </el-descriptions-item>
           </el-descriptions>
           <el-descriptions border :column="1" v-show="active === 2">
+            <el-descriptions-item label="地面点">
+              <el-button type="primary" size="small">设置点云</el-button>
+              <el-button type="primary" size="small">清除点云</el-button>
+            </el-descriptions-item>
+            <el-descriptions-item label="目标检测">
+              <el-button type="primary" size="small">添加目标</el-button>
+              <el-button type="primary" size="small">上传目标</el-button>
+              <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
+                <el-table-column prop="date" label="序号" width="40" align="center" />
+                <el-table-column prop="name" label="可见性" align="center" />
+                <el-table-column prop="address" label="操作" width="60" align="center" >
+                  <template #default="scope">
+                    <el-button link type="danger" size="small">删除</el-button>
+                  </template>
+                </el-table-column>  
+              </el-table>
+            </el-descriptions-item>
+            <el-descriptions-item label="完成">
+              <el-button type="primary" size="small"  @click="next(3)">完成</el-button>
+            </el-descriptions-item>
+          </el-descriptions>
+          <el-descriptions border :column="1" v-show="active === 3">
             <el-descriptions-item label="操作">
               <el-button type="primary" size="small">计算</el-button>
               <el-button type="primary" size="small">导出结果</el-button>
-            </el-descriptions-item>
-            <el-descriptions-item label="源">
-              源
-            </el-descriptions-item>
-            <el-descriptions-item label="目标">
-              目标
             </el-descriptions-item>
             <el-descriptions-item label="matrix4">
               <!-- <el-table border :data="tableData" style="width: 100%;" size="small" >
@@ -164,7 +173,7 @@
               1243
             </el-descriptions-item>
           </el-descriptions>
-          <div v-show="active === 2" style="position: absolute;bottom:2px;right:20px;">
+          <div v-show="active === 3" style="position: absolute;bottom:2px;right:20px;">
             <el-button type="primary" size="default" @click="save2Dataset">应用到数据集</el-button>
             <el-button type="primary" size="default" @click="save2Viewport">应用到视角</el-button>
           </div>
@@ -181,6 +190,9 @@ import { useRoute } from 'vue-router';
 import { patchItem, findItem, findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import { ElMessage } from 'element-plus'
+import { dataSetStore } from "@/pinia/dataSet";
+
+const dataSet = dataSetStore();
 
 const route = useRoute();
 interface selOptType {
@@ -188,6 +200,21 @@ interface selOptType {
   value: string
   icon: string
 }
+
+const loadOptions = ref({
+  "planeExtractThreshold": 0.1,
+  "groundExtractThreshold": 0.06,
+  "groundRemoval": true,
+  "groundRemovalThreshold": 0.05,
+  "targetHeight": 1.25,
+  "targetUpperBoundThreshold": 1.25,
+  "normalScale": 500,
+  "minimalPointsNumber": 5,
+  "globalAlign": true,
+  "globalAlignThreshold": 0.2,
+  "srcVoxelSize": 0.2,
+  "distVoxelSize": 0.2
+})
 
 const active = ref(0)
 const matrix4 =  ref([
@@ -242,13 +269,11 @@ const tableData = [
     name: 'Tom',
   },
 ]
+
 const next = (num) => {
-  if ((num || num === 0) && typeof(num) === 'number') {
-    active.value = num
-  } else {
-    if (active.value++ > 2) active.value = 0
-  }
-  
+  // 只有选择点云步骤显示videobar
+  active.value = num
+  emit('activeTabClick', active.value)
 }
 onMounted(() => {
   getDatasetDetails()
@@ -412,11 +437,15 @@ const selModeChange = (value: string) => {
   emit('selModeChange', value)
   // pcControlStore.value.selMode = value
 }
-const emit = defineEmits(['selModeChange'])
+const emit = defineEmits(['selModeChange', 'showVideoBar'])
 
 </script>
 
 <style lang="scss" scoped>
+
+::v-deep .el-descriptions__cell.is-bordered-label {
+  width: 100px;
+}
 .result-table {
   width: 450px;
   overflow: auto;

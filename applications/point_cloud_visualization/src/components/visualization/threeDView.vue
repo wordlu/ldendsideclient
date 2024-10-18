@@ -17,6 +17,10 @@ const props = defineProps({
   isCali: {
     type: Boolean,
     default: false
+  },
+  singleDevice: {
+    type: String,
+    default: ''
   }
 })
 
@@ -30,6 +34,16 @@ watch(()=>dataSet.loading,(newVal)=>{
 
 watch(()=>props.isCali,(newVal)=>{
   setControlsEnable(!newVal)
+},{deep:true})
+
+watch(()=>props.singleDevice,(newVal)=>{
+  points1.visible = true;
+  points2.visible = true;
+  if (newVal === 'mainlidar') {
+    points2.visible = false;
+  } else if (newVal) {
+    points1.visible = false;
+  }
 },{deep:true})
 
 const initThree = async () =>{
