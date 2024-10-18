@@ -146,17 +146,30 @@
               目标
             </el-descriptions-item>
             <el-descriptions-item label="matrix4">
-              <el-table border :data="tableData" style="width: 100%;" size="small" class="result-table">
+              <!-- <el-table border :data="tableData" style="width: 100%;" size="small" >
                 <el-table-column prop="date" label="序号"  align="center" />
-                <el-table-column prop="name" label="可见性" align="center" />
-                <el-table-column prop="date" label="序号"  align="center" />
-                <el-table-column prop="name" label="可见性" align="center" />
-              </el-table>
+                <el-table-column prop="name" label="可见性" align="center" /> 
+              </el-table> -->
+              <div class="result-table">
+                <table cellspacing="0" cellpadding="10">
+                  <tbody>
+                    <tr v-for="(row, rowIndex) in matrix4" :key="rowIndex">
+                      <td v-for="(item, colIndex) in row" :key="colIndex">
+                        <div :title="item" class="result-table-cell">{{ item }}</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </el-descriptions-item>
             <el-descriptions-item label="tf">
               1243
             </el-descriptions-item>
           </el-descriptions>
+          <div v-show="active === 2" style="position: absolute;bottom:2px;right:20px;">
+            <el-button type="primary" size="default" @click="save2Dataset">应用到数据集</el-button>
+            <el-button type="primary" size="default" @click="save2Viewport">应用到视角</el-button>
+          </div>
         </div>
       </div>
     </el-aside>
@@ -174,6 +187,32 @@ interface selOptType {
 }
 
 const active = ref(0)
+const matrix4 =  ref([
+    [
+        0.9808926046034612,
+        0.16522008882562422,
+        -0.102723028005876,
+        0.5889886522525678
+    ],
+    [
+        0.17620264782356698,
+        -0.9782948395208942,
+        0.10904968531251212,
+        4.645020335900523
+    ],
+    [
+        -0.08247620950436851,
+        -0.12506609938446703,
+        -0.9887143903324914,
+        -1.2630851953840043
+    ],
+    [
+        0,
+        0,
+        0,
+        1
+    ]
+])
 const tableData = [
   {
     date: '1',
@@ -207,6 +246,14 @@ const next = (num) => {
     if (active.value++ > 2) active.value = 0
   }
   
+}
+
+const save2Dataset = () => {
+  console.log('save2Dataset')
+}
+
+const save2Viewport = () => {
+  console.log('save2Viewport')
 }
 
 const pcControlStore = ref({
@@ -277,8 +324,28 @@ const emit = defineEmits(['selModeChange'])
 
 <style lang="scss" scoped>
 .result-table {
-  ::v-deep .el-table__header-wrapper {
-    display: none;
+  width: 450px;
+  overflow: auto;
+
+  table {
+    width:450px;
+    overflow: auto;
+
+    td {
+      border: 1px solid #ebeef5;
+      height:36px;
+
+      .result-table-cell {
+        width: 100px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        text-align: center;
+        white-space: nowrap;
+        color: #303133;
+        padding:4px;
+        font-size: 12px;
+      }
+    }
   }
 }
 .el-button--primary {
