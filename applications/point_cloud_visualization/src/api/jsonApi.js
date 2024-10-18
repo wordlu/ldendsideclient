@@ -12,8 +12,19 @@ export function findAll(module,data) {
   })
 }
 
+export function patchItem(module,params) {
+  return request({
+    url: `${module}/${params.data.id}`,
+    method: 'patch',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    },
+    data:params
+  })
+}
+
 export function findItem(module,id) {
-  let url = `/${module}/${id}`
+  let url = `${module}/${id}`
   return request({
     url: url,
     method: 'get',

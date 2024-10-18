@@ -1,5 +1,5 @@
 
-<!-- 点云操作区域 -->
+<!-- 点云操作区域:补盲雷达向主雷达标定 -->
 <template>
   <div id="toolBar">
     <el-aside
@@ -83,8 +83,6 @@
               </div>
             </div>
           </div>
-
-
           <el-steps :active="active" finish-status="success" style="margin: 20px;">
             <el-step title="设置源" @click="next(0)" ></el-step>
             <el-step title="设置目标" @click="next(1)" ></el-step>
@@ -177,9 +175,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref,defineEmits } from 'vue'
+import { ref, defineEmits, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useRoute } from 'vue-router';
+import { patchItem, findItem, findAll } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
+import { ElMessage } from 'element-plus'
 
+const route = useRoute();
 interface selOptType {
   name: string
   value: string
@@ -189,10 +192,10 @@ interface selOptType {
 const active = ref(0)
 const matrix4 =  ref([
     [
-        0.9808926046034612,
-        0.16522008882562422,
-        -0.102723028005876,
-        0.5889886522525678
+        0.9808926046034611,
+        0.1652200888256241,
+        -0.102723028005871,
+        0.5889886522525671
     ],
     [
         0.17620264782356698,
@@ -247,13 +250,103 @@ const next = (num) => {
   }
   
 }
+onMounted(() => {
+  getDatasetDetails()
+  queryViewportDetails()
+})
+
+// 获取当前viewport
+const viewportData = ref({})
+const queryViewportDetails = () => {
+  try {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+      viewportData.value = res.data.data[0]
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+// 获取当前dataset
+const datasetData = ref({})
+const getDatasetDetails = () => {
+  try {
+    findItem('/models/datasets', route.query.datasetid).then((res: any) => {
+      gostore.reset()
+      datasetData.value = gostore.sync(res.data)
+    }).catch((err: any) => {
+      console.error(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 const save2Dataset = () => {
-  console.log('save2Dataset')
+  const calibrations = datasetData.value.calibrations
+  const devicename = route.query.devicename
+  calibrations[devicename] = matrix4.value
+  const params = {
+    data: {
+      type: 'datasets',
+      id: route.query.datasetid,
+      attributes: {
+        calibrations: calibrations
+      }
+    }
+        
+  }
+  patchItem('/models/datasets', params).then((res) => {
+    console.log(res)
+    ElMessage({
+      message: "应用到数据集成功",
+      type: 'success',
+    })
+  }).catch(err => {
+    let msg = "应用到数据集失败"
+    const {response:{data:{errors}}} = err
+    if(errors && errors[0]) {
+      msg = errors[0]['detail']
+    }
+    ElMessage({
+      message: msg,
+      type: 'error',
+    })
+  })
+
 }
 
 const save2Viewport = () => {
-  console.log('save2Viewport')
+  const calibrations = viewportData.value.calibrations || {}
+  const devicename = route.query.devicename
+  calibrations[devicename] = matrix4.value
+  const params = {
+    data: {
+      type: 'viewports',
+      id: viewportData.value.id,
+      attributes: {
+        calibrations: calibrations
+      }
+    }
+  }
+  patchItem('/models/viewports', params).then((res) => {
+    console.log(res)
+    ElMessage({
+      message: "应用到视角成功",
+      type: 'success',
+    })
+  }).catch(err => {
+    let msg = "应用到视角失败"
+    const {response:{data:{errors}}} = err
+    if(errors && errors[0]) {
+      msg = errors[0]['detail']
+    }
+    ElMessage({
+      message: msg,
+      type: 'error',
+    })
+  })
 }
 
 const pcControlStore = ref({
@@ -320,6 +413,7 @@ const selModeChange = (value: string) => {
   // pcControlStore.value.selMode = value
 }
 const emit = defineEmits(['selModeChange'])
+
 </script>
 
 <style lang="scss" scoped>
