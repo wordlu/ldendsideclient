@@ -33,9 +33,7 @@ watch(()=>dataSet.loading,(newVal)=>{
 },{deep:true})
 
 watch(()=>dataSet.clearSelectionBoxValue,(newVal)=>{
-  if(newVal) {
-    clearSelectionBox()
-  }
+  clearSelectionBox()
 },{deep:true})
 
 watch(()=>props.isCali,(newVal)=>{
@@ -46,9 +44,9 @@ watch(()=>props.singleDevice,(newVal)=>{
   points1.visible = true;
   points2.visible = true;
   if (newVal === 'mainlidar') {
-    points2.visible = false;
-  } else if (newVal) {
     points1.visible = false;
+  } else if (newVal) {
+    points2.visible = false;
   }
 },{deep:true})
 

@@ -39,8 +39,6 @@ const animate = () => {
 
 animate()
 
-// let clearSelectionBoxValue = false
-
 /**
  * 配准---设置地面点
  * @param payload 接口请求回来的数据{centroid, norm, xLen, yLen}
@@ -58,7 +56,6 @@ export const setSceneGround = (payload) => {
     payload.yLen
   )
   scene.add(groundPlane)
-  // clearSelectionBoxValue = true
 }
 
 /**

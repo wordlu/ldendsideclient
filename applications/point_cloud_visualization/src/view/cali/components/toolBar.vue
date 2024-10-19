@@ -127,8 +127,8 @@
           </el-descriptions>
           <el-descriptions border :column="1" v-show="active === 2">
             <el-descriptions-item label="地面点">
-              <el-button type="primary" size="small">设置点云</el-button>
-              <el-button type="primary" size="small">清除点云</el-button>
+              <el-button type="primary" size="small" @click="handleSetGroundTarget">设置点云</el-button>
+              <el-button type="primary" size="small" @click="resetGroundPointsClick">清除点云</el-button>
             </el-descriptions-item>
             <el-descriptions-item label="目标检测">
               <el-button type="primary" size="small">添加目标</el-button>
@@ -253,22 +253,42 @@ const next = (num) => {
   // 只有选择点云步骤显示videobar
   active.value = num
   emit('activeTabClick', active.value)
+  dataSet.clearSelectionBoxValue++ //清除选框
+  resetGroundPointsClick() //清除地面点
 }
 onMounted(() => {
   getDatasetDetails()
   queryViewportDetails()
 })
 
+// 设置目标地面点
+const ground_mode_target = ref([])
+const handleSetGroundTarget = async () => {
+  // @wodelu:TODO:此处应标识是第几次选点
+  const selIdx = 0 
+  const res = await postSetSourceGroundTarget(selIdx)
+  ground_mode_target.value = res.data.ground_mode
+  updateRes(res, selIdx)
+}
+const postSetSourceGroundTarget = async (selIdx: any) => {
+  const params =  {
+    "dataset": route.query.dataset, //数据集名称
+    "device": 'mainlidar', // 雷达名称              
+    "frame_index": dataSet.activefame, // 帧id
+    "idx": dataSet.selectedIndices,
+    "config_json": config_json.value
+  }
+  return await Post(`/calibration/registration/confirm_ground`, params)
+}
 
 const ground_mode = ref([])
-// 设置地面点
+// 设置源地面点
 const handleSetGround = async () => {
   // @wodelu:TODO:此处应标识是第几次选点
   const selIdx = 0 
   const res = await postSetSourceGround(selIdx)
   ground_mode.value = res.data.ground_mode
   updateRes(res, selIdx)
-  
 }
 
 const postSetSourceGround = async (selIdx: any) => {
@@ -313,7 +333,7 @@ const updateRes = (res: any, selIdx: any) => {
       xLen: 10,
       yLen: 10,
     })
-    dataSet.clearSelectionBoxValue = true
+    dataSet.clearSelectionBoxValue++
   } else {
     ElMessage.error('设置点云失败')
     caliData.groundIdx = new Set()
@@ -340,24 +360,34 @@ const handleAddTarget = () => {
     visible: 0,
     result: [],
   })
+  dataSet.selectedTargetIndices.push(dataSet.selectedIndices)
+  console.log(dataSet.selectedTargetIndices, "设置目标检测")
   // 清空选区
   // pcSelector?.clearSelection()
-  dataSet.clearSelectionBoxValue = true
+  dataSet.clearSelectionBoxValue++
 }
 
+// 目标检测
+const uploadSourceTargetsIdx = async () => {
+  const params =  {
+    "dataset": route.query.dataset, //数据集名称
+    "device": route.query.devicename, // 雷达名称              
+    "frame_index": dataSet.activefame, // 帧id
+    "ground_mode": ground_mode.value,
+    "idx_list": dataSet.selectedTargetIndices,
+    "config_json": config_json.value,
+    "matrix4": matrix4.value
+  }
+  return await Post(`/calibration/registration/confirm_target`, params)
+
+}
 
 // 上传数据
 const handleUploadTargets = async () => {
-  removeTarget()
-  const params = caliData.targetTable.map((item) => [...item.idx])
-  let res: any
-  if (props.lidarType === 'source') {
-    res = await uploadSourceTargetsIdx(params)
-  } else if (props.lidarType === 'dest') {
-    res = await uploadDestTargetsIdx(params)
-  }
+  let res = await uploadSourceTargetsIdx()
   if (res.status === 200 || res.status === 201) {
-    caliData.targetTable.forEach((val: any, idx: number) => {
+    debugger
+    tableData.value.forEach((val: any, idx: number) => {
       const curData = res.data[idx]
       val.result = [planeParamsCvt(curData[0]), planeParamsCvt(curData[1])]
     })
