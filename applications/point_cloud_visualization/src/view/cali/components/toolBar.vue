@@ -360,14 +360,14 @@ const handleAddDestTarget = () => {
   dataSet.clearSelectionBoxValue++
 }
 
-// 目标检测
-const uploadSourceTargetsIdx = async () => {
+// 目标目标检测
+const uploadDestTargetsIdx = async () => {
   const params =  {
     "dataset": route.query.dataset, //数据集名称
     "device": route.query.devicename, // 雷达名称              
     "frame_index": dataSet.activefame, // 帧id
-    "ground_mode": ground_mode.value,
-    "idx_list": dataSet.selectedSourceTargetIndices,
+    "ground_mode": ground_mode_dest.value,
+    "idx_list": dataSet.selectedDestTargetIndices?.filter(it => it.length > 0),
     "config_json": config_json.value,
     "matrix4": matrix4.value
   }
@@ -375,7 +375,42 @@ const uploadSourceTargetsIdx = async () => {
 
 }
 
-// 上传数据
+// 目标目标检测
+const handleUploadDestTargets = async () => {
+  let res = await uploadDestTargetsIdx()
+  if (res.status === 200 || res.status === 201) {
+    tableData.value.forEach((val: any, idx: number) => {
+      const curData = res.data[idx]
+      val.result = [planeParamsCvt(curData[0]), planeParamsCvt(curData[1])]
+    })
+    // 更新画布
+    caliData.targetTable.forEach((val) => {
+      addSceneTarget(val.result)
+    })
+    // 更新目标板状态
+    caliData.targetState = true
+  } else {
+    caliData.targetState = false
+    ElMessage.error(res.msg)
+    return
+  }
+}
+
+// 源目标检测
+const uploadSourceTargetsIdx = async () => {
+  const params =  {
+    "dataset": route.query.dataset, //数据集名称
+    "device": route.query.devicename, // 雷达名称              
+    "frame_index": dataSet.activefame, // 帧id
+    "ground_mode": ground_mode.value,
+    "idx_list": dataSet.selectedSourceTargetIndices?.filter(it => it.length > 0),
+    "config_json": config_json.value,
+    "matrix4": matrix4.value
+  }
+  return await Post(`/calibration/registration/confirm_target`, params)
+
+}
+// 源上传数据
 const handleUploadTargets = async () => {
   let res = await uploadSourceTargetsIdx()
   if (res.status === 200 || res.status === 201) {
@@ -412,19 +447,19 @@ const resetGroundPointsClick = () => {
 
 const handleCalculate = async () => {
   const data = {
-   "src_obj_point_idx": dataSet.selectedSourceTargetIndices, // src文件的目标点下标
-   "dest_obj_point_idx": dataSet.selectedDestTargetIndices, // dest 目标点下标
-   "frame_index": dataSet.activefame,
-   "dataset": route.query.dataset,
-   "src_device": route.query.devicename,
-   "dest_device": 'mainlidar',
-   "config_json": config_json.value,
-  "src_ground_mode": ground_mode.value, // src 设置地面点返回的ground_mode
-  "dest_ground_mode": ground_mode_dest.value, // dest 设置地面点返回的ground_mode
-  "matrix4": matrix4.value
+    "src_obj_point_idx": dataSet.selectedSourceTargetIndices?.filter(it => it.length > 0), // src文件的目标点下标
+    "dest_obj_point_idx": dataSet.selectedDestTargetIndices?.filter(it => it.length > 0), // dest 目标点下标
+    "frame_index": dataSet.activefame,
+    "dataset": route.query.dataset,
+    "src_device": route.query.devicename,
+    "dest_device": 'mainlidar',
+    "config_json": config_json.value,
+    "src_ground_mode": ground_mode.value, // src 设置地面点返回的ground_mode
+    "dest_ground_mode": ground_mode_dest.value, // dest 设置地面点返回的ground_mode
+    "matrix4": matrix4.value
   }
   const result = await Post(`/calibration/registration/result`, data)
-  debugger
+  matrix4.value = result.data.data.matrix4
 }
 
 // 获取当前viewport
