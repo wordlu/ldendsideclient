@@ -109,7 +109,7 @@
               <el-button type="primary" size="small" @click="resetGroundPointsClick">清除点云</el-button>
             </el-descriptions-item>
             <el-descriptions-item label="目标检测">
-              <el-button type="primary" size="small" @click="handleAddTarget">添加目标</el-button>
+              <el-button type="primary" size="small" @click="handleAddTargets">添加目标</el-button>
               <el-button type="primary" size="small" @click="handleUploadTargets">上传目标</el-button>
               <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
                 <el-table-column type="index" label="序号" width="40" align="center" />
@@ -125,15 +125,16 @@
               <el-button type="primary" size="small" @click="next(2)">完成</el-button>
             </el-descriptions-item>
           </el-descriptions>
+          <!-- 目标检测 -->
           <el-descriptions border :column="1" v-show="active === 2">
             <el-descriptions-item label="地面点">
               <el-button type="primary" size="small" @click="handleSetGroundTarget">设置点云</el-button>
               <el-button type="primary" size="small" @click="resetGroundPointsClick">清除点云</el-button>
             </el-descriptions-item>
             <el-descriptions-item label="目标检测">
-              <el-button type="primary" size="small">添加目标</el-button>
-              <el-button type="primary" size="small">上传目标</el-button>
-              <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
+              <el-button type="primary" size="small" @click="handleAddDestTarget">添加目标</el-button>
+              <el-button type="primary" size="small" @click="handleUploadDestTargets">上传目标</el-button>
+              <el-table :data="tableDataDest" style="width: 100%;margin-top: 20px;" size="small" >
                 <el-table-column prop="idx" label="序号" width="40" align="center" />
                 <el-table-column prop="visible" label="可见性" align="center" />
                 <el-table-column prop="address" label="操作" width="60" align="center" >
@@ -149,8 +150,8 @@
           </el-descriptions>
           <el-descriptions border :column="1" v-show="active === 3">
             <el-descriptions-item label="操作">
-              <el-button type="primary" size="small">计算</el-button>
-              <el-button type="primary" size="small">导出结果</el-button>
+              <el-button type="primary" size="small" @click="handleCalculate">计算</el-button>
+              <!-- <el-button type="primary" size="small">导出结果</el-button> -->
             </el-descriptions-item>
             <el-descriptions-item label="matrix4">
               <!-- <el-table border :data="tableData" style="width: 100%;" size="small" >
@@ -222,33 +223,13 @@ const config_json = ref({
 
 const active = ref(0)
 const matrix4 =  ref([
-    [
-        0.9808926046034611,
-        0.1652200888256241,
-        -0.102723028005871,
-        0.5889886522525671
-    ],
-    [
-        0.17620264782356698,
-        -0.9782948395208942,
-        0.10904968531251212,
-        4.645020335900523
-    ],
-    [
-        -0.08247620950436851,
-        -0.12506609938446703,
-        -0.9887143903324914,
-        -1.2630851953840043
-    ],
-    [
-        0,
-        0,
-        0,
-        1
-    ]
+    [1, 0, 0, 0],
+    [0, 1,0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]
 ])
 const tableData = ref([])
-
+const tableDataDest = ref([])
 const next = (num) => {
   // 只有选择点云步骤显示videobar
   active.value = num
@@ -262,12 +243,12 @@ onMounted(() => {
 })
 
 // 设置目标地面点
-const ground_mode_target = ref([])
+const ground_mode_dest = ref([])
 const handleSetGroundTarget = async () => {
   // @wodelu:TODO:此处应标识是第几次选点
   const selIdx = 0 
   const res = await postSetSourceGroundTarget(selIdx)
-  ground_mode_target.value = res.data.ground_mode
+  ground_mode_dest.value = res.data.ground_mode
   updateRes(res, selIdx)
 }
 const postSetSourceGroundTarget = async (selIdx: any) => {
@@ -350,7 +331,7 @@ const updateRes = (res: any, selIdx: any) => {
 }
 
 // 添加数据
-const handleAddTarget = () => {
+const handleAddTargets = () => {
   // const selIdx = pcSelector?.selIdx
   // if (selIdx?.size == 0) {
   //   ElMessage.error(`please select first`)
@@ -360,8 +341,20 @@ const handleAddTarget = () => {
     visible: 0,
     result: [],
   })
-  dataSet.selectedTargetIndices.push(dataSet.selectedIndices)
-  console.log(dataSet.selectedTargetIndices, "设置目标检测")
+  dataSet.selectedSourceTargetIndices.push(dataSet.selectedIndices)
+  console.log(dataSet.selectedSourceTargetIndices, "设置源目标检测")
+  // 清空选区
+  // pcSelector?.clearSelection()
+  dataSet.clearSelectionBoxValue++
+}
+
+const handleAddDestTarget = () => {
+  tableDataDest.value.push({
+    visible: 0,
+    result: [],
+  })
+  dataSet.selectedDestTargetIndices.push(dataSet.selectedIndices)
+  console.log(dataSet.selectedDestTargetIndices, "设置目标目标检测")
   // 清空选区
   // pcSelector?.clearSelection()
   dataSet.clearSelectionBoxValue++
@@ -374,7 +367,7 @@ const uploadSourceTargetsIdx = async () => {
     "device": route.query.devicename, // 雷达名称              
     "frame_index": dataSet.activefame, // 帧id
     "ground_mode": ground_mode.value,
-    "idx_list": dataSet.selectedTargetIndices,
+    "idx_list": dataSet.selectedSourceTargetIndices,
     "config_json": config_json.value,
     "matrix4": matrix4.value
   }
@@ -386,7 +379,6 @@ const uploadSourceTargetsIdx = async () => {
 const handleUploadTargets = async () => {
   let res = await uploadSourceTargetsIdx()
   if (res.status === 200 || res.status === 201) {
-    debugger
     tableData.value.forEach((val: any, idx: number) => {
       const curData = res.data[idx]
       val.result = [planeParamsCvt(curData[0]), planeParamsCvt(curData[1])]
@@ -416,6 +408,23 @@ const resetGroundPointsClick = () => {
   }
   caliData.groundState = false
   clearPlane()
+}
+
+const handleCalculate = async () => {
+  const data = {
+   "src_obj_point_idx": dataSet.selectedSourceTargetIndices, // src文件的目标点下标
+   "dest_obj_point_idx": dataSet.selectedDestTargetIndices, // dest 目标点下标
+   "frame_index": dataSet.activefame,
+   "dataset": route.query.dataset,
+   "src_device": route.query.devicename,
+   "dest_device": 'mainlidar',
+   "config_json": config_json.value,
+  "src_ground_mode": ground_mode.value, // src 设置地面点返回的ground_mode
+  "dest_ground_mode": ground_mode_dest.value, // dest 设置地面点返回的ground_mode
+  "matrix4": matrix4.value
+  }
+  const result = await Post(`/calibration/registration/result`, data)
+  debugger
 }
 
 // 获取当前viewport

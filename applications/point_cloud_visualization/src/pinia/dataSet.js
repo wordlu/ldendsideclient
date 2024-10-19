@@ -21,7 +21,8 @@ export const dataSetStore = defineStore('dataSet', {
       odInfo:[],
       kpiInfo:[],
       selectedIndices:[],
-      selectedTargetIndices:[],
+      selectedSourceTargetIndices:[],
+      selectedDestTargetIndices:[],
       clearSelectionBoxValue:0,
       loading:true
     }
