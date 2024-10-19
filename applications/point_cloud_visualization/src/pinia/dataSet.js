@@ -20,6 +20,8 @@ export const dataSetStore = defineStore('dataSet', {
       },
       odInfo:[],
       kpiInfo:[],
+      selectedIndices:[],
+      clearSelectionBoxValue:false,
       loading:true
     }
   },

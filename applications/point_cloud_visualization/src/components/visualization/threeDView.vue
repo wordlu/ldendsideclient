@@ -8,10 +8,10 @@
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import { points1, points2, camera, scene, renderer, setCamera, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
+import { points1, points2, camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
-import { dataSetStore } from '../../pinia/dataSet.js';
+import { dataSetStore } from '@/pinia/dataSet.js';
 
 const props = defineProps({
   isCali: {
@@ -30,6 +30,12 @@ const loading = ref(dataSet.loading)
 
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
+},{deep:true})
+
+watch(()=>dataSet.clearSelectionBoxValue,(newVal)=>{
+  if(newVal) {
+    clearSelectionBox()
+  }
 },{deep:true})
 
 watch(()=>props.isCali,(newVal)=>{
@@ -223,13 +229,23 @@ const selectPointsInBox = () => {
 
     // 判断该点是否在框内
     if (rect.containsPoint(new THREE.Vector2(vector.x, vector.y))) {
-      selectedPoints.push(point);
+      selectedPoints.push(point); // 存储点的坐标
       selectedIndices.push(i / 3); // 存储点的下标
     }
   }
 
   console.log('Selected Points:', selectedPoints);
   console.log('Selected Indices:', selectedIndices);
+  dataSet.selectedIndices = selectedIndices;
+  // @wodelu:TODO:源雷达是补盲雷达，points2，暂时写死
+  highlightSelectedPoints(selectedIndices, 2)
+};
+
+
+// 清除选择框的函数
+const clearSelectionBox = () => {
+  const ctx = overlayCanvas.value.getContext('2d');
+  ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height); // 清空 Canvas
 };
 
 

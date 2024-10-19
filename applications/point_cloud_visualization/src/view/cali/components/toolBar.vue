@@ -105,20 +105,20 @@
           </el-descriptions>
           <el-descriptions border :column="1" v-show="active === 1">
             <el-descriptions-item label="地面点">
-              <el-button type="primary" size="small">设置点云</el-button>
-              <el-button type="primary" size="small">清除点云</el-button>
+              <el-button type="primary" size="small" @click="handleSetGround">设置点云</el-button>
+              <el-button type="primary" size="small" @click="resetGroundPointsClick">清除点云</el-button>
             </el-descriptions-item>
             <el-descriptions-item label="目标检测">
-              <el-button type="primary" size="small">添加目标</el-button>
-              <el-button type="primary" size="small">上传目标</el-button>
+              <el-button type="primary" size="small" @click="handleAddTarget">添加目标</el-button>
+              <el-button type="primary" size="small" @click="handleUploadTargets">上传目标</el-button>
               <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
-                <el-table-column prop="date" label="序号" width="40" align="center" />
-                <el-table-column prop="name" label="可见性" align="center" />
+                <el-table-column type="index" label="序号" width="40" align="center" />
+                <el-table-column prop="visible" label="可见性" align="center" />
                 <el-table-column prop="address" label="操作" width="60" align="center" >
                   <template #default="scope">
                     <el-button link type="danger" size="small">删除</el-button>
                   </template>
-                </el-table-column>  
+                </el-table-column>   
               </el-table>
             </el-descriptions-item>
             <el-descriptions-item label="完成">
@@ -134,8 +134,8 @@
               <el-button type="primary" size="small">添加目标</el-button>
               <el-button type="primary" size="small">上传目标</el-button>
               <el-table :data="tableData" style="width: 100%;margin-top: 20px;" size="small" >
-                <el-table-column prop="date" label="序号" width="40" align="center" />
-                <el-table-column prop="name" label="可见性" align="center" />
+                <el-table-column prop="idx" label="序号" width="40" align="center" />
+                <el-table-column prop="visible" label="可见性" align="center" />
                 <el-table-column prop="address" label="操作" width="60" align="center" >
                   <template #default="scope">
                     <el-button link type="danger" size="small">删除</el-button>
@@ -191,8 +191,12 @@ import { patchItem, findItem, findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import { ElMessage } from 'element-plus'
 import { dataSetStore } from "@/pinia/dataSet";
+import { Post } from "@/api/api";
+import { setSceneGround, clearPlane } from "@/components/visualization/lib/initThree";
+
 
 const dataSet = dataSetStore();
+let caliData = {}
 
 const route = useRoute();
 interface selOptType {
@@ -201,7 +205,7 @@ interface selOptType {
   icon: string
 }
 
-const loadOptions = ref({
+const config_json = ref({
   "planeExtractThreshold": 0.1,
   "groundExtractThreshold": 0.06,
   "groundRemoval": true,
@@ -243,32 +247,7 @@ const matrix4 =  ref([
         1
     ]
 ])
-const tableData = [
-  {
-    date: '1',
-    name: 'Tom',
-    date: '1',
-    name: 'Tom',
-  },
-  {
-    date: '2',
-    name: 'Tom',
-    date: '1',
-    name: 'Tom',
-  },
-  {
-    date: '2',
-    name: 'Tom',
-    date: '1',
-    name: 'Tom',
-  },
-  {
-    date: '2',
-    name: 'Tom',
-    date: '1',
-    name: 'Tom',
-  },
-]
+const tableData = ref([])
 
 const next = (num) => {
   // 只有选择点云步骤显示videobar
@@ -280,11 +259,140 @@ onMounted(() => {
   queryViewportDetails()
 })
 
+
+const ground_mode = ref([])
+// 设置地面点
+const handleSetGround = async () => {
+  // @wodelu:TODO:此处应标识是第几次选点
+  const selIdx = 0 
+  const res = await postSetSourceGround(selIdx)
+  ground_mode.value = res.data.ground_mode
+  updateRes(res, selIdx)
+  
+}
+
+const postSetSourceGround = async (selIdx: any) => {
+  const params =  {
+    "dataset": route.query.dataset, //数据集名称
+    "device": route.query.devicename, // 雷达名称              
+    "frame_index": dataSet.activefame, // 帧id
+    "idx": dataSet.selectedIndices,
+    "config_json": config_json.value,
+    "matrix4": matrix4.value
+  }
+  return await Post(`/calibration/registration/confirm_ground`, params)
+}
+
+/**
+ * 将后端获取的平面参数转成前端的数据格式.
+ * @param {Ojbect} bePlane 后端获取的平面参数.
+ */
+ const planeParamsCvt = (bePlane: any) => {
+  return {
+    error: bePlane.error,
+    inlierNum: bePlane.inlier_points_num,
+    outlierNum: bePlane.outlier_points_num,
+    centroid: bePlane.center,
+    norm: bePlane.norm,
+  }
+}
+// 渲染地面点
+const updateRes = (res: any, selIdx: any) => {
+  if (res?.status === 200 || res?.status) {
+    // 创建
+    caliData.groundIdx = selIdx
+    caliData.groundRes = planeParamsCvt(res.data.data)
+    caliData.groundState = true
+    ElMessage.success(
+      `inlier number:: ${res.data.inlier_points_num}, outlier number: ${res.data.outlier_points_num}`
+    )
+    // 更新画布
+    setSceneGround({
+      centroid: res.data.data.center,
+      norm: res.data.data.norm,
+      xLen: 10,
+      yLen: 10,
+    })
+    dataSet.clearSelectionBoxValue = true
+  } else {
+    ElMessage.error('设置点云失败')
+    caliData.groundIdx = new Set()
+    caliData.groundState = false
+    caliData.groundRes = {
+      error: 0,
+      inlierNum: 0,
+      outlierNum: 0,
+      centroid: 0,
+      norm: 0,
+    }
+    return
+  }
+}
+
+// 添加数据
+const handleAddTarget = () => {
+  // const selIdx = pcSelector?.selIdx
+  // if (selIdx?.size == 0) {
+  //   ElMessage.error(`please select first`)
+  //   return
+  // }
+  tableData.value.push({
+    visible: 0,
+    result: [],
+  })
+  // 清空选区
+  // pcSelector?.clearSelection()
+  dataSet.clearSelectionBoxValue = true
+}
+
+
+// 上传数据
+const handleUploadTargets = async () => {
+  removeTarget()
+  const params = caliData.targetTable.map((item) => [...item.idx])
+  let res: any
+  if (props.lidarType === 'source') {
+    res = await uploadSourceTargetsIdx(params)
+  } else if (props.lidarType === 'dest') {
+    res = await uploadDestTargetsIdx(params)
+  }
+  if (res.status === 200 || res.status === 201) {
+    caliData.targetTable.forEach((val: any, idx: number) => {
+      const curData = res.data[idx]
+      val.result = [planeParamsCvt(curData[0]), planeParamsCvt(curData[1])]
+    })
+    // 更新画布
+    caliData.targetTable.forEach((val) => {
+      addSceneTarget(val.result)
+    })
+    // 更新目标板状态
+    caliData.targetState = true
+  } else {
+    caliData.targetState = false
+    ElMessage.error(res.msg)
+    return
+  }
+}
+
+// 清除地面点
+const resetGroundPointsClick = () => {
+  caliData.groundIdx = new Set()
+  caliData.groundRes = {
+    error: 0,
+    inlierNum: 0,
+    outlierNum: 0,
+    centroid: 0,
+    norm: 0,
+  }
+  caliData.groundState = false
+  clearPlane()
+}
+
 // 获取当前viewport
 const viewportData = ref({})
 const queryViewportDetails = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportData.value = res.data.data[0]
     }).catch((err: any) => {
       console.log(err, 'err')
@@ -297,7 +405,7 @@ const queryViewportDetails = () => {
 const datasetData = ref({})
 const getDatasetDetails = () => {
   try {
-    findItem('/models/datasets', route.query.datasetid).then((res: any) => {
+    findItem('/logger/models/datasets', route.query.datasetid).then((res: any) => {
       gostore.reset()
       datasetData.value = gostore.sync(res.data)
     }).catch((err: any) => {
@@ -322,7 +430,7 @@ const save2Dataset = () => {
     }
         
   }
-  patchItem('/models/datasets', params).then((res) => {
+  patchItem('/logger/models/datasets', params).then((res) => {
     console.log(res)
     ElMessage({
       message: "应用到数据集成功",
@@ -355,7 +463,7 @@ const save2Viewport = () => {
       }
     }
   }
-  patchItem('/models/viewports', params).then((res) => {
+  patchItem('/logger/models/viewports', params).then((res) => {
     console.log(res)
     ElMessage({
       message: "应用到视角成功",

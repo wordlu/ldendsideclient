@@ -3,7 +3,7 @@ import jsCookie from "js-cookie"
 
 const request = axios.create({
 	timeout: 3600000,
-	baseURL:`http://loggertrash/api/logger`,
+	baseURL:`http://loggertrash/api`,
 	// baseURL:'/api'
 })
 

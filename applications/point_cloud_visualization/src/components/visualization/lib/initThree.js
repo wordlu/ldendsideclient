@@ -39,10 +39,70 @@ const animate = () => {
 
 animate()
 
+// let clearSelectionBoxValue = false
+
+/**
+ * 配准---设置地面点
+ * @param payload 接口请求回来的数据{centroid, norm, xLen, yLen}
+ */
+let groundPlane = null
+export const setSceneGround = (payload) => {
+  if (groundPlane !== null) {
+    // 如果之前有地面, 则先删除
+    scene.remove(groundPlane)
+  }
+  groundPlane = createPlane(
+    new THREE.Vector3(...payload.centroid),
+    new THREE.Vector3(...payload.norm),
+    payload.xLen,
+    payload.yLen
+  )
+  scene.add(groundPlane)
+  // clearSelectionBoxValue = true
+}
+
+/**
+ * 根据平面的点法式参数和其他参数构造一个可以显示的平面.
+ * @param {THREE.Vector3} centroid 平面中心点.
+ * @param {THREE.Vector3} norm 平面法向量.
+ * @param {Number} xLen x 方向长度(未经过仿射变换前).
+ * @param {Number} yLen y 方向长度(未经过仿射变换前).
+ * @param {THREE.MeshBasicMaterialParameters} meshParam Mesh 参数.
+ *
+ * @returns {THREE.Mesh} 构造的可显示平面
+ */
+const createPlane = (centroid, norm, xLen, yLen, meshParam) => {
+  const geometry = new THREE.PlaneGeometry(xLen, yLen, 32)
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    side: THREE.DoubleSide,
+    opacity: 0.5,
+    transparent: true,
+  })
+  const plane = new THREE.Mesh(geometry, material)
+  const matrix4 = new THREE.Matrix4().compose(
+    centroid,
+    new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), norm.normalize()),
+    new THREE.Vector3(1, 1, 1)
+  )
+  plane.applyMatrix4(matrix4)
+  return plane
+}
+
+/**
+ * new_清除地面点
+ */
+export const clearPlane = () => {
+  if (groundPlane !== null) {
+    scene.remove(groundPlane)
+    groundPlane = null
+  }
+}
+
 // //创建一个WebGL渲染器
 const renderer = new THREE.WebGLRenderer()
 
-export { scene , renderer , controls , camera, points1, points2, }
+export { scene , renderer , controls , camera, points1, points2}
 
 //创建相机
 export const setCamera = (width, height) => {
@@ -237,13 +297,23 @@ const cloudpointparams = getQueryString('cloudpointparams') ? JSON.parse(getQuer
 let material1 = new THREE.PointsMaterial({
   color: `#${cloudpointparams.color}` || '#0cf36d',//模型颜色
   // size: Number(cloudpointparams.size) || 0.01 //模型大小
-  size: 0.001 //模型大小
+  size: 0.001, //模型大小
+  // vertexColors: true // 支持每个点使用不同的颜色
 });//配置模型的材质对象   
 
 let material2 = new THREE.PointsMaterial({
   color: '#ff01f3',//模型颜色
-  size: 0.01 //模型大小
+  size: 0.01, //模型大小
+  // vertexColors: true // 支持每个点使用不同的颜色
 });//配置模型的材质对象 
+
+
+// @wodelu:TODO: 修改点云颜色
+// 选择框选的点并高亮
+export const highlightSelectedPoints = (pointArray, num) => {
+  console.log('修改点云颜色')
+};
+
 
 let points1 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
 let points2 = new THREE.Points(geometry2, material2)//将上述对象配置到点模型对象上
