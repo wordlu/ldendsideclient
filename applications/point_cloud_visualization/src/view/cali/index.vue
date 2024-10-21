@@ -15,11 +15,10 @@
 <script setup lang='ts'>
 import toolBarVue from "./components/toolBar.vue";
 import videoBarVue from "./components/videoBar.vue";
-import threeDView from "../../components/visualization/threeDView.vue";
-import cameras from "../../components/camera/cameras.vue";
+import threeDView from "../../components/visualization/caliThreeDView.vue";
 import { createHub } from '../../components/socket/calisocket';
 import { ref , watch } from 'vue';
-import { dataSetStore } from '../../pinia/dataSet';
+import { dataSetStore } from '../../pinia/caliDataSet';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
