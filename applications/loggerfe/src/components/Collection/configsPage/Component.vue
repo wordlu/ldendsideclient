@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" src="/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
+          <img ref="backgroundImage" src="http://loggertrash/icon/default/vehicle_viewport.png" alt="Background Image" style="display: block;width: 100%;">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -429,7 +429,10 @@ const drawSensors = (ctx) => {
         color = 'green';
         break;
       case 'lidar':
-        color = 'red';
+        color = '#ff7900';
+        break;
+      case 'imu':
+        color = 'yellow';
         break;
       default:
         color = 'blue';
@@ -451,13 +454,13 @@ const drawSensors = (ctx) => {
     ctx.closePath();
 
     // 绘制 ID
-    ctx.font = '12px Arial';
-    ctx.fillStyle = 'black'; // 白色字体
+    ctx.font = '14px bold';
+    ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
     const textX = adjustedX + 15; // 文字x坐标，偏移圆形
-    const textY = adjustedY // 文字y坐标，与圆形对齐
+    const textY = adjustedY + 3 // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
   });
