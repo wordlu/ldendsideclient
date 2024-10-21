@@ -7,6 +7,7 @@
         <div class="container">
           <threeDView />
         </div>
+        <cameras />
         <videoBarVue :currentScene="currentScene"/>
       </div>
     </div>
