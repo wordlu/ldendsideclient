@@ -20,13 +20,13 @@ const cutActiveCam = (value)=>{
 
 <style lang="scss">
 #cameras{
-  width: 400px;
-  height: 250px;
+  width: 300px;
+  // height: 250px;
   // background: #191919;
   background: #000;
   position: absolute;
-  right: 8px;
-  bottom: 65px;
+  left: 8px;
+  top: 8px;
   z-index: 999;
   display: flex;
   flex-wrap: wrap;

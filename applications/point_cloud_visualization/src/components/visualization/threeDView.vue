@@ -1,7 +1,7 @@
 <template>
   <div id="threeDView" ref="container">
     <div id="three" ></div>
-    <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas>
+    <!-- <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas> -->
   </div>
 </template>
 
@@ -144,15 +144,15 @@ const resizeRendererToDisplaySize = async(renderer) =>{
 onMounted(()=>{
   setTimeout(()=>{
     initThree()
-    // 设置 Overlay Canvas 大小
-    const { clientWidth, clientHeight } = container.value;
-    overlayCanvas.value.width = clientWidth;
-    overlayCanvas.value.height = clientHeight;
+    // // 设置 Overlay Canvas 大小
+    // const { clientWidth, clientHeight } = container.value;
+    // overlayCanvas.value.width = clientWidth;
+    // overlayCanvas.value.height = clientHeight;
 
-    // 添加鼠标事件监听
-    container.value.addEventListener('mousedown', onMouseDown);
-    container.value.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    // // 添加鼠标事件监听
+    // container.value.addEventListener('mousedown', onMouseDown);
+    // container.value.addEventListener('mousemove', onMouseMove);
+    // window.addEventListener('mouseup', onMouseUp);
   },100)
 })
 

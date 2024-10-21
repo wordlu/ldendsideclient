@@ -190,13 +190,12 @@ let urlval = ''
 let request_count = 10
 //获取视觉数据并渲染
 export const allWsSend = (frame,play,endframe,request_count_val)=>{
-  
   try{
     let options = {
-      "dataset": 'leikeroad/12345678',
-      "devices": ['vision1'],
-      // "dataset": getQueryString('dataset'),
-      // "devices": dataSet.info.devices,
+      // "dataset": 'leikeroad/12345678',
+      // "devices": ['vision1'],
+      "dataset": getQueryString('dataset'),
+      "devices": dataSet.info.devices,
       "request_index": frame,
       "request_count": request_count_val || request_count
     }
@@ -212,43 +211,24 @@ export const allWsSend = (frame,play,endframe,request_count_val)=>{
         
       }else{
         console.log("10:all websocket接收到ArrayBuffer格式数据")
-        console.log(urlval,splitInfo.frame_index, "=====urlval")
-        // 点云数据
         reader.readAs('ArrayBuffer',evt.data,function(result){
-          // for(let key in splitInfo){
-
-            // activeCamInfo 当前帧的摄像头数据
-            // if(dataSet.activeCamInfo.hasOwnProperty(key)){
-            //   // 摄像头数据生成 base64的url
-            //   let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
-            //   dataSet.activeCamInfo[key] = url
-            //   if(dataSet.activeCam.cam == key){
-            //     dataSet.activeCam.value = url
-            //   }
-            // }
-
-            // activePcdInfo 当前帧的点云数据
-            // if(dataSet.activePcdInfo.meta_key == key){
-            //   DracoPoint(result)
-            // }
-
 
             // 渲染点云数据
-            // dataSet.lidarDevices.forEach((key,index)=>{
-            //   if (key === "frame_index") return;
-            //   const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-            //   if (!urlval || urlval == key) {
-            //     urlval = key
-            //     console.log("渲染点云1")
-            //     DracoPoint(res)
-            //   } else {
-            //     console.log("渲染点云2")
-            //     DracoPoint(res, 2)
-            //   }
-            // })
+            dataSet.lidarDevices.forEach((key,index)=>{
+              if (key === "frame_index") return;
+              if (!urlval) urlval = key
+              const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+              if (urlval == key) {
+                console.log("渲染点云1", key)
+                DracoPoint(res)
+              } else {
+                console.log("渲染点云2", key)
+                DracoPoint(res, 2)
+              }
+            })
 
             // 渲染摄像头数据
-            dataSet.cameraDevices.push('vision1')
+            // dataSet.cameraDevices = ['vision1']
             dataSet.cameraDevices.forEach((key,index)=>{
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
               let url = arrayBufferToBase64(res)
