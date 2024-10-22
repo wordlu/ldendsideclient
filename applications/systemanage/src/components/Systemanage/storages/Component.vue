@@ -49,7 +49,7 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
-                    <el-dropdown-item command="导出" :icon="MoreFilled">导出</el-dropdown-item>
+                    <!-- <el-dropdown-item command="导出" :icon="MoreFilled">导出</el-dropdown-item> -->
                     <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
@@ -65,9 +65,9 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll } from '@/api/jsonApi'
+import { findAll, deleteItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
-import { ElTable } from 'element-plus'
+import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
 
 interface Row {}
 
@@ -101,18 +101,18 @@ const getSize = (size: number) => {
 }
 
 const nextPage = () => {
-  queryDevice(current.value + 1)
+  queryDatasets(current.value + 1)
 }
 
 const prevPage = () => {
-  queryDevice(current.value - 1)
+  queryDatasets(current.value - 1)
 }
 
 onMounted(() => {
-  queryDevice(current.value)
+  queryDatasets(current.value)
 })
 
-const queryDevice = (page: number) => {
+const queryDatasets = (page: number) => {
   try {
     const params = {
       offset: step.value * page,
@@ -137,17 +137,50 @@ const queryDevice = (page: number) => {
 
 
 const change = () => {
-  queryDevice(0)
+  queryDatasets(0)
 }
 
 const handleCommand = (command, row) => {
   if(command == '数据详情'){
     window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
   }else if(command == '删除'){  
-    console.log(row)
-  }else if(command == '导出'){
-    console.log(row)
+    ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
+      confirmButtonText: '确认',
+      customClass:"delete-confirm-box",
+      callback: (action: Action) => {
+        if (action === 'confirm') {
+          onDelete(row.id)
+        }
+      },
+    })
   }
+}
+
+
+const onDelete = (id) => {
+  const params = {
+      data: {
+        id: id,
+        type: 'datasets'
+      }
+    }
+  deleteItem('/models/datasets', params).then(res => {
+    ElMessage({
+      message: "删除成功",
+      type: 'success',
+    })
+    queryDatasets(0)
+  }).catch(err => {
+    const {response:{data:{errors}}} = err
+    let msg =  "删除失败"
+    if(errors && errors[0]) {
+      msg = errors[0]['detail']
+    }
+    ElMessage({
+      message: msg,
+      type: 'error',
+    })
+  })
 }
 
 const handleClick = (e) =>{
@@ -180,7 +213,14 @@ const formatter = (thistime: any, fmt: string) => {
 }
 </script>
 
+<style>
+.delete-confirm-box {
+  height: 160px !important;
+}
+</style>
 <style lang="scss" scoped>
+
+
 .ver-mid {
   display: flex;
   flex-direction: column;
