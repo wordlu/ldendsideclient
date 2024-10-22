@@ -60,8 +60,6 @@ import gostore from '@/services/governance-store'
 import zhCn from "element-plus/es/locale/lang/zh-cn"
 
 const locale = zhCn
-const monitorPrefix = ref(window.server.monitorPrefix)
-
 const logsinput = ref('')
 const sensorvalue = ref('')
 const containerValue = ref('device')

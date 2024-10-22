@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -297,14 +297,6 @@ const getSensoronfigs = (nodedata) => {
 const setFormData = (details: any) => {
   form.type = details.driver
   Object.assign(form, details['device-params']);
-  // form.points_topic = details['device-params'].points_topic
-  // form.host_name = details['device-params'].host_name
-  // form.timestamp_mode = details['device-params'].timestamp_mode
-  // form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
-  // form.point_type = details['device-params'].point_type
-  // form.receive_topic = details['device-params'].receive_topic
-  // form.save_topic = details['device-params'].save_topic
-  // form.bag_file_name = details['device-params'].bag_file_name
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)

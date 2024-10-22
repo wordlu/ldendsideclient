@@ -56,8 +56,8 @@ let ipList = []
 
 let allportArray = []
 
-// let ipvalue = `ws://${window.parent.location.hostname}`
-let ipvalue = `ws://loggertrash`
+let ipvalue = `ws://${window.parent.location.hostname}`
+// let ipvalue = `ws://loggertrash`
 let reconnectInterval = null;  
 
 

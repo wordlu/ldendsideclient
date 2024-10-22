@@ -8,7 +8,6 @@
       <el-breadcrumb-item>{{ calibrationTemplateName }}</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="cali-iframe-container">
-      <!-- <iframe :src="`http://localhost:5173/pointcloud/calivisualization?datasetid=${$route.params.datasetid}&devicename=${$route.query.devicename}&dataset=leikeroad/20241015174132&deviceshub=[{%22id%22:%22mainlidar%22,%22type%22:%22lidar%22,%22x%22:140,%22y%22:20},{%22id%22:%22blindlidar%22,%22type%22:%22lidar%22,%22x%22:140,%22y%22:120},{%22id%22:%22vision1%22,%22type%22:%22camera%22,%22x%22:200,%22y%22:65}]&cloudpointparams={%22color%22:%2200ffff%22,%22size%22:0.1}`" frameborder="0" width="100%" height="100%"></iframe> -->
       <iframe :src="`/pointcloud/calivisualization?datasetid=${$route.params.datasetid}&devicename=${$route.query.devicename}&dataset=${datasetData.prefix}&deviceshub=${JSON.stringify(devicehub)}&cloudpointparams=${JSON.stringify(cloudpointparams)}`" frameborder="0" width="100%" height="100%"></iframe>
     </div>
   </div>
