@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/leikeroad/background.png`" alt="Background Image" style="display: block;height: 100%;">
+          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -115,7 +115,7 @@ interface Tree {
   label: string
   children?: Tree[]
 }
-
+const baseStyle = ref({})
 const loadingtext = ref('')
 const pageLoading = ref(false)
 
@@ -328,11 +328,17 @@ const queryCurrentDrivers = () => {
       const datavalue = gostore.findAll('viewports')
       currentViewport.value = datavalue[0]
       viewport_bg.value = datavalue[0]['image-path']
-      console.log(datavalue, 'datavalue')
+      baseStyle.value = datavalue[0].type === "场端" ? {
+        height: '100%',
+      } : {
+        width: '100%',
+      }
       name.value = datavalue[0].name
       sensorData.value = datavalue[0]['device-hub']
       treedata.value = totree(datavalue[0]['device-hub'])
-      createSensorCanvas(treedata.value)
+      setTimeout(() => {
+        createSensorCanvas(treedata.value)
+      }, 100)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
