@@ -14,10 +14,10 @@
           node-key="id"
           highlight-current
           @node-click="handleNodeClick"
-          :render-content="renderContent"
           :props="defaultProps"
           @check-change="handleCheckChange"
         />
+        <!-- :render-content="renderContent" 去掉标定入口 -->
       </div>
       <div class="config-area">
         <div v-if="setConfigValue" class="info-btn-group">
