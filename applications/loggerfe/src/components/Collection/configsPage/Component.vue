@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -321,9 +321,9 @@ const queryCurrentDrivers = () => {
       currentViewport.value = datavalue[0]
       viewport_bg.value = datavalue[0]['image-path']
       baseStyle.value = datavalue[0].type === "场端" ? {
-        height: '100%',
+        height: '689px',
       } : {
-        width: '100%',
+        width: '559px',
       }
       name.value = datavalue[0].name
       sensorData.value = datavalue[0]['device-hub']
