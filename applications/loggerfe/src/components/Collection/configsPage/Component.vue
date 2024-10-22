@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" src="http://loggertrash/icon/default/vehicle_viewport.png" alt="Background Image" style="display: block;width: 100%;">
+          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/leikeroad/background.png`" alt="Background Image" style="display: block;height: 100%;">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -319,6 +319,7 @@ const treedata = ref([])
 const sensorData = ref([])
 const name = ref('')
 const currentViewport = ref(null)
+const viewport_bg = ref('')
 const queryCurrentDrivers = () => {
   try {
     findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
@@ -326,6 +327,7 @@ const queryCurrentDrivers = () => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
       currentViewport.value = datavalue[0]
+      viewport_bg.value = datavalue[0]['image-path']
       console.log(datavalue, 'datavalue')
       name.value = datavalue[0].name
       sensorData.value = datavalue[0]['device-hub']
@@ -488,7 +490,7 @@ const handleCanvasClick = (event) => {
 
 const loadRemoteComponent = async () => {
   try {
-    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/dms-static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
     const { descriptor } = parse(vueFile);
     const script = compileScript(descriptor, { id: 'remote-component' });
