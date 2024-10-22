@@ -609,7 +609,7 @@ const loadRemoteComponent = async () => {
 
     .tree-content {
       width: 300px; 
-      height: 200px; 
+      height: 260px; 
       overflow: auto;
     }
   }

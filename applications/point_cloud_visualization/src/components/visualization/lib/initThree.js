@@ -5,7 +5,6 @@ import DracoDecoderModule from './draco_decoder'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 let camera,controls;
-
 let geometry = new THREE.BufferGeometry()//创建图形对象
 let geometry2 = new THREE.BufferGeometry()//创建图形对象
 let geometry_draco; // draco 图形对象
@@ -315,22 +314,41 @@ export const highlightSelectedPoints = (pointArray, num) => {
 let points1 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
 let points2 = new THREE.Points(geometry2, material2)//将上述对象配置到点模型对象上
 
-export const setPointCloud = () => {
-  console.log(cloudpointparams)
-      
-  function initpoint() {
-    scene.add(points1)
+function getRandomHexColor() {
+  const randomColor = Math.floor(Math.random() * 16777215).toString(16); // 16777215 是 #ffffff 的十进制表示
+  return `#${randomColor.padStart(6, '0')}`; // 确保颜色代码为6位
+}
+
+function initpoint(renderObject) {
+  for (let key in renderObject) {
+    let points = new THREE.Points(renderObject[key].geometry, renderObject[key].material)//将上述对象配置到点模型对象上
+    scene.add(points)
   }
-  initpoint() //  创建点云并添加到场景中
+}
+
+let renderObject = {}
+export const setPointCloud = (lidarDevices) => {
+
+  lidarDevices.forEach((item,index)=>{
+    renderObject[item] = {
+      geometry: new THREE.BufferGeometry(),
+      material:  new THREE.PointsMaterial({
+        color: getRandomHexColor(),
+        size: 0.001,
+      })
+    }
+  })
+ 
+  initpoint(renderObject) //  创建点云并添加到场景中
 }
 
 export const setPointCloud2 = () => {
-  console.log(cloudpointparams)
+  // console.log(cloudpointparams)
          
-  function initpoint() {
-    scene.add(points2)
-  }
-  initpoint() //  创建点云并添加到场景中
+  // function initpoint() {
+  //   scene.add(points2)
+  // }
+  // initpoint() //  创建点云并添加到场景中
 }
 
 // 原始点云创建
@@ -410,11 +428,12 @@ function createGeometry(geometryData, type) {
   let array = attribute.array
   let itemSize = attribute.itemSize
   // 此方法上一帧的数据会被新的数据覆盖。这是因为Three.js的BufferAttribute对象是直接修改顶点数据的，而不是创建新的几何体
-  if (type === 2) {
-    geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
-  } else {
-    geometry2.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
-  }
+  // if (type === 2) {
+  //   geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  // } else {
+  //   geometry2.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  // }
+  renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
 }
 
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {

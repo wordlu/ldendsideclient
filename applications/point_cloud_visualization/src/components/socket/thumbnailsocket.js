@@ -187,7 +187,7 @@ export const initAllSocket = ()=>{
 }
 
 let urlval = ''
-let request_count = 10
+let request_count = 1
 //获取视觉数据并渲染
 export const allWsSend = (frame,play,endframe,request_count_val)=>{
   try{
@@ -212,19 +212,20 @@ export const allWsSend = (frame,play,endframe,request_count_val)=>{
       }else{
         console.log("10:all websocket接收到ArrayBuffer格式数据")
         reader.readAs('ArrayBuffer',evt.data,function(result){
-
             // 渲染点云数据
             dataSet.lidarDevices.forEach((key,index)=>{
               if (key === "frame_index") return;
-              if (!urlval) urlval = key
+              // if (!urlval) urlval = key
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-              if (urlval == key) {
-                console.log("渲染点云1", key)
-                DracoPoint(res)
-              } else {
-                console.log("渲染点云2", key)
-                DracoPoint(res, 2)
-              }
+              DracoPoint(res, key)
+
+              // if (urlval == key) {
+              //   console.log("渲染点云1", key)
+              //   DracoPoint(res)
+              // } else {
+              //   console.log("渲染点云2", key)
+              //   DracoPoint(res, 2)
+              // }
             })
 
             // 渲染摄像头数据
@@ -242,7 +243,8 @@ export const allWsSend = (frame,play,endframe,request_count_val)=>{
       }
 
       console.log("判断结束：",endframe, dataSet.activefame, play)
-      if (play && dataSet.activefame <= endframe && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
+      // + (request_count -2) <= splitInfo.frame_index
+      if (play && dataSet.activefame <= endframe && dataSet.activefame) {
         dataSet.activefame = dataSet.activefame + request_count
       }
     };

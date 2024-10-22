@@ -20,10 +20,11 @@ export const dataSetStore = defineStore('dataSet', {
       },
       odInfo:[],
       kpiInfo:[],
-      selectedIndices:[],
-      selectedSourceTargetIndices:[],
-      selectedDestTargetIndices:[],
-      clearSelectionBoxValue:0,
+      lidarDevices:[],
+      // selectedIndices:[],
+      // selectedSourceTargetIndices:[],
+      // selectedDestTargetIndices:[],
+      // clearSelectionBoxValue:0,
       loading:true
     }
   },
