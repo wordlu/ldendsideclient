@@ -311,10 +311,6 @@ export const highlightSelectedPoints = (pointArray, num) => {
 };
 
 
-// let points1 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
-// // let points2 = new THREE.Points(geometry2, material2)//将上述对象配置到点模型对象上
-// let points2 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
-
 function getRandomHexColor() {
   const randomColor = Math.floor(Math.random() * 16777215).toString(16); // 16777215 是 #ffffff 的十进制表示
   return `#${randomColor.padStart(6, '0')}`; // 确保颜色代码为6位

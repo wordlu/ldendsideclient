@@ -25,7 +25,8 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports"
+        <BasicScene 
+          :allports="allports"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs ref="sensorConfigsRef" 
@@ -294,7 +295,7 @@ const shutdownDevice = async () => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
     ElMessage({
-      message: "设备关闭中",
+      message: "设备关闭中，请稍后...",
       type: 'success',
     })
   }).catch((err: any) => {

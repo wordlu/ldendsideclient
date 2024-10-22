@@ -12,18 +12,6 @@ import {camera, scene, renderer, setCamera, highlightSelectedPoints, setControls
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '@/pinia/dataSet.js';
-
-const props = defineProps({
-  // isCali: {
-  //   type: Boolean,
-  //   default: false
-  // },
-  // singleDevice: {
-  //   type: String,
-  //   default: ''
-  // }
-})
-
 const dataSet = dataSetStore();
 
 const loading = ref(dataSet.loading)
@@ -31,24 +19,6 @@ const loading = ref(dataSet.loading)
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
 },{deep:true})
-
-// watch(()=>dataSet.clearSelectionBoxValue,(newVal)=>{
-//   clearSelectionBox()
-// },{deep:true})
-
-// watch(()=>props.isCali,(newVal)=>{
-//   setControlsEnable(!newVal)
-// },{deep:true})
-
-// watch(()=>props.singleDevice,(newVal)=>{
-//   points1.visible = true;
-//   points2.visible = true;
-//   if (newVal === 'mainlidar') {
-//     points1.visible = false;
-//   } else if (newVal) {
-//     points2.visible = false;
-//   }
-// },{deep:true})
 
 const initThree = async () =>{
   let width = document.getElementById('threeDView').offsetWidth;
@@ -63,7 +33,6 @@ const initThree = async () =>{
   setControls(camera); // 创建轨道控制器
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
   setPointCloud(dataSet.lidarDevices); //  创建点云并添加到场景中
-  // setPointCloud2(); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);

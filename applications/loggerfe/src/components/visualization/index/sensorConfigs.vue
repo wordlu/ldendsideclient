@@ -285,7 +285,7 @@ const queryCurrentDrivers = () => {
 const totree = (data) => {
   const tree = [];
   allTreeKeys.value = []
-  const allport = []
+  const allports = []
   // 通过类型分组
   data.forEach(sensor => {
     let parent = tree.find(node => node.label === sensor.type);
@@ -308,7 +308,11 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      allport.push(sensor.devicedata['display-port'])
+      // allports.push(sensor.devicedata['display-port'])
+      allports.push({
+        port:sensor.devicedata['display-port'],
+        type:sensor.devicedata.type
+      })
       allTreeKeys.value.push({
         key:sensor.id,
         value:sensor.type+'_'+sensor.id
@@ -316,7 +320,7 @@ const totree = (data) => {
     }
   });
   // selectAllNodes()
-  emit('setAllTreeKeys', allport)
+  emit('setAllTreeKeys', allports)
   return tree;
 }
 

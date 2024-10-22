@@ -9,6 +9,7 @@
         <div class="container">
           <threeDView />
         </div>
+        <cameras />
       </div>
     </div>
   </div>
@@ -29,8 +30,7 @@ const route = useRoute();
 const routeQuery = ref(route.query);
 
 console.log("1:createHub")
-connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allport)
-
+connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports)
 
 function print(val) {
   document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'

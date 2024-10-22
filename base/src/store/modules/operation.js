@@ -37,7 +37,7 @@ const state = {
     {
       //logger
       name: "loggerfe",
-      entry: "http://localhost:8084/apps/loggerfe",
+      entry: "http://localhost:8085/apps/loggerfe",
       container: "#Appmicro",
       activeRule: [],
       props:{}
@@ -45,7 +45,7 @@ const state = {
     {
       //系统管理
       name: "systemanage",
-      entry: "http://10.86.24.22:8083/apps/systemanage",
+      entry: "http://10.86.24.22:8086/apps/systemanage",
       container: "#Appmicro",
       activeRule: [],
       props:{}

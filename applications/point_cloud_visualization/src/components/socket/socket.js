@@ -54,34 +54,41 @@ let webSockets  = {}
 
 let ipList = []
 
+let allportArray = []
+
 // let ipvalue = `ws://${window.parent.location.hostname}`
 let ipvalue = `ws://loggertrash`
-let reconnectInterval = null;    
+let reconnectInterval = null;  
 
-export const connectWebSocketArray = (portarray, allport) => {
+
+export const connectWebSocketArray = (portarray, allports) => {
+  dataSet = dataSetStore();
   const currentport = portarray ? portarray.split(',') : []
-  const allportArray = allport ? allport.split(',') : []
+  allportArray = JSON.parse(allports)
 
   //断开所有连接
   if (currentport.length === 0) {
-    const lists = allportArray.map(item => `${ipvalue}:${item}`)
+    const lists = allportArray.map(item => `${ipvalue}:${item.port}`)
     disconnectFromAllIPs(lists)
   } else {
-    const connectlist = currentport.map(item => `${ipvalue}:${item}`)
-    const disconnectlist = allportArray.filter(item => !currentport.includes(item)).map(item => `${ipvalue}:${item}`)
+    const connectlist = currentport.map(item => {
+      return {
+        port: `${ipvalue}:${item}`,
+        type: allportArray.find(it => it.port == item).type
+      }
+    })
+    const disconnectlist = allportArray.filter(item => !currentport.includes(item.port)).map(it => `${ipvalue}:${it.port}`)
     disconnectFromAllIPs(disconnectlist)
     connectToAllIPs(connectlist)
   }
 }
 let urlval = ''
-export const connectWebSocket = (ip) => {
+export const connectWebSocket = (ip, type) => {
   if (webSockets[ip] && webSockets[ip].status === 'Connected') {
     console.log(`Already connected to ${ip}`);
     return;
   }
-
   const socket = new WebSocket(ip)
-
   webSockets[ip] = {
     socket,
     status: 'Connecting...',
@@ -95,17 +102,28 @@ export const connectWebSocket = (ip) => {
   };
 
   socket.onmessage = (event) => {
+    reader.readAs('ArrayBuffer',event.data,function(result){
+      if (type == 'lidar') {
+        DracoPoint(result, ip)
+      } else if (type == 'camera') {
+        let url = arrayBufferToBase64(result)
+        dataSet.activeCamInfo[key] = url
+        if(url){
+          dataSet.activeCam.value = url
+        }
+      }
+    });
     // @wodelu:TODO: 目前逻辑只有两颗雷达，判断是第一颗还是第二颗，分别渲染
-    if (!urlval || urlval == ip) {
-      urlval = ip
-      reader.readAs('ArrayBuffer',event.data,function(result){
-        DracoPoint(result)
-      });
-    } else {
-      reader.readAs('ArrayBuffer',event.data,function(result){
-        DracoPoint(result, 2)
-      });
-    }
+    // if (!urlval || urlval == ip) {
+    //   urlval = ip
+    //   reader.readAs('ArrayBuffer',event.data,function(result){
+    //     DracoPoint(result)
+    //   });
+    // } else {
+    //   reader.readAs('ArrayBuffer',event.data,function(result){
+    //     DracoPoint(result, 2)
+    //   });
+    // }
     
   }
 
@@ -150,8 +168,9 @@ const disconnectFromIP = (ip) => {
 
 // 连接所有 IP
 const connectToAllIPs = (lists) => {
-  lists.forEach((ip) => {
-    connectWebSocket(ip);
+  dataSet.lidarDevices = lists.filter(it => it.type === 'lidar').map(it => it.port)
+  lists.forEach((item,index) => {
+    connectWebSocket(item.port, item.type);
   });
 };
 
@@ -169,7 +188,7 @@ export const pcdencode = ()=>{
   console.log("6:启动点云压缩通道")
 }
 
-// 初始化socket
+// // 初始化socket
 export const initSocket = ()=>{
   ws = new WebSocket(`${podUrl.value}check`);
   dataSet = dataSetStore();
@@ -223,7 +242,7 @@ export const initSocket = ()=>{
   };
 }
 
-// 初始化点云文件通道
+// // 初始化点云文件通道
 export const initPcdSocket = ()=>{
   pcdWs = new WebSocket(`${podUrl.value}pcd`);
 
@@ -232,7 +251,7 @@ export const initPcdSocket = ()=>{
   };
 }
 
-// 获取pcd压缩数据并渲染
+// // 获取pcd压缩数据并渲染
 export const pcdWsSend = (frame)=>{
   try{
     pcdWs.send(JSON.stringify({
@@ -252,7 +271,7 @@ export const pcdWsSend = (frame)=>{
   }
 }
 
-// 初始化视觉数据
+// // 初始化视觉数据
 export const initCamSocket = ()=>{
   camWs = new WebSocket(`${podUrl.value}cam`);
 
@@ -271,7 +290,7 @@ export const initCamSocket = ()=>{
   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
-//获取视觉数据并渲染
+// //获取视觉数据并渲染
 export const camWsSend = (frame)=>{
   try{
     const cams = dataSet.info.meta_json.cam;
@@ -303,7 +322,7 @@ export const camWsSend = (frame)=>{
   }
 }
 
-// 初始化组合数据
+// // 初始化组合数据
 export const initAllSocket = ()=>{
   allWs = new WebSocket(`${podUrl.value}all`);
 
@@ -326,7 +345,7 @@ export const initAllSocket = ()=>{
   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
-//获取视觉数据并渲染
+// //获取视觉数据并渲染
 export const allWsSend = (frame,play)=>{
   try{
     let options = {
