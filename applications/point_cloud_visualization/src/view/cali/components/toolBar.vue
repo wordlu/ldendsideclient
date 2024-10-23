@@ -193,7 +193,7 @@ import gostore from '@/services/governance-store'
 import { ElMessage } from 'element-plus'
 import { dataSetStore } from "@/pinia/dataSet";
 import { Post } from "@/api/api";
-import { setSceneGround, clearPlane } from "@/components/visualization/lib/initThree";
+import { setSceneGround, clearPlane } from "@/components/visualization/lib/caliInitThree";
 
 
 const dataSet = dataSetStore();

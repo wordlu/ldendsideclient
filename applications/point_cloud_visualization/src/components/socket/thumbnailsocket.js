@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/initThree';
+import { DracoPoint, scene  } from '../visualization/lib/replayInitThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -17,8 +17,8 @@ function getQueryString(name) {
   return null;
 }
 // 数据回显
-const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
-// const podUrl = ref(`ws://loggertrash/replay/`);
+// const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
+const podUrl = ref(`ws://loggertrash/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
@@ -184,9 +184,7 @@ export const initAllSocket = ()=>{
 
   // dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
-
-let urlval = ''
-let request_count = 1
+let request_count = 10
 //获取视觉数据并渲染
 export const allWsSend = (frame,play,endframe,request_count_val)=>{
   try{
@@ -205,30 +203,21 @@ export const allWsSend = (frame,play,endframe,request_count_val)=>{
     allWs.onmessage = async function(evt) {
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
-        console.log("10:all websocket接收到string格式数据"+evt.data)
+        console.log("10:string数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
         
       }else{
-        console.log("10:all websocket接收到ArrayBuffer格式数据")
+        console.log("10:ArrayBuffer数据")
         reader.readAs('ArrayBuffer',evt.data,function(result){
+          console.log("数据量"+result.byteLength)
+          console.log("分割"+JSON.stringify(splitInfo))
             // 渲染点云数据
             dataSet.lidarDevices.forEach((key,index)=>{
               if (key === "frame_index") return;
-              // if (!urlval) urlval = key
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
               DracoPoint(res, key)
-
-              // if (urlval == key) {
-              //   console.log("渲染点云1", key)
-              //   DracoPoint(res)
-              // } else {
-              //   console.log("渲染点云2", key)
-              //   DracoPoint(res, 2)
-              // }
             })
-
             // 渲染摄像头数据
-            // dataSet.cameraDevices = ['vision1']
             dataSet.cameraDevices.forEach((key,index)=>{
               const res = result.slice(splitInfo[key][0],splitInfo[key][1])
               let url = arrayBufferToBase64(res)

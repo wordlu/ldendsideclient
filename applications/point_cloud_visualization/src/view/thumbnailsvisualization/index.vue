@@ -18,7 +18,7 @@
 import toolBarVue from "./components/toolBar.vue";
 import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
-import threeDView from "../../components/visualization/threeDView.vue";
+import threeDView from "../../components/visualization/replayThreeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
 import { createHub } from '../../components/socket/thumbnailsocket';
 import { ref , watch } from 'vue';
