@@ -17,9 +17,7 @@
     <div class="progress-area">
       <div class="Progress-thumbnails">
         <div class="Progress_back"
-          @mouseleave="progressMouseleave"
           @mousedown="setProgressPosDown"
-          @mouseup="setProgressPosUp"
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
@@ -213,6 +211,7 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
     }else{
       isStart.value = false;
+      stopPlaying() // 停止播放
     }
   }
 })
@@ -222,21 +221,15 @@ const progressMove = (e)=>{
   moveFrame.value = parseInt(e.offsetX / step.value);
 }
 
-const progressMouseleave = ()=>{
-  
-}
-
 const setProgressPosDown = ()=>{
   if(!loading.value){
+    isStart.value = false
+    stopPlaying() // 停止播放
     document.querySelector('.Progress_line').style.width = offsetX.value + 'px';
     activeFrame.value = moveFrame.value;
     dataSet.activefame = moveFrame.value;
     getCertainFrameData();
   }
-}
-
-const setProgressPosUp = ()=>{
-  
 }
 
 const getCertainFrameData = ()=>{
@@ -265,6 +258,7 @@ const start=()=>{
 
 const prev=()=>{
   isStart.value = false
+  stopPlaying() // 停止播放
   dataSet.activefame = activeFrame.value
   if(activeFrame.value > 0 && activeFrame.value > startframe.value){
     dataSet.activefame --
@@ -276,6 +270,7 @@ const prev=()=>{
 
 const next=()=>{
   isStart.value = false
+  stopPlaying() // 停止播放
   dataSet.activefame = activeFrame.value
   if(activeFrame.value < frame_count.value ){
     dataSet.activefame ++

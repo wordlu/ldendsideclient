@@ -582,7 +582,7 @@ const loadRemoteComponent = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #eee;
+    // border: 1px solid #eee;
   }
   .ml {
     padding-left: 20px;
