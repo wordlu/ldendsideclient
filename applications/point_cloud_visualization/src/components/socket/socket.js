@@ -107,7 +107,7 @@ export const connectWebSocket = (ip, type) => {
         DracoPoint(result, ip)
       } else if (type == 'camera') {
         let url = arrayBufferToBase64(result)
-        dataSet.activeCamInfo[key] = url
+        dataSet.activeCamInfo[type] = url
         if(url){
           dataSet.activeCam.value = url
         }
