@@ -15,8 +15,6 @@
       </div>
     </div>
     <div class="progress-area">
-      
-      <!-- <div class="mask" :style="maskStyle" v-if="currentScene"></div> -->
       <div class="Progress-thumbnails">
         <div class="Progress_back"
           @mouseleave="progressMouseleave"
@@ -25,10 +23,8 @@
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
-        <!-- <span>{{activeFrame }}</span> -->
         <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
       </div>
-      <!-- <div id="thumbnails" ref="thumbnailsContainer"></div> -->
     </div>
   </div>
 </template>
@@ -36,7 +32,7 @@
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
 import { ref , watch , computed, onMounted, nextTick, defineProps } from 'vue'
-import { allWsSend } from '../../../components/socket/thumbnailsocket'
+import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
 import {dataval} from './dataval'
 import { func_scene_thumbnail } from '../../../api/api'
 import * as THREE from 'three';
@@ -55,7 +51,6 @@ const getDataval = async () => {
   const arr = await func_scene_thumbnail({dataset: datasetid.value,image_count: imageCount.value})
   return arr.data.data
 }
-const endframe = ref(Infinity)
 const startframe = ref(0)
 const createBox = (obj) => {
   const geometry = new THREE.BoxGeometry(obj.dimension_x, obj.dimension_y, obj.dimension_z);
@@ -202,11 +197,9 @@ const currentTimeString = computed(() => {
 });
 
 watch(info,(newVal)=>{
-
   // 处理帧数
   frame_count.value = newVal.frame_count-1;
   document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px';
-
   // 计算总时长
   time_value.value = getTimeValue(newVal.start_time, newVal.end_time);
   //计算每帧的时长
@@ -216,8 +209,7 @@ watch(info,(newVal)=>{
 watch(()=>dataSet.activefame,(newVal,oldVal)=>{
   if(isStart.value){
     activeFrame.value = dataSet.activefame
-    if(activeFrame.value <= frame_count.value && activeFrame.value <= endframe.value){
-      allWsSend(activeFrame.value, true, endframe.value)
+    if(activeFrame.value <= frame_count.value){
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
     }else{
       isStart.value = false;
@@ -239,7 +231,7 @@ const setProgressPosDown = ()=>{
     document.querySelector('.Progress_line').style.width = offsetX.value + 'px';
     activeFrame.value = moveFrame.value;
     dataSet.activefame = moveFrame.value;
-    getData();
+    getCertainFrameData();
   }
 }
 
@@ -247,27 +239,26 @@ const setProgressPosUp = ()=>{
   
 }
 
-const getData = ()=>{
-  allWsSend(activeFrame.value, false, endframe.value, 1);
+const getCertainFrameData = ()=>{
+  allWsSend(activeFrame.value, false, 1);
 }
 
 const start=()=>{
   if(!loading.value){
     if(!isStart.value){
+      // 当前帧数小于总帧数
       if(activeFrame.value < frame_count.value){
         dataSet.activefame ++
         activeFrame.value = dataSet.activefame
-        // allWsSend(activeFrame.value, false)
         document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-        isStart.value = true
-      }else if(activeFrame.value >= frame_count.value){
-        isStart.value = true
+      }else {
         dataSet.activefame = 0
-      }else{
-        isStart.value = false;
       }
+      isStart.value = true
+      startPlaying(activeFrame.value) // 开始播放
     }else{
       isStart.value = false
+      stopPlaying() // 停止播放
     }
   }
 }
@@ -278,7 +269,7 @@ const prev=()=>{
   if(activeFrame.value > 0 && activeFrame.value > startframe.value){
     dataSet.activefame --
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value, 1)
+    getCertainFrameData()
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }
@@ -286,28 +277,13 @@ const prev=()=>{
 const next=()=>{
   isStart.value = false
   dataSet.activefame = activeFrame.value
-  if(activeFrame.value < frame_count.value && activeFrame.value < endframe.value){
+  if(activeFrame.value < frame_count.value ){
     dataSet.activefame ++
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value, 1)
+    getCertainFrameData()
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }
-
-
-// 100-200帧
-// 第一百帧的位置：step*100
-// 100-200帧的长度: step*(200-100)
-
-// const maskStart = ref(0)
-// const maskWidth = ref(0)
-// const maskStyle = computed(() => {
-//   const end = maskStart.value + maskWidth.value
-//   return {
-//     clipPath: `polygon(0% 0%, ${maskStart.value}px 0%, ${maskStart.value}px 100%, 0% 100%, 0% 0%, ${end}px 0%, ${end}px 100%, 100% 100%, 100% 0%)`
-//   }
-// })
-
 
 </script>
 
