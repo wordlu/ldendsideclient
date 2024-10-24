@@ -16,8 +16,8 @@
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
-        <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
-        <el-button class="info-btn" @click="checkTags">查看已打标签</el-button>
+        <!-- <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <el-button class="info-btn" @click="checkTags">查看已打标签</el-button> -->
       </div>
     </div>
     <div
@@ -34,10 +34,10 @@
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />
-        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
+        <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
       </div>
     </div>
-    <el-dialog
+    <!-- <el-dialog
       v-model="dialogVisible"
       title="添加作业标签"
       width="680"
@@ -58,8 +58,8 @@
           </el-button>
         </div>
       </template>
-    </el-dialog>
-    <el-dialog
+    </el-dialog> -->
+    <!-- <el-dialog
       v-model="checkTagsDialogVisible"
       title="已打标签"
       width="800"
@@ -67,7 +67,6 @@
     >
       <el-table :data="taggingsTableData" height="360">
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
-        <!-- <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/> -->
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss") }}</template>
@@ -99,7 +98,7 @@
           <el-button @click="checkTagsDialogVisible = false">取消</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
