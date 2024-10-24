@@ -168,7 +168,7 @@ export const initAllSocket = ()=>{
 
   allWs.onopen = function() {
     console.log("7:开启点云数据通道,并初始化第一帧点云数据")
-    allWsSend(0, 0);
+    allWsSend(0, 0, 1);
   };
 
   allWs.onclose = function() {
@@ -181,7 +181,7 @@ export const initAllSocket = ()=>{
  */
 let bufferedFrames = []; // 存储帧数据的缓冲区
 let currentFrameIndex = 0; // 当前播放的帧索引
-let totalFrames = 0; // 已请求的总帧数
+let totalFrames = 0; // 已请求最大帧数
 let isRequesting = false; // 是否正在请求数据
 let playInterval;
 
@@ -226,23 +226,22 @@ function renderFrame(frameData) {
   const splitInfo = frameData.splitInfo;
   const ArrayBufferData = frameData.ArrayBufferData;
   reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
-    console.log("数据量"+result.byteLength)
-    console.log("分割"+JSON.stringify(splitInfo))
-      // 渲染点云数据
-      dataSet.lidarDevices.forEach((key,index)=>{
-        if (key === "frame_index") return;
-        const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-        DracoPoint(res, key)
-      })
-      // 渲染摄像头数据
-      dataSet.cameraDevices.forEach((key,index)=>{
-        const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-        let url = arrayBufferToBase64(res)
-        dataSet.activeCamInfo[key] = url
-        if(url){
-          dataSet.activeCam.value = url
-        }
-      })
+    dataSet.activefame = splitInfo.frame_index
+    // 渲染点云数据
+    dataSet.lidarDevices.forEach((key,index)=>{
+      if (key === "frame_index") return;
+      const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+      DracoPoint(res, key)
+    })
+    // 渲染摄像头数据
+    dataSet.cameraDevices.forEach((key,index)=>{
+      const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+      let url = arrayBufferToBase64(res)
+      dataSet.activeCamInfo[key] = url
+      if(url){
+        dataSet.activeCam.value = url
+      }
+    })
   });
 }
 
@@ -261,6 +260,7 @@ export const allWsSend = (frame, play, request_count_val)=>{
     allWs.send(JSON.stringify(options));
     if (!play) {
       bufferedFrames = [];
+      totalFrames = frame;
     } else {
       // 已请求的帧数增加
       totalFrames+= request_count;
@@ -287,9 +287,9 @@ export const allWsSend = (frame, play, request_count_val)=>{
         // 不是播放中直接渲染当前数据
         renderFrame(bufferedFrames[0]);
       }
-      if (play && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
-        dataSet.activefame = dataSet.activefame + request_count
-      }
+      // if (play && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
+      //   dataSet.activefame = dataSet.activefame + request_count
+      // }
     };
   }catch(err){
     console.error('Init camWsSend error:'+err);
