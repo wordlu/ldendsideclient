@@ -12,7 +12,9 @@
         <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
         <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
-        <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
+
+
+        <!-- <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button> -->
 
         <!-- <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
           标定

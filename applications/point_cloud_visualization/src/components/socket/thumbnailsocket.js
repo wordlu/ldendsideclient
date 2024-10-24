@@ -176,48 +176,35 @@ export const initAllSocket = ()=>{
   };
 }
 
-/**
- * 需求：前端页面支持批量请求多帧数据，然后以0.1秒每帧的速度，逐帧播放。比如一次请求10帧数据，当播放帧数达到5帧数时，再请求10~19帧数据，当播放帧数达到15帧时，再请求20~29帧数据，依此类推。
- */
 let bufferedFrames = []; // 存储帧数据的缓冲区
-let currentFrameIndex = 0; // 当前播放的帧索引
 let totalFrames = 0; // 已请求最大帧数
 let isRequesting = false; // 是否正在请求数据
 let playInterval;
 
-// 逐帧播放
 export const startPlaying = () => {
-  // allWsSend(totalFrames, 1)
+  if (totalFrames >= dataSet.info.frame_count) totalFrames = 0;
+  // 100 毫秒每帧，即每秒 10 帧
   playInterval = setInterval(() => {
     if (bufferedFrames.length > 0) {
-      // const frameData = bufferedFrames.shift(); // 移除并返回第一帧
-      let frameData;
-      if (bufferedFrames.length > 1) {
-        frameData = bufferedFrames.shift();
-        renderFrame(frameData); // 渲染当前帧
-      } else {
-        frameData = bufferedFrames[0];
-      }
-      currentFrameIndex++;
-      
-      // 如果缓冲帧数少于5帧，则请求下一批数据
+      let frameData = bufferedFrames.length > 1 ? bufferedFrames.shift() : bufferedFrames[0];
+      renderFrame(frameData); // 渲染当前帧
+      console.log('当前帧数111：'+frameData.splitInfo.frame_index)
+      // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
       if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-1)) {
-        // const nextStartFrame = currentFrameIndex + 1;
         allWsSend(totalFrames, 1)
       }
     } else {
       console.log('等待新数据...');
     }
-  }, 100); // 100 毫秒每帧，即每秒 10 帧
+  }, 100);
 }
 
 // 结束播放
 export const stopPlaying = () => {
-  
-  // if (allWs) allWs.close();
+  bufferedFrames = [bufferedFrames[bufferedFrames.length - 1]];
+  totalFrames = bufferedFrames[0].splitInfo.frame_index;
   if (playInterval) {
     clearInterval(playInterval);
-    bufferedFrames = [bufferedFrames[bufferedFrames.length - 1]];
   }
 }
 
@@ -225,8 +212,9 @@ export const stopPlaying = () => {
 function renderFrame(frameData) {
   const splitInfo = frameData.splitInfo;
   const ArrayBufferData = frameData.ArrayBufferData;
+  dataSet.activefame = splitInfo.frame_index
+  console.log('当前帧数：'+dataSet.activefame)
   reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
-    dataSet.activefame = splitInfo.frame_index
     // 渲染点云数据
     dataSet.lidarDevices.forEach((key,index)=>{
       if (key === "frame_index") return;
@@ -265,22 +253,26 @@ export const allWsSend = (frame, play, request_count_val)=>{
       // 已请求的帧数增加
       totalFrames+= request_count;
     }
-    console.log("8:all websocket发送消息"+JSON.stringify(options))
-
-    
+    console.log("8:all websocket发送消息")
     allWs.onmessage = async function(evt) {
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
         console.log("10:string数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
+        if (splitInfo.frame_index > dataSet.info.frame_count) {
+          return;
+        }
         bufferedFrames.push({
           splitInfo: splitInfo,
           ArrayBufferData: null
         })
       }else{
-        console.log("10:ArrayBuffer数据")
+        if (splitInfo.frame_index > dataSet.info.frame_count) {
+          return;
+        }
         // 将接收到的ArrayBuffer数据存储到缓冲区中
         bufferedFrames[bufferedFrames.length - 1].ArrayBufferData = evt.data;
+        console.log("10:ArrayBuffer数据")
       }
 
       if (!play) {

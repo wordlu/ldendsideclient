@@ -29,89 +29,13 @@
 
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
-import { ref , watch , computed, onMounted, nextTick, defineProps } from 'vue'
+import { ref , watch , computed } from 'vue'
 import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
 import {dataval} from './dataval'
 import { func_scene_thumbnail } from '../../../api/api'
 import * as THREE from 'three';
-const props = defineProps({
-  currentScene: {
-    type: Object,
-    required: true
-  },
-});
-const data = ref([])
-const thumbnailsContainer = ref(null);
-const imageCount = ref(9)
-const urlParams = new URLSearchParams(window.location.search);
-const datasetid = ref(urlParams.get('dataset'))
-const getDataval = async () => {
-  const arr = await func_scene_thumbnail({dataset: datasetid.value,image_count: imageCount.value})
-  return arr.data.data
-}
+
 const startframe = ref(0)
-const createBox = (obj) => {
-  const geometry = new THREE.BoxGeometry(obj.dimension_x, obj.dimension_y, obj.dimension_z);
-  const material = new THREE.MeshBasicMaterial({ color: 0xFF7900, wireframe: true });
-  const box = new THREE.Mesh(geometry, material);
-  box.position.set(obj.position_x, obj.position_y, obj.position_z);
-  box.rotation.z = obj.yaw;
-  return box;
-};
-
-const createThumbnail = (pointCloud) => {
-  const boundingBox = new THREE.Box3().setFromObject(pointCloud);
-  const center = boundingBox.getCenter(new THREE.Vector3());
-  const size = boundingBox.getSize(new THREE.Vector3());
-
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov = 50;
-  const aspectRatio = 1; // square thumbnails
-  const distance = maxDim / (2 * Math.tan((Math.PI * fov) / 360));
-
-  const thumbRenderer = new THREE.WebGLRenderer({ antialias: true });
-  const thumbCamera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 1000);
-  const thumbScene = new THREE.Scene();
-
-  thumbCamera.position.set(center.x, center.y, center.z + distance);
-  thumbCamera.lookAt(center);
-  thumbRenderer.setSize(160, 160);
-  thumbRenderer.setClearColor(0x000000, 0);
-  thumbRenderer.clear();
-
-  thumbScene.add(pointCloud);
-  thumbRenderer.render(thumbScene, thumbCamera);
-
-  thumbScene.remove(pointCloud);
-  return thumbRenderer.domElement.toDataURL();
-};
-
-const loadThumbnails = () => {
-  if (thumbnailsContainer.value) {
-    const thumbnailsContainerElem = thumbnailsContainer.value;
-    thumbnailsContainerElem.innerHTML = '';
-
-    data.value.forEach((frameData, index) => {
-      const frame = new THREE.Group();
-      frameData.od.forEach((obj) => {
-        if (obj) {
-          const box = createBox(obj);
-          frame.add(box);
-        }
-      });
-
-      const thumbnailDiv = document.createElement('div');
-      thumbnailDiv.classList.add('thumbnail');
-      // if (index === 1) { 
-        // thumbnailDiv.classList.add('highlight');
-      // }
-      thumbnailDiv.style.backgroundImage = `url(${createThumbnail(frame)})`;
-      thumbnailsContainerElem.appendChild(thumbnailDiv);
-    });
-  }
-};
-
-onMounted(async () => {});
 
 const dataSet = dataSetStore()
 
@@ -196,7 +120,7 @@ const currentTimeString = computed(() => {
 
 watch(info,(newVal)=>{
   // 处理帧数
-  frame_count.value = newVal.frame_count-1;
+  frame_count.value = newVal.frame_count;
   document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px';
   // 计算总时长
   time_value.value = getTimeValue(newVal.start_time, newVal.end_time);
@@ -209,7 +133,8 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
     activeFrame.value = dataSet.activefame
     if(activeFrame.value <= frame_count.value){
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-    }else{
+    }
+    if(activeFrame.value >= frame_count.value){
       isStart.value = false;
       stopPlaying() // 停止播放
     }
@@ -239,14 +164,6 @@ const getCertainFrameData = ()=>{
 const start=()=>{
   if(!loading.value){
     if(!isStart.value){
-      // 当前帧数小于总帧数
-      if(activeFrame.value < frame_count.value){
-        dataSet.activefame ++
-        activeFrame.value = dataSet.activefame
-        document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-      }else {
-        dataSet.activefame = 0
-      }
       isStart.value = true
       startPlaying(activeFrame.value) // 开始播放
     }else{
