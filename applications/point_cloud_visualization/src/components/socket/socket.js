@@ -49,6 +49,7 @@ let isData = false;
  * 1. 两个数组参数，一个为所有ip，一个为当前连接ip，进行对比
  */
 let connectedIPs = []
+let closedIPs = []
 
 let webSockets  = {}
 
@@ -97,7 +98,13 @@ export const connectWebSocket = (ip, type) => {
   socket.onopen = () => {
     webSockets[ip].status = 'Connected';
     connectedIPs.push(ip);
-    clearInterval(reconnectInterval);
+
+    const index = closedIPs.find(it => it.ip === ip);
+    if (index) {
+        clearInterval(index.timer);
+        closedIPs = closedIPs.filter(it => it.ip !== ip);
+    }
+    // clearInterval(reconnectInterval);
     console.log(`socket.onopen: Connected to ${ip}`);
   };
 
@@ -133,26 +140,53 @@ export const connectWebSocket = (ip, type) => {
     if (index > -1) {
       connectedIPs.splice(index, 1);
     }
-    if (!reconnectInterval) {
-      reconnectInterval = setInterval(() => {
+
+    const index2 = closedIPs.find(it => it.ip === ip);
+    if (!index2) {
+      let timer = setInterval(() => {
         if (socket.readyState !== WebSocket.OPEN) {
           console.log('尝试重新连接 WebSocket...');
-          connectWebSocket(ip);
+          connectWebSocket(ip, type);
         }
       }, 10000);
+      closedIPs.push({
+        ip,
+        timer
+      });
     }
+    // if (!reconnectInterval) {
+    //   reconnectInterval = setInterval(() => {
+    //     if (socket.readyState !== WebSocket.OPEN) {
+    //       console.log('尝试重新连接 WebSocket...');
+    //       connectWebSocket(ip, type);
+    //     }
+    //   }, 10000);
+    // }
     console.log(`socket.onclose: Disconnected from ${ip}`);
   };
 
   socket.onerror = (error) => {
-    if (!reconnectInterval) {
-      reconnectInterval = setInterval(() => {
+    const index2 = closedIPs.find(it => it.ip === ip);
+    if (!index2) {
+      let timer = setInterval(() => {
         if (socket.readyState !== WebSocket.OPEN) {
           console.log('尝试重新连接 WebSocket...');
-          connectWebSocket(ip);
+          connectWebSocket(ip, type);
         }
       }, 10000);
+      closedIPs.push({
+        ip,
+        timer
+      });
     }
+    // if (!reconnectInterval) {
+    //   reconnectInterval = setInterval(() => {
+    //     if (socket.readyState !== WebSocket.OPEN) {
+    //       console.log('尝试重新连接 WebSocket...');
+    //       connectWebSocket(ip, type);
+    //     }
+    //   }, 10000);
+    // }
     console.error('socket.onerror: WebSocket error:', error)
   }
 }
