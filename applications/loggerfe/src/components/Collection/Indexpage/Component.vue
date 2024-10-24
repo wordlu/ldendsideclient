@@ -1,7 +1,7 @@
 <template>
-  <div class="index-page" 
-    :element-loading-text="loadingtext"
-    v-loading="pageLoading" >
+  <div class="index-page" >
+    <!-- :element-loading-text="loadingtext"
+    v-loading="pageLoading" > -->
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
@@ -138,7 +138,7 @@ const changeProps = (obj) => {
 }
 
 const loadingtext = ref('')
-const pageLoading = ref(false)
+// const pageLoading = ref(false)
 const switchLoading = ref(false)
 const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
@@ -256,8 +256,8 @@ const startupDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备启动中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备启动中，请稍后...'
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
@@ -325,8 +325,8 @@ const recordOnDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备采集开启中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备采集开启中，请稍后...'
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
@@ -358,8 +358,8 @@ const recordOffDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备结束采集中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备结束采集中，请稍后...'
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
@@ -572,7 +572,7 @@ onMounted(() => {
     const state = message.value?.alerts[0]?.labels?.state
 
     if (state === '0') {
-      pageLoading.value = false
+      // pageLoading.value = false
       ElNotification({
         title: '收到一条新事件',
         type: severity !== '2' ? 'warning' : 'error',
@@ -584,7 +584,8 @@ onMounted(() => {
         },
       })
     } else if (state == '1') {
-      pageLoading.value = false
+      // pageLoading.value = false
+      // 接收成功和失败的消息
     }
     
   };
