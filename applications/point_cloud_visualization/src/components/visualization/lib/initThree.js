@@ -424,17 +424,16 @@ function createGeometry(geometryData, type) {
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
-  // 此方法上一帧的数据会被新的数据覆盖。这是因为Three.js的BufferAttribute对象是直接修改顶点数据的，而不是创建新的几何体
-  // if (type === 2) {
-  //   geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
-  // } else {
-  //   geometry2.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
-  // }
+
   if (type) {
     renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   } else {
     geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   }
+}
+
+export const clearGeometry = (type) => {
+  renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
 }
 
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {

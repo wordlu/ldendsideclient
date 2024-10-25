@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, renderODBox, scene, renderObjBox, renderDUTBox } from '../visualization/lib/initThree';
+import { DracoPoint, renderODBox, scene, renderObjBox, renderDUTBox, clearGeometry } from '../visualization/lib/initThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -56,6 +56,7 @@ let webSockets  = {}
 let ipList = []
 
 let allportArray = []
+const timeouts = {}; // 每个通道的超时ID
 
 // let ipvalue = `ws://${window.parent.location.hostname}`
 let ipvalue = `ws://loggertrash`
@@ -104,11 +105,15 @@ export const connectWebSocket = (ip, type) => {
         clearInterval(index.timer);
         closedIPs = closedIPs.filter(it => it.ip !== ip);
     }
-    // clearInterval(reconnectInterval);
     console.log(`socket.onopen: Connected to ${ip}`);
   };
 
   socket.onmessage = (event) => {
+    // 需求：一秒没接到数据清空上一帧
+    clearTimeout(timeouts[ip]);
+    timeouts[ip] = setTimeout(() => {
+      clearGeometry(ip)
+    }, 1000);
     reader.readAs('ArrayBuffer',event.data,function(result){
       if (type == 'lidar') {
         DracoPoint(result, ip)
@@ -120,18 +125,6 @@ export const connectWebSocket = (ip, type) => {
         }
       }
     });
-    // @wodelu:TODO: 目前逻辑只有两颗雷达，判断是第一颗还是第二颗，分别渲染
-    // if (!urlval || urlval == ip) {
-    //   urlval = ip
-    //   reader.readAs('ArrayBuffer',event.data,function(result){
-    //     DracoPoint(result)
-    //   });
-    // } else {
-    //   reader.readAs('ArrayBuffer',event.data,function(result){
-    //     DracoPoint(result, 2)
-    //   });
-    // }
-    
   }
 
   socket.onclose = () => {
@@ -154,14 +147,6 @@ export const connectWebSocket = (ip, type) => {
         timer
       });
     }
-    // if (!reconnectInterval) {
-    //   reconnectInterval = setInterval(() => {
-    //     if (socket.readyState !== WebSocket.OPEN) {
-    //       console.log('尝试重新连接 WebSocket...');
-    //       connectWebSocket(ip, type);
-    //     }
-    //   }, 10000);
-    // }
     console.log(`socket.onclose: Disconnected from ${ip}`);
   };
 
@@ -179,14 +164,6 @@ export const connectWebSocket = (ip, type) => {
         timer
       });
     }
-    // if (!reconnectInterval) {
-    //   reconnectInterval = setInterval(() => {
-    //     if (socket.readyState !== WebSocket.OPEN) {
-    //       console.log('尝试重新连接 WebSocket...');
-    //       connectWebSocket(ip, type);
-    //     }
-    //   }, 10000);
-    // }
     console.error('socket.onerror: WebSocket error:', error)
   }
 }
