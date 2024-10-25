@@ -58,8 +58,8 @@ let ipList = []
 let allportArray = []
 const timeouts = {}; // 每个通道的超时ID
 
-// let ipvalue = `ws://${window.parent.location.hostname}`
-let ipvalue = `ws://loggertrash`
+let ipvalue = `ws://${window.parent.location.hostname}`
+// let ipvalue = `ws://loggertrash`
 let reconnectInterval = null;  
 
 

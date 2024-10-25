@@ -3,7 +3,32 @@
     <div class="grid-content ml">
       <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
      <div class="title-area">
-      <span class="title">配置信息</span>
+      <div class="title">
+        配置信息
+        <el-tooltip placement="top" effect="light">
+          <template #content>
+            <div style="display: flex;flex-direction: column;">
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #d0d7de; margin-right: 6px;"></div> 
+                <span style="color: black;">未连接</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #28a745; margin-right: 6px;"></div> 
+                <span style="color: black;">成功</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #e6a23c; margin-right: 6px;"></div> 
+                <span style="color: black;">警告</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #dc3545; margin-right: 6px;"></div> 
+                <span style="color: black;">故障</span>
+              </div>
+            </div>
+          </template>
+          <el-icon><InfoFilled /></el-icon>
+        </el-tooltip>
+      </div>
       <div class="status-title">
         <span class="status-title-item">设备</span>
         <span class="status-title-item">数据</span>
@@ -91,7 +116,7 @@ import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import Vue from 'vue/dist/vue.esm-bundler.js';
-import { Search } from "@element-plus/icons-vue"
+import { Search, InfoFilled } from "@element-plus/icons-vue"
 const { t } = useI18n()
 
 interface Tree {
@@ -582,8 +607,9 @@ defineExpose({
 
   .title-area {
     display: flex;
-
     .title {
+      display: flex;
+      align-items: center;
       font-size: 18px;
       font-weight: 600;
       color: #5A5E72;
@@ -592,7 +618,7 @@ defineExpose({
     }
 
     .status-title {
-      margin-left: 70px;
+      margin-left: 55px;
 
       .status-title-item {
         font-size: 12px;
