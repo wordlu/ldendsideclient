@@ -21,7 +21,7 @@
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
-        <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
+        <span style="min-width: 100px;font-size: 12px;margin-left: 10px;text-align: center;">{{ activeFrame }}/{{ currentTimeString }}/{{ time_value }}</span>
       </div>
     </div>
   </div>
