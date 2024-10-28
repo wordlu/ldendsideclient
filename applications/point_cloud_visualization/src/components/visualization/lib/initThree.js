@@ -38,64 +38,7 @@ const animate = () => {
 
 animate()
 
-/**
- * 配准---设置地面点
- * @param payload 接口请求回来的数据{centroid, norm, xLen, yLen}
- */
-let groundPlane = null
-export const setSceneGround = (payload) => {
-  if (groundPlane !== null) {
-    // 如果之前有地面, 则先删除
-    scene.remove(groundPlane)
-  }
-  groundPlane = createPlane(
-    new THREE.Vector3(...payload.centroid),
-    new THREE.Vector3(...payload.norm),
-    payload.xLen,
-    payload.yLen
-  )
-  scene.add(groundPlane)
-}
-
-/**
- * 根据平面的点法式参数和其他参数构造一个可以显示的平面.
- * @param {THREE.Vector3} centroid 平面中心点.
- * @param {THREE.Vector3} norm 平面法向量.
- * @param {Number} xLen x 方向长度(未经过仿射变换前).
- * @param {Number} yLen y 方向长度(未经过仿射变换前).
- * @param {THREE.MeshBasicMaterialParameters} meshParam Mesh 参数.
- *
- * @returns {THREE.Mesh} 构造的可显示平面
- */
-const createPlane = (centroid, norm, xLen, yLen, meshParam) => {
-  const geometry = new THREE.PlaneGeometry(xLen, yLen, 32)
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xff0000,
-    side: THREE.DoubleSide,
-    opacity: 0.5,
-    transparent: true,
-  })
-  const plane = new THREE.Mesh(geometry, material)
-  const matrix4 = new THREE.Matrix4().compose(
-    centroid,
-    new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), norm.normalize()),
-    new THREE.Vector3(1, 1, 1)
-  )
-  plane.applyMatrix4(matrix4)
-  return plane
-}
-
-/**
- * new_清除地面点
- */
-export const clearPlane = () => {
-  if (groundPlane !== null) {
-    scene.remove(groundPlane)
-    groundPlane = null
-  }
-}
-
-// //创建一个WebGL渲染器
+//创建一个WebGL渲染器
 const renderer = new THREE.WebGLRenderer()
 
 export { scene , renderer , controls , camera}
@@ -114,9 +57,7 @@ export const setCamera = (width, height) => {
 
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
-  // controls.enableRotate = false; // 禁用旋转
-  // controls.enableZoom = false; // 禁用缩放
-  // controls.enablePan = false; // 禁用平移  
+  setControlsEnable(false)
   controls.addEventListener('change',()=>{
     renderer.render(scene, camera)
   })
