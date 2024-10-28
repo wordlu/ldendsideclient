@@ -214,7 +214,7 @@ function renderFrame(frameData) {
   const splitInfo = frameData.splitInfo;
   const ArrayBufferData = frameData.ArrayBufferData;
   dataSet.activefame = splitInfo.frame_index
-  console.log('当前帧数：'+dataSet.activefame)
+  // console.log('当前帧数：'+dataSet.activefame)
   reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
     // 渲染点云数据
     dataSet.lidarDevices.forEach((key,index)=>{
@@ -266,11 +266,11 @@ export const allWsSend = (frame, play, request_count_val)=>{
       // 已请求的帧数增加
       totalFrames+= request_count;
     }
-    console.log("8:all websocket发送消息")
+    // console.log("8:all websocket发送消息")
     allWs.onmessage = async function(evt) {
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
-        console.log("10:string数据"+evt.data)
+        // console.log("10:string数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
         if (splitInfo.frame_index > dataSet.info.frame_count) {
           return;
@@ -285,7 +285,7 @@ export const allWsSend = (frame, play, request_count_val)=>{
         }
         // 将接收到的ArrayBuffer数据存储到缓冲区中
         bufferedFrames[bufferedFrames.length - 1].ArrayBufferData = evt.data;
-        console.log("10:ArrayBuffer数据")
+        // console.log("10:ArrayBuffer数据")
       }
 
       if (!play) {

@@ -1,7 +1,7 @@
 
 
 <template>
-  <div id="thumbnailsvideoBar">
+  <div id="calivideoBar">
     <div class="control">
       <div
         class="control-prev control-item"
@@ -200,7 +200,7 @@ const next = () => {
 
 
 <style lang="scss">
-#thumbnailsvideoBar {
+#calivideoBar {
   z-index: 999;
   color: #ffffff;
   width: calc(100% - 16px);

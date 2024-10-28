@@ -3,16 +3,22 @@
 <template>
   <div id="thumbnailsvideoBar">
     <div class="control">
-      <div class="control-prev control-item" @click="prev" style="margin-right: 10px;">
+      <!-- <div class="control-prev control-item" @click="prev" style="margin-right: 10px;">
         <img src="../../../assets/prev.svg" alt="" style="margin-right: 3px;" />
+      </div> -->
+      <div class="control-prev-next" @click="prev">
+         上一帧
       </div>
       <div class="control-stop" @click="start">
         <img src="../../../assets/pause.svg" alt="" v-if="isStart" />
         <img src="../../../assets/stop.svg" alt="" class="marginLeft3" v-else />
       </div>
-      <div class="control-next control-item" @click="next" style="margin-left: 10px;">
-        <img src="../../../assets/next.svg" alt="" style="margin-left: 3px;" />
+      <div class="control-prev-next" @click="next">
+         下一帧
       </div>
+      <!-- <div class="control-next control-item" @click="next" style="margin-left: 10px;">
+        <img src="../../../assets/next.svg" alt="" style="margin-left: 3px;" />
+      </div> -->
     </div>
     <div class="progress-area">
       <div class="Progress-thumbnails">
@@ -201,49 +207,6 @@ const next=()=>{
 
 
 <style lang="scss">
-
-.mask {
-  position: absolute;
-  bottom: 0;
-  // left: 20px;
-  // right: 20px;
-  // width: 100%;
-  width: calc(100% - 12px);
-  margin: 0 6px;
-  height: 180px;
-  background: rgba(255, 255, 255, 0.35);
-  z-index: 2;
-  transition: clip-path 0.3s ease;
-}
-
-.thumbnail {
-  flex-grow: 1;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  position: relative;
-  width: 160px; /* Example size */
-  height: 160px; /* Example size */
-  border-right: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.highlight {
-  border: 2px solid black;
-}
-
-
-
-.vertical-line {
-  position: absolute;
-  bottom: 0;
-  width: 2px;
-  height: 160px;
-  top: 60px;
-  background-color: red;
-}
-
-
 #thumbnailsvideoBar{
   z-index: 999;
   color: #ffffff;
@@ -270,7 +233,7 @@ const next=()=>{
 
   .control{
     display: flex;
-    width: 130px;
+    // width: 130px;
     height: 40px;
     align-items: center;
     margin-bottom: 10px;
@@ -284,6 +247,21 @@ const next=()=>{
       justify-content: center;
       border-radius: 50%;
       cursor: pointer;
+    }
+
+    .control-prev-next {
+      margin: 0 10px;
+      min-width: 40px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .control-prev-next:hover {
+      text-decoration: underline;
+    }
+
+    .control-prev-next:active {
+      color: #FF7900;
     }
 
     .control-stop{
