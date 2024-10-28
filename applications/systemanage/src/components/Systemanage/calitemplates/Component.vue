@@ -2,18 +2,22 @@
   <div class="container">
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
-      <el-breadcrumb-item>存储管理</el-breadcrumb-item>
+      <el-breadcrumb-item>标定流程管理</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">数据集<span class="count">({{ count }})</span></b>
+            <b class="title">标定流程管理<span class="count">({{ count }})</span></b>
+          </div>
+          <div class="info-btn-group">
+            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button> -->
+            <!-- <el-button disabled class="info-btn">拉取采集模版</el-button> -->
           </div>
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索数据集名称" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="search" class="search-bar" placeholder="搜索标定流程名称" @change="change" @input="change" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -29,32 +33,17 @@
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
           :data="data" style="width: 100%">
-          <el-table-column property="name" label="数据集名称" width="200" show-overflow-tooltip />
-          <el-table-column property="size" label="数据集规模" align="center" >
-            <template #default="scope">{{ getSize(scope.row.size) }}</template>
-          </el-table-column>
-          <el-table-column property="prefix" label="存储位置"/>
+          <!-- <el-table-column label="" width="80">
+            <template #default="scope">
+              <div v-show="!currentdata.includes(scope.row.id)" style="width: 13px;height: 13px;border-radius: 50%; border: 1px solid #ccc;"></div>
+              <i class="el-icon-success" v-show="currentdata.includes(scope.row.id)" style="color: #ff7900;"></i>
+            </template>
+          </el-table-column> -->
+          <el-table-column property="name" label="标定流程名称"  />
+          <!-- <el-table-column property="type" label="类型" />
+          <el-table-column property="description" label="描述"/> -->
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
-          </el-table-column>
-          <el-table-column
-            property="name"
-            label="操作"
-            width="50">
-            <template #default="scope">
-              <el-dropdown @command="(val) => handleCommand(val, scope.row)">
-                <span class="el-dropdown-link">
-                  <el-button @click="handleClick(scope.row)" type="text" size="small" :icon="MoreFilled"></el-button>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
-                    <!-- <el-dropdown-item command="导出" :icon="MoreFilled">导出</el-dropdown-item> -->
-                    <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </template>
           </el-table-column>
         </el-table>
       </div>
@@ -63,11 +52,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
+import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll, deleteItem } from '@/api/jsonApi'
+import { findAll } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
-import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
+import { ElTable } from 'element-plus'
 
 interface Row {}
 
@@ -77,53 +66,61 @@ const search = ref('')
 const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
-const activeRow = ref<Row>({})
+const currentdata = ref([])
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
-const getSize = (size: number) => {
-  if (size >= 0) {
-    if (size < 1024) {
-      return `${size} B`;                      // 小于1KB，显示为B
-    } else if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(2)} KB`; // 小于1MB，显示为KB
-    } else if (size < 1024 * 1024 * 1024) {
-      return `${(size / (1024 * 1024)).toFixed(2)} MB`; // 小于1GB，显示为MB
-    } else {
-      return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`; // 大于等于1GB，显示为GB
-    }
-  } else if (size === -1) {
-    return '正在采集'
-  }
-  return '---'
-}
-
 const nextPage = () => {
-  queryDatasets(current.value + 1)
+  queryCalibrationTemplates(current.value + 1)
 }
 
 const prevPage = () => {
-  queryDatasets(current.value - 1)
+  queryCalibrationTemplates(current.value - 1)
 }
 
 onMounted(() => {
-  queryDatasets(current.value)
+  queryCurrentDrivers()
+  // queryCalibrationTemplates(current.value)
 })
 
-const queryDatasets = (page: number) => {
+const trigger = () => {
+  // window.history.pushState(null, '', `/loggerfe/configs`)
+}
+
+const viewportId = ref('')
+
+const queryCurrentDrivers = () => {
+  try {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('viewports')
+      viewportId.value = datavalue[0]?.id
+      queryCalibrationTemplates(current.value)
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+
+const queryCalibrationTemplates = (page: number) => {
   try {
     const params = {
       offset: step.value * page,
       limit: step.value,
-      sort: '-created',
+      // sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('/models/datasets', params).then((res: any) => {
+    findAll(`/sys/calibration-templates`, params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      data.value = gostore.findAll('datasets')
+      data.value = gostore.findAll('calibration-templates')
       count.value = res.data.meta.count
       current.value = page
       currentmax.value = Math.ceil(count.value / step.value)
@@ -137,54 +134,7 @@ const queryDatasets = (page: number) => {
 
 
 const change = () => {
-  queryDatasets(0)
-}
-
-const handleCommand = (command, row) => {
-  if(command == '数据详情'){
-    window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
-  }else if(command == '删除'){  
-    ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
-      confirmButtonText: '确认',
-      customClass:"delete-confirm-box",
-      callback: (action: Action) => {
-        if (action === 'confirm') {
-          onDelete(row.id)
-        }
-      },
-    })
-  }
-}
-
-
-const onDelete = (id) => {
-  const params = {
-      data: {
-        id: id,
-        type: 'datasets'
-      }
-    }
-  deleteItem('/models/datasets', params).then(res => {
-    ElMessage({
-      message: "删除成功",
-      type: 'success',
-    })
-    queryDatasets(0)
-  }).catch(err => {
-    const {response:{data:{errors}}} = err
-    let msg =  "删除失败"
-    if(errors && errors[0]) {
-      msg = errors[0]['detail']
-    }
-    ElMessage({
-      message: msg,
-      type: 'error',
-    })
-  })
-}
-
-const handleClick = (e) =>{
-  activeRow.value = e
+  queryCalibrationTemplates(0)
 }
 
 const formatter = (thistime: any, fmt: string) => {
@@ -211,16 +161,10 @@ const formatter = (thistime: any, fmt: string) => {
   }
   return fmt
 }
+// queryCurrentDrivers()
 </script>
 
-<style>
-.delete-confirm-box {
-  height: 160px !important;
-}
-</style>
 <style lang="scss" scoped>
-
-
 .ver-mid {
   display: flex;
   flex-direction: column;

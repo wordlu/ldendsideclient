@@ -1,5 +1,0 @@
-# Ignore artifacts:
-dist
-coverage
-docs
-ld_logger_fe

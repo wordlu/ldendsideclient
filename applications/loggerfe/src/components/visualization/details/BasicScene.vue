@@ -1,6 +1,6 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe :src="'/pointcloud/thumbnailsvisualization?dataset='+datasetprefix+'&deviceshub='+JSON.stringify(devicesHub)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'/pointcloud/thumbnailsvisualization?dataset='+datasetprefix+'&deviceshub='+JSON.stringify(devicesHub)+'&cloudpointparams='+JSON.stringify(cloudpointparams)+'&isCollapsedConfig='+isCollapsedConfig" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
@@ -13,7 +13,8 @@ const props = defineProps({
   allports: Array,
   datasetprefix: String,
   devicesHub: Array,
-  cloudpointparams: Object
+  cloudpointparams: Object,
+  isCollapsedConfig: Boolean
 });
 </script>
 

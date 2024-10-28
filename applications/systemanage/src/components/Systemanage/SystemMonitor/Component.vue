@@ -34,7 +34,6 @@ import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 
 const title = ref('系统监控')
-const monitorPrefix = ref(window.server.monitorPrefix)
 
 const sensorvalue = ref('')
 const options = ref([])

@@ -98,7 +98,7 @@ export const clearPlane = () => {
 // //创建一个WebGL渲染器
 const renderer = new THREE.WebGLRenderer()
 
-export { scene , renderer , controls , camera}
+export { scene , renderer , controls , camera, points1, points2}
 
 //创建相机
 export const setCamera = (width, height) => {
@@ -311,6 +311,10 @@ export const highlightSelectedPoints = (pointArray, num) => {
 };
 
 
+let points1 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
+// let points2 = new THREE.Points(geometry2, material2)//将上述对象配置到点模型对象上
+let points2 = new THREE.Points(geometry, material1)//将上述对象配置到点模型对象上
+
 function getRandomHexColor() {
   const randomColor = Math.floor(Math.random() * 16777215).toString(16); // 16777215 是 #ffffff 的十进制表示
   return `#${randomColor.padStart(6, '0')}`; // 确保颜色代码为6位
@@ -424,16 +428,17 @@ function createGeometry(geometryData, type) {
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
-
+  // 此方法上一帧的数据会被新的数据覆盖。这是因为Three.js的BufferAttribute对象是直接修改顶点数据的，而不是创建新的几何体
+  // if (type === 2) {
+  //   geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  // } else {
+  //   geometry2.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  // }
   if (type) {
     renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   } else {
     geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   }
-}
-
-export const clearGeometry = (type) => {
-  renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
 }
 
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {

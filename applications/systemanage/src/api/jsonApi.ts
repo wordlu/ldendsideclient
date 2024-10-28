@@ -34,3 +34,13 @@ export function addItem(module:string,params:any) {
     data:params
   })
 }
+
+export function deleteItem(module:string,params:any) {
+  return request({
+    url: `${module}/${params.data.id}`,
+    method: 'delete',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    }
+  })
+}

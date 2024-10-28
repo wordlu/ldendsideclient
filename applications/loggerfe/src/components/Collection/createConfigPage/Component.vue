@@ -15,8 +15,8 @@
     </div>
     <el-form :model="form" label-width="auto" style="max-width: 600px">
       
-      <el-form-item label="设备驱动类型">
-        <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
+      <el-form-item label="设备驱动类型:" label-width="110px">
+        <el-select v-model="form.type" style="width: 300px;" placeholder="请选择驱动" @change="handleDriverChange">
           <el-option v-for="item in driversdata" :key="item.id" :label="item.name" :value="item.name" />
         </el-select>
       </el-form-item>
@@ -153,7 +153,7 @@ const loadRemoteComponent = async () => {
   try {
     // Step 1: Fetch the remote .vue file content
     // const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
-    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/dms-static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
 
     // Step 2: Parse the .vue file using @vue/compiler-sfc

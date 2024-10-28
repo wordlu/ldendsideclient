@@ -2,7 +2,40 @@
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
       <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
-     <div class="title">配置信息</div>
+     <div class="title-area">
+      <div class="title">
+        配置信息
+        <el-tooltip placement="top" effect="light">
+          <template #content>
+            <div style="display: flex;flex-direction: column;">
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #d0d7de; margin-right: 6px;"></div> 
+                <span style="color: black;">未连接</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #28a745; margin-right: 6px;"></div> 
+                <span style="color: black;">成功</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #e6a23c; margin-right: 6px;"></div> 
+                <span style="color: black;">警告</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #dc3545; margin-right: 6px;"></div> 
+                <span style="color: black;">故障</span>
+              </div>
+            </div>
+          </template>
+          <el-icon><InfoFilled /></el-icon>
+        </el-tooltip>
+      </div>
+      <div class="status-title">
+        <span class="status-title-item">设备</span>
+        <span class="status-title-item">数据</span>
+        <span class="status-title-item">显示</span>
+        <span class="status-title-item">存储</span>
+      </div>
+     </div>
 
       <div class="tree-area">
         <el-tree
@@ -83,7 +116,7 @@ import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import Vue from 'vue/dist/vue.esm-bundler.js';
-import { Search } from "@element-plus/icons-vue"
+import { Search, InfoFilled } from "@element-plus/icons-vue"
 const { t } = useI18n()
 
 interface Tree {
@@ -207,8 +240,6 @@ const defaultProps = {
   label: 'label',
 }
 
-const monitorPrefix = ref(window.server.monitorPrefix)
-
 const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
@@ -277,7 +308,7 @@ const queryCurrentDrivers = () => {
 const totree = (data) => {
   const tree = [];
   allTreeKeys.value = []
-  const allport = []
+  const allports = []
   // 通过类型分组
   data.forEach(sensor => {
     let parent = tree.find(node => node.label === sensor.type);
@@ -300,7 +331,11 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      allport.push(sensor.devicedata['display-port'])
+      // allports.push(sensor.devicedata['display-port'])
+      allports.push({
+        port:sensor.devicedata['display-port'],
+        type:sensor.devicedata.type
+      })
       allTreeKeys.value.push({
         key:sensor.id,
         value:sensor.type+'_'+sensor.id
@@ -308,7 +343,7 @@ const totree = (data) => {
     }
   });
   // selectAllNodes()
-  emit('setAllTreeKeys', allport)
+  emit('setAllTreeKeys', allports)
   return tree;
 }
 
@@ -570,13 +605,30 @@ defineExpose({
   overflow: auto;
   padding-right: 20px;
 
-  .title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #5A5E72;
-    margin-bottom: 10px;
-    text-align: left;
+  .title-area {
+    display: flex;
+    .title {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #5A5E72;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .status-title {
+      margin-left: 55px;
+
+      .status-title-item {
+        font-size: 12px;
+        margin-left: 5px;
+        color: #606266;
+      }
+    }
   }
+
+  
 
 }
 

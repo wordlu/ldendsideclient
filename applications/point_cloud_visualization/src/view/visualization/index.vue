@@ -1,3 +1,20 @@
+
+<template>
+  <div id="visualization">
+    <topBarVue />
+    <div class="view">
+      <toolBarVue />
+      <div class="main">
+
+        <div class="container">
+          <threeDView />
+        </div>
+        <cameras />
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import toolBarVue from "./components/toolBar.vue";
 import topBarVue from "./components/topBar.vue";
@@ -13,8 +30,7 @@ const route = useRoute();
 const routeQuery = ref(route.query);
 
 console.log("1:createHub")
-connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allport)
-
+connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports)
 
 function print(val) {
   document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'
@@ -24,20 +40,6 @@ const x = ref(document.documentElement.clientWidth - 408)
 const y = ref(document.documentElement.clientHeight - 620)
 </script>
 
-<template>
-  <div id="visualization">
-    <topBarVue />
-    <div class="view">
-      <toolBarVue />
-      <div class="main">
-
-        <div class="container">
-          <threeDView />
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style lang="scss">
 #visualization{

@@ -8,7 +8,7 @@
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import {camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
+import {camera, scene, renderer, setCamera, setControls,setControlsEnable, setPointCloud } from './lib/replayInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '@/pinia/dataSet.js';
@@ -204,7 +204,7 @@ const selectPointsInBox = () => {
   console.log('Selected Indices:', selectedIndices);
   dataSet.selectedIndices = selectedIndices;
   // @wodelu:TODO:源雷达是补盲雷达，points2，暂时写死
-  highlightSelectedPoints(selectedIndices, 2)
+  // highlightSelectedPoints(selectedIndices, 2)
 };
 
 

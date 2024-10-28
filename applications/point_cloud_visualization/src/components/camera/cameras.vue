@@ -20,20 +20,21 @@ const cutActiveCam = (value)=>{
 
 <style lang="scss">
 #cameras{
-  width: 400px;
-  height: 250px;
-  background: #191919;
+  width: 300px;
+  // height: 250px;
+  // background: #191919;
+  background: #000;
   position: absolute;
-  right: 8px;
-  bottom: 65px;
+  left: 8px;
+  top: 8px;
   z-index: 999;
   display: flex;
   flex-wrap: wrap;
   .cameras-item{
-    width: 200px;
-    height: 125px;
+    width: 100%;
+    height: 100%;
     color: aliceblue;
-    box-shadow: 0px 0px 2px 0px rgba(235, 233, 233, 0.2);
+    // box-shadow: 0px 0px 2px 0px rgba(235, 233, 233, 0.2);
     cursor: pointer;
   }
 }

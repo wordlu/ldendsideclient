@@ -1,23 +1,53 @@
 <template>
   <div id="threeDView" ref="container">
     <div id="three" ></div>
-    <!-- <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas> -->
+    <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas>
   </div>
 </template>
 
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import {camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
+import { points1, points2, camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/caliInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '@/pinia/dataSet.js';
+
+const props = defineProps({
+  isCali: {
+    type: Boolean,
+    default: false
+  },
+  singleDevice: {
+    type: String,
+    default: ''
+  }
+})
+
 const dataSet = dataSetStore();
 
 const loading = ref(dataSet.loading)
 
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
+},{deep:true})
+
+watch(()=>dataSet.clearSelectionBoxValue,(newVal)=>{
+  clearSelectionBox()
+},{deep:true})
+
+watch(()=>props.isCali,(newVal)=>{
+  setControlsEnable(!newVal)
+},{deep:true})
+
+watch(()=>props.singleDevice,(newVal)=>{
+  points1.visible = true;
+  points2.visible = true;
+  if (newVal === 'mainlidar') {
+    points1.visible = false;
+  } else if (newVal) {
+    points2.visible = false;
+  }
 },{deep:true})
 
 const initThree = async () =>{
@@ -32,7 +62,9 @@ const initThree = async () =>{
   renderer.render(scene,camera); // 创建渲染器
   setControls(camera); // 创建轨道控制器
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
-  setPointCloud(dataSet.lidarDevices); //  创建点云并添加到场景中
+
+  setPointCloud(); //  创建点云并添加到场景中
+  setPointCloud2(); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);
@@ -112,15 +144,15 @@ const resizeRendererToDisplaySize = async(renderer) =>{
 onMounted(()=>{
   setTimeout(()=>{
     initThree()
-    // // 设置 Overlay Canvas 大小
-    // const { clientWidth, clientHeight } = container.value;
-    // overlayCanvas.value.width = clientWidth;
-    // overlayCanvas.value.height = clientHeight;
+    // 设置 Overlay Canvas 大小
+    const { clientWidth, clientHeight } = container.value;
+    overlayCanvas.value.width = clientWidth;
+    overlayCanvas.value.height = clientHeight;
 
-    // // 添加鼠标事件监听
-    // container.value.addEventListener('mousedown', onMouseDown);
-    // container.value.addEventListener('mousemove', onMouseMove);
-    // window.addEventListener('mouseup', onMouseUp);
+    // 添加鼠标事件监听
+    container.value.addEventListener('mousedown', onMouseDown);
+    container.value.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   },100)
 })
 

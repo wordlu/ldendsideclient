@@ -15,137 +15,27 @@
       </div>
     </div>
     <div class="progress-area">
-      
-      <!-- <div class="mask" :style="maskStyle" v-if="currentScene"></div> -->
       <div class="Progress-thumbnails">
         <div class="Progress_back"
-          @mouseleave="progressMouseleave"
           @mousedown="setProgressPosDown"
-          @mouseup="setProgressPosUp"
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
+        <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
       </div>
-      <!-- <div id="thumbnails" ref="thumbnailsContainer"></div> -->
     </div>
   </div>
 </template>
 
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
-import { ref , watch , computed, onMounted, nextTick, defineProps } from 'vue'
-import { allWsSend } from '../../../components/socket/thumbnailsocket'
+import { ref , watch , computed } from 'vue'
+import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
 import {dataval} from './dataval'
 import { func_scene_thumbnail } from '../../../api/api'
 import * as THREE from 'three';
-const props = defineProps({
-  currentScene: {
-    type: Object,
-    required: true
-  },
-});
-const data = ref([])
-const thumbnailsContainer = ref(null);
-const imageCount = ref(9)
-const urlParams = new URLSearchParams(window.location.search);
-const datasetid = ref(urlParams.get('dataset'))
-const getDataval = async () => {
-  const arr = await func_scene_thumbnail({dataset: datasetid.value,image_count: imageCount.value})
-  return arr.data.data
-}
-const endframe = ref(Infinity)
+
 const startframe = ref(0)
-const createBox = (obj) => {
-  const geometry = new THREE.BoxGeometry(obj.dimension_x, obj.dimension_y, obj.dimension_z);
-  const material = new THREE.MeshBasicMaterial({ color: 0xFF7900, wireframe: true });
-  const box = new THREE.Mesh(geometry, material);
-  box.position.set(obj.position_x, obj.position_y, obj.position_z);
-  box.rotation.z = obj.yaw;
-  return box;
-};
-
-const createThumbnail = (pointCloud) => {
-  const boundingBox = new THREE.Box3().setFromObject(pointCloud);
-  const center = boundingBox.getCenter(new THREE.Vector3());
-  const size = boundingBox.getSize(new THREE.Vector3());
-
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov = 50;
-  const aspectRatio = 1; // square thumbnails
-  const distance = maxDim / (2 * Math.tan((Math.PI * fov) / 360));
-
-  const thumbRenderer = new THREE.WebGLRenderer({ antialias: true });
-  const thumbCamera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 1000);
-  const thumbScene = new THREE.Scene();
-
-  thumbCamera.position.set(center.x, center.y, center.z + distance);
-  thumbCamera.lookAt(center);
-  thumbRenderer.setSize(160, 160);
-  thumbRenderer.setClearColor(0x000000, 0);
-  thumbRenderer.clear();
-
-  thumbScene.add(pointCloud);
-  thumbRenderer.render(thumbScene, thumbCamera);
-
-  thumbScene.remove(pointCloud);
-  return thumbRenderer.domElement.toDataURL();
-};
-
-const loadThumbnails = () => {
-  if (thumbnailsContainer.value) {
-    const thumbnailsContainerElem = thumbnailsContainer.value;
-    thumbnailsContainerElem.innerHTML = '';
-
-    data.value.forEach((frameData, index) => {
-      const frame = new THREE.Group();
-      frameData.od.forEach((obj) => {
-        if (obj) {
-          const box = createBox(obj);
-          frame.add(box);
-        }
-      });
-
-      const thumbnailDiv = document.createElement('div');
-      thumbnailDiv.classList.add('thumbnail');
-      // if (index === 1) { 
-        // thumbnailDiv.classList.add('highlight');
-      // }
-      thumbnailDiv.style.backgroundImage = `url(${createThumbnail(frame)})`;
-      thumbnailsContainerElem.appendChild(thumbnailDiv);
-    });
-  }
-};
-
-onMounted(async () => {
-  // data.value = await getDataval()
-  
-  // loadThumbnails();
-});
-
-// 遮挡
-// const currentScene = ref(null)
-// const getMasks = () => {
-//   const currentFrame = currentScene.value ? (currentScene.value.currentFrame || currentScene.value.frame_line[0]) : null
-//   if (currentFrame) {
-//     maskStart.value = currentFrame.start * step.value
-//     maskWidth.value = (currentFrame.end - currentFrame.start) * step.value
-//     activeFrame.value = currentFrame.start
-//     dataSet.activefame = currentFrame.start
-//     endframe.value = currentFrame.end
-//     startframe.value = currentFrame.start
-//   } else {
-//     maskStart.value = 0
-//     maskWidth.value = 0
-//     activeFrame.value = 0
-//     dataSet.activefame = 0
-//     endframe.value = Infinity
-//     startframe.value = 0
-//   }
-//   //重置所有状态
-//   isStart.value = false;
-//   document.querySelector('.Progress_line').style.width = 0
-// }
-
 
 const dataSet = dataSetStore()
 
@@ -157,8 +47,11 @@ const offsetX = ref(0)
 const isShow = ref(false)
 
 const frame_count = ref()
+const time_value = ref('00:00')
 
-const activeFrame = ref(dataSet.activefame)
+const activeFrame = ref(dataSet.activefame) // 当前帧
+
+const frame_duration = ref(0) //每帧的时长
 
 const moveFrame = ref()
 
@@ -169,11 +62,6 @@ const loading = ref(dataSet.loading)
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
 },{deep:true})
-
-// watch(()=>props.currentScene,(newVal)=>{
-//   currentScene.value = newVal.value
-//   getMasks()
-// },{deep:true})
 
 const step = computed(()=>{
   const num = document.querySelector('.Progress_back').offsetWidth / (frame_count.value)
@@ -186,19 +74,69 @@ if(dataSet.info.frame_count){
   isShow.value = true;
 }
 
+const getTimeValue = (start_time, end_time) => {
+  if (!start_time || !end_time || end_time < start_time) return '00:00:00';
+  const startTime = new Date(start_time);
+  const endTime = new Date(end_time);
+  const durationMs = endTime - startTime;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    // 超过1小时，显示为 "HH:mm:ss"
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    // 不超过1小时，显示为 "mm:ss"
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+}
+
+// 计算当前帧对应的时间（毫秒转秒）
+const currentTime = computed(() => {
+  return activeFrame.value * frame_duration.value;
+});
+
+// 将时间戳转换为格式化字符串，显示为 "秒.毫秒" 格式
+const currentTimeString = computed(() => {
+  const durationMs = currentTime.value;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    // 超过1小时，显示为 "HH:mm:ss"
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    // 不超过1小时，显示为 "mm:ss"
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+  // const seconds = Math.floor(currentTime.value / 1000);
+  // const milliseconds = currentTime.value % 1000;
+  // return `${seconds}.${String(milliseconds).padStart(3, '0')}s`;
+});
+
 watch(info,(newVal)=>{
-  frame_count.value = newVal.frame_count-1;
+  // 处理帧数
+  frame_count.value = newVal.frame_count;
   document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px';
+  // 计算总时长
+  time_value.value = getTimeValue(newVal.start_time, newVal.end_time);
+  //计算每帧的时长
+  frame_duration.value = (newVal.end_time - newVal.start_time) / frame_count.value;
 },{deep:true})
 
 watch(()=>dataSet.activefame,(newVal,oldVal)=>{
   if(isStart.value){
     activeFrame.value = dataSet.activefame
-    if(activeFrame.value <= frame_count.value && activeFrame.value <= endframe.value){
-      allWsSend(activeFrame.value, true, endframe.value)
+    if(activeFrame.value <= frame_count.value){
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-    }else{
+    }
+    if(activeFrame.value >= frame_count.value){
       isStart.value = false;
+      stopPlaying() // 停止播放
     }
   }
 })
@@ -208,84 +146,56 @@ const progressMove = (e)=>{
   moveFrame.value = parseInt(e.offsetX / step.value);
 }
 
-const progressMouseleave = ()=>{
-  
-}
-
 const setProgressPosDown = ()=>{
   if(!loading.value){
+    isStart.value = false
+    stopPlaying() // 停止播放
     document.querySelector('.Progress_line').style.width = offsetX.value + 'px';
     activeFrame.value = moveFrame.value;
     dataSet.activefame = moveFrame.value;
-    getData();
+    getCertainFrameData();
   }
 }
 
-const setProgressPosUp = ()=>{
-  
-}
-
-const getData = ()=>{
-  allWsSend(activeFrame.value, false, endframe.value);
+const getCertainFrameData = ()=>{
+  allWsSend(activeFrame.value, false, 1);
 }
 
 const start=()=>{
   if(!loading.value){
     if(!isStart.value){
-      if(activeFrame.value < frame_count.value){
-        dataSet.activefame ++
-        activeFrame.value = dataSet.activefame
-        allWsSend(activeFrame.value, false)
-        document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
-        isStart.value = true
-      }else if(activeFrame.value >= frame_count.value){
-        isStart.value = true
-        dataSet.activefame = 0
-      }else{
-        isStart.value = false;
-      }
+      isStart.value = true
+      startPlaying(activeFrame.value) // 开始播放
     }else{
       isStart.value = false
+      stopPlaying() // 停止播放
     }
   }
 }
 
 const prev=()=>{
   isStart.value = false
+  stopPlaying() // 停止播放
   dataSet.activefame = activeFrame.value
   if(activeFrame.value > 0 && activeFrame.value > startframe.value){
     dataSet.activefame --
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value)
+    getCertainFrameData()
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }
 
 const next=()=>{
   isStart.value = false
+  stopPlaying() // 停止播放
   dataSet.activefame = activeFrame.value
-  if(activeFrame.value < frame_count.value && activeFrame.value < endframe.value){
+  if(activeFrame.value < frame_count.value ){
     dataSet.activefame ++
     activeFrame.value = dataSet.activefame
-    allWsSend(activeFrame.value, false, endframe.value)
+    getCertainFrameData()
     document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
   }
 }
-
-
-// 100-200帧
-// 第一百帧的位置：step*100
-// 100-200帧的长度: step*(200-100)
-
-// const maskStart = ref(0)
-// const maskWidth = ref(0)
-// const maskStyle = computed(() => {
-//   const end = maskStart.value + maskWidth.value
-//   return {
-//     clipPath: `polygon(0% 0%, ${maskStart.value}px 0%, ${maskStart.value}px 100%, 0% 100%, 0% 0%, ${end}px 0%, ${end}px 100%, 100% 100%, 100% 0%)`
-//   }
-// })
-
 
 </script>
 

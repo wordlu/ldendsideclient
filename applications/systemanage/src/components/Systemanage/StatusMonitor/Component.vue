@@ -6,8 +6,6 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-const monitorPrefix = ref(window.server.monitorPrefix)
-console.log(monitorPrefix.value,'window.server.monitorPrefix')
 </script>
 
 <style lang="scss" scoped>

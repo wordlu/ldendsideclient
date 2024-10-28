@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" src="/icon/default/viewport.png" alt="Background Image" style="display: block;height: 480px;">
+          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -65,9 +65,9 @@
                 class="demo-tabs"
               >
                 <el-tab-pane label="设备配置" name="first">
-                    <el-form :model="form" label-width="auto" style="max-width: 600px">
-                      <el-form-item label="设备驱动类型">
-                        <el-select v-model="form.type" placeholder="请选择驱动" @change="handleDriverChange">
+                    <el-form :model="form" label-width="auto"  style="max-width: 600px">
+                      <el-form-item label="设备驱动类型:" label-width="110px">
+                        <el-select v-model="form.type" style="width: 300px;" placeholder="请选择驱动" @change="handleDriverChange">
                           <!-- <el-option label="Zone one" value="shanghai" /> -->
                           <el-option v-for="item in driversdataOptions" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
@@ -115,7 +115,7 @@ interface Tree {
   label: string
   children?: Tree[]
 }
-
+const baseStyle = ref({})
 const loadingtext = ref('')
 const pageLoading = ref(false)
 
@@ -297,14 +297,6 @@ const getSensoronfigs = (nodedata) => {
 const setFormData = (details: any) => {
   form.type = details.driver
   Object.assign(form, details['device-params']);
-  // form.points_topic = details['device-params'].points_topic
-  // form.host_name = details['device-params'].host_name
-  // form.timestamp_mode = details['device-params'].timestamp_mode
-  // form.ptp_utc_tai_offset = details['device-params'].ptp_utc_tai_offset
-  // form.point_type = details['device-params'].point_type
-  // form.receive_topic = details['device-params'].receive_topic
-  // form.save_topic = details['device-params'].save_topic
-  // form.bag_file_name = details['device-params'].bag_file_name
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)
@@ -319,6 +311,7 @@ const treedata = ref([])
 const sensorData = ref([])
 const name = ref('')
 const currentViewport = ref(null)
+const viewport_bg = ref('')
 const queryCurrentDrivers = () => {
   try {
     findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
@@ -326,11 +319,18 @@ const queryCurrentDrivers = () => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
       currentViewport.value = datavalue[0]
-      console.log(datavalue, 'datavalue')
+      viewport_bg.value = datavalue[0]['image-path']
+      baseStyle.value = datavalue[0].type === "场端" ? {
+        height: '689px',
+      } : {
+        width: '559px',
+      }
       name.value = datavalue[0].name
       sensorData.value = datavalue[0]['device-hub']
       treedata.value = totree(datavalue[0]['device-hub'])
-      createSensorCanvas(treedata.value)
+      setTimeout(() => {
+        createSensorCanvas(treedata.value)
+      }, 100)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -429,7 +429,10 @@ const drawSensors = (ctx) => {
         color = 'green';
         break;
       case 'lidar':
-        color = 'red';
+        color = '#ff7900';
+        break;
+      case 'imu':
+        color = 'yellow';
         break;
       default:
         color = 'blue';
@@ -451,13 +454,13 @@ const drawSensors = (ctx) => {
     ctx.closePath();
 
     // 绘制 ID
-    ctx.font = '12px Arial';
-    ctx.fillStyle = 'black'; // 白色字体
+    ctx.font = '14px bold';
+    ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
     const textX = adjustedX + 15; // 文字x坐标，偏移圆形
-    const textY = adjustedY // 文字y坐标，与圆形对齐
+    const textY = adjustedY + 3 // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
   });
@@ -485,7 +488,7 @@ const handleCanvasClick = (event) => {
 
 const loadRemoteComponent = async () => {
   try {
-    const response = await fetch(`${window.server.mecPrefix}/static/components/${currentDriver.value['component-path']}`);
+    const response = await fetch(`${window.server.mecPrefix}/dms-static/components/${currentDriver.value['component-path']}`);
     const vueFile = await response.text();
     const { descriptor } = parse(vueFile);
     const script = compileScript(descriptor, { id: 'remote-component' });
@@ -579,7 +582,7 @@ const loadRemoteComponent = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #eee;
+    // border: 1px solid #eee;
   }
   .ml {
     padding-left: 20px;
@@ -606,7 +609,7 @@ const loadRemoteComponent = async () => {
 
     .tree-content {
       width: 300px; 
-      height: 200px; 
+      height: 260px; 
       overflow: auto;
     }
   }

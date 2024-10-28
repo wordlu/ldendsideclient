@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, scene  } from '../visualization/lib/replayInitThree';
+import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/initThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -91,6 +91,7 @@ export const createHub = ()=>{
 //     console.log("连接已关闭...");
 //   };
 // }
+
 // 获取pcd压缩数据并渲染
 export const pcdWsSend = (frame)=>{
   try{
@@ -167,121 +168,113 @@ export const initAllSocket = ()=>{
   allWs = new WebSocket(`${podUrl.value}frames`);
 
   allWs.onopen = function() {
-    console.log("7:开启点云数据通道,并初始化第一帧点云数据")
-    allWsSend(0, 0, 1);
+    console.log("7:开启点云数据通道all")
+    // 发送数据集id
+    allWsSend(0, 0, 0, 1);
   };
 
   allWs.onclose = function() {
     console.log("连接已关闭...");
   };
+
+  // const cams = dataSet.info.meta_json.cam;
+
+  // for(let cam in cams){
+  //   dataSet.activeCamInfo[cam] = null;
+  // }
+
+  // dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
-let bufferedFrames = []; // 存储帧数据的缓冲区
-let totalFrames = 0; // 已请求最大帧数
-let isRequesting = false; // 是否正在请求数据
-let playInterval;
-
-export const startPlaying = () => {
-  if (totalFrames >= dataSet.info.frame_count) totalFrames = 0;
-  // 100 毫秒每帧，即每秒 10 帧
-  playInterval = setInterval(() => {
-    if (bufferedFrames.length > 0) {
-      let frameData = bufferedFrames.length > 1 ? bufferedFrames.shift() : bufferedFrames[0];
-      renderFrame(frameData); // 渲染当前帧
-      console.log('当前帧数111：'+frameData.splitInfo.frame_index)
-      // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
-      if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-1)) {
-        allWsSend(totalFrames, 1)
-      }
-    } else {
-      console.log('等待新数据...');
-    }
-  }, 100);
-}
-
-// 结束播放
-export const stopPlaying = () => {
-  bufferedFrames = [bufferedFrames[bufferedFrames.length - 1]];
-  totalFrames = bufferedFrames[0].splitInfo.frame_index;
-  if (playInterval) {
-    clearInterval(playInterval);
-  }
-}
-
-// 渲染当前帧
-function renderFrame(frameData) {
-  const splitInfo = frameData.splitInfo;
-  const ArrayBufferData = frameData.ArrayBufferData;
-  dataSet.activefame = splitInfo.frame_index
-  console.log('当前帧数：'+dataSet.activefame)
-  reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
-    // 渲染点云数据
-    dataSet.lidarDevices.forEach((key,index)=>{
-      if (key === "frame_index") return;
-      const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-      DracoPoint(res, key)
-    })
-    // 渲染摄像头数据
-    dataSet.cameraDevices.forEach((key,index)=>{
-      const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-      let url = arrayBufferToBase64(res)
-      dataSet.activeCamInfo[key] = url
-      if(url){
-        dataSet.activeCam.value = url
-      }
-    })
-  });
-}
-
-
-// 每次返回的数据帧数
+let urlval = ''
 let request_count = 10
-export const allWsSend = (frame, play, request_count_val)=>{
+//获取视觉数据并渲染
+export const allWsSend = (frame,play,endframe,request_count_val)=>{
+  
   try{
     let options = {
       "dataset": getQueryString('dataset'),
       "devices": dataSet.info.devices,
       "request_index": frame,
       "request_count": request_count_val || request_count
+      // frame_index:frame,
+      // pcd: dataSet.info.meta_json.pcd,
+      // cam: dataSet.info.meta_json.cam,
+      // data_files_prefix: dataSet.info.data_files_prefix,
+      // od: dataSet.info.meta_json.od,
+      // kpi: getQueryString('kpi'),
+      // client_name: getQueryString('client_name')
     }
+
+    // if(getQueryString('endtime')){
+    //   options.end_ts = parseTimestamp(getQueryString('endtime'));
+    // }
+
+    // if(getQueryString('starttime')){
+    //   options.start_ts = parseTimestamp(getQueryString('starttime'));
+    // }
 
     allWs.send(JSON.stringify(options));
-    if (!play) {
-      bufferedFrames = [];
-      totalFrames = frame;
-    } else {
-      // 已请求的帧数增加
-      totalFrames+= request_count;
-    }
-    console.log("8:all websocket发送消息")
+    console.log("8:all websocket发送消息"+JSON.stringify(options))
+
     allWs.onmessage = async function(evt) {
+      // console.log("9:all websocket接收消息"+evt.data)
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
-        console.log("10:string数据"+evt.data)
+        console.log("10:all websocket接收到string格式数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
-        if (splitInfo.frame_index > dataSet.info.frame_count) {
-          return;
-        }
-        bufferedFrames.push({
-          splitInfo: splitInfo,
-          ArrayBufferData: null
-        })
+        
       }else{
-        if (splitInfo.frame_index > dataSet.info.frame_count) {
-          return;
-        }
-        // 将接收到的ArrayBuffer数据存储到缓冲区中
-        bufferedFrames[bufferedFrames.length - 1].ArrayBufferData = evt.data;
-        console.log("10:ArrayBuffer数据")
+        console.log("10:all websocket接收到ArrayBuffer格式数据")
+        console.log(urlval,splitInfo.frame_index, "=====urlval")
+        // 点云数据
+        reader.readAs('ArrayBuffer',evt.data,function(result){
+          // for(let key in splitInfo){
+
+            // activeCamInfo 当前帧的摄像头数据
+            // if(dataSet.activeCamInfo.hasOwnProperty(key)){
+            //   // 摄像头数据生成 base64的url
+            //   let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
+            //   dataSet.activeCamInfo[key] = url
+            //   if(dataSet.activeCam.cam == key){
+            //     dataSet.activeCam.value = url
+            //   }
+            // }
+
+            // activePcdInfo 当前帧的点云数据
+            // if(dataSet.activePcdInfo.meta_key == key){
+            //   DracoPoint(result)
+            // }
+            dataSet.lidarDevices.forEach((key,index)=>{
+              if (key === "frame_index") return;
+              const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+              if (!urlval || urlval == key) {
+                urlval = key
+                console.log("渲染点云1")
+                DracoPoint(res)
+              } else {
+                console.log("渲染点云2")
+                DracoPoint(res, 2)
+              }
+            })
+
+            // dataSet.cameraDevices.forEach((key,index)=>{
+            //   const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+            //   let url = arrayBufferToBase64(res)
+            //   dataSet.activeCamInfo[key] = url
+            //   if(dataSet.activeCam.cam == key){
+            //     dataSet.activeCam.value = url
+            //   }
+            // })
+          // }
+        });
+        
       }
 
-      if (!play) {
-        // 不是播放中直接渲染当前数据
-        renderFrame(bufferedFrames[0]);
+      console.log("判断结束：",endframe, dataSet.activefame, play)
+      if (play && dataSet.activefame <= endframe && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
+        dataSet.activefame = dataSet.activefame + request_count
       }
-      // if (play && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
-      //   dataSet.activefame = dataSet.activefame + request_count
-      // }
     };
   }catch(err){
     console.error('Init camWsSend error:'+err);

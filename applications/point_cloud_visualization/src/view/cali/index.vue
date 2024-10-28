@@ -1,28 +1,28 @@
 <template>
-  <div id="thumbvisualization">
-    <!-- <topBarVue  @currentSceneClick="currentSceneClick" /> -->
+  <div id="calivisualization">
     <div class="view">
-      <toolBarVue/>
       <div class="main">
         <div class="container">
-          <threeDView />
+          <threeDView :isCali="isCali" :singleDevice="singleDevice" />
         </div>
-        <cameras />
-        <videoBarVue :currentScene="currentScene"/>
+        <videoBarVue v-show="showVideoBar" :currentScene="currentScene"/>
       </div>
+      <toolBarVue @selModeChange="selModeChange" @activeTabClick="activeTabClick" />
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang='ts'>
 import toolBarVue from "./components/toolBar.vue";
-import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
-import threeDView from "../../components/visualization/replayThreeDView.vue";
-import cameras from "../../components/camera/cameras.vue";
-import { createHub } from '../../components/socket/thumbnailsocket';
+import threeDView from "../../components/visualization/caliThreeDView.vue";
+import { createHub } from '../../components/socket/calisocket';
 import { ref , watch } from 'vue';
-import { dataSetStore } from '../../pinia/dataSet';
+import { dataSetStore } from '../../pinia/caliDataSet';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const isCali = ref(false);
 const dataSet = dataSetStore();
 const activeCam = ref(dataSet.activeCam);
 const currentScene = ref({})
@@ -33,6 +33,23 @@ const currentSceneClick = (data) => {
 watch(()=>dataSet.activeCam,(newVal)=>{
   dataSet.value = newVal
 },{deep:true})
+
+const selModeChange = (val) => {
+  isCali.value = (val === 'union')
+}
+const showVideoBar = ref(true)
+const singleDevice = ref('')
+const activeTabClick = (val) => {
+  singleDevice.value = ''
+  showVideoBar.value = (val === 0)
+  if (val === 1) {
+    // 源
+    singleDevice.value = route.query.devicename
+  } else if (val === 2) {
+    // 目标
+    singleDevice.value = 'mainlidar'
+  }
+}
 
 createHub();
 console.log("1:createHub")
@@ -48,7 +65,7 @@ const y = ref(document.documentElement.clientHeight - 620)
 
 
 <style lang="scss">
-#thumbvisualization{
+#calivisualization{
   width: 100%;
   height: 100%;
   .view{
@@ -58,11 +75,18 @@ const y = ref(document.documentElement.clientHeight - 620)
     #toolBar{
       height: 100%;
     }
+    #toolBar{
+      width: 600px;
+      height: 100%;
+      background: #fff;
+      border-radius: 0 12px 12px 0;
+      padding-left: 20px;
+    }
     .main{
       flex: 1;
       height: 100%;
       background: #000000;
-      border-radius: 12px;
+      border-radius: 12px 0 0 12px;
       position: relative;
       .container{
         width: 100%;

@@ -1,7 +1,7 @@
 <template>
-  <div class="index-page" 
-    :element-loading-text="loadingtext"
-    v-loading="pageLoading" >
+  <div class="index-page" >
+    <!-- :element-loading-text="loadingtext"
+    v-loading="pageLoading" > -->
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
@@ -16,8 +16,8 @@
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
-        <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
-        <el-button class="info-btn" @click="checkTags">查看已打标签</el-button>
+        <!-- <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <el-button class="info-btn" @click="checkTags">查看已打标签</el-button> -->
       </div>
     </div>
     <div
@@ -25,7 +25,8 @@
       element-loading-background="rgba(200, 200, 200, 0.6)"
       class="visible">
       <div class="point">
-        <BasicScene :allports="allports"
+        <BasicScene 
+          :allports="allports"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs ref="sensorConfigsRef" 
@@ -33,10 +34,10 @@
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />
-        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
+        <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
       </div>
     </div>
-    <el-dialog
+    <!-- <el-dialog
       v-model="dialogVisible"
       title="添加作业标签"
       width="680"
@@ -57,8 +58,8 @@
           </el-button>
         </div>
       </template>
-    </el-dialog>
-    <el-dialog
+    </el-dialog> -->
+    <!-- <el-dialog
       v-model="checkTagsDialogVisible"
       title="已打标签"
       width="800"
@@ -66,7 +67,6 @@
     >
       <el-table :data="taggingsTableData" height="360">
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
-        <!-- <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/> -->
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss") }}</template>
@@ -98,7 +98,7 @@
           <el-button @click="checkTagsDialogVisible = false">取消</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -130,14 +130,14 @@ interface Option {
 
 const cloudpointparams = ref({
   color: "00ffff",
-  size: 0.1,
+  size: 0.01,
 })
 const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
 const loadingtext = ref('')
-const pageLoading = ref(false)
+// const pageLoading = ref(false)
 const switchLoading = ref(false)
 const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
@@ -154,11 +154,22 @@ const taggingsTableData = ref([])
 const currentSelectedSensor = ref([])
 
 // 调试
-const testDeviceChange = (val) => {
+const testDeviceChange = async (val) => {
   switchLoading.value = true
   if (val) {
     startupDevice()
   } else {
+    const currentStatus = await findItem('/viewport_status', viewportId.value)
+    // 若为采集中，不可关闭
+    if (currentStatus.data.isrecording) {
+      ElMessage({
+        message: "设备正在采集中，请先停止采集",
+        type: 'error',
+      })
+      switchLoading.value = false;
+      testDevice.value = true
+      return;
+    }
     shutdownDevice()
   }
 }
@@ -244,8 +255,8 @@ const startupDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备启动中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备启动中，请稍后...'
     ElMessage({
       message: "设备正在启动中",
       type: 'success',
@@ -263,7 +274,7 @@ const startupDevice = () => {
   })
 }
 // 结束调试
-const shutdownDevice = () => {
+const shutdownDevice = async () => {
   getCurrentPorts()
   if (sensorConfigsRef.value) {
     sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
@@ -283,7 +294,7 @@ const shutdownDevice = () => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
     ElMessage({
-      message: "设备关闭中",
+      message: "设备关闭中，请稍后...",
       type: 'success',
     })
   }).catch((err: any) => {
@@ -313,8 +324,8 @@ const recordOnDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = false
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备采集中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备采集开启中，请稍后...'
     ElMessage({
       message: "设备正在采集中",
       type: 'success',
@@ -346,8 +357,8 @@ const recordOffDevice = () => {
   addItem('/models/actions', params).then((res: any) => {
     // showRecordOnDevice.value = true
     switchLoading.value = false
-    pageLoading.value = true
-    loadingtext.value = '设备结束采集中，请稍后...'
+    // pageLoading.value = true
+    // loadingtext.value = '设备结束采集中，请稍后...'
     ElMessage({
       message: "设备正在结束采集中",
       type: 'success',
@@ -560,7 +571,7 @@ onMounted(() => {
     const state = message.value?.alerts[0]?.labels?.state
 
     if (state === '0') {
-      pageLoading.value = false
+      // pageLoading.value = false
       ElNotification({
         title: '收到一条新事件',
         type: severity !== '2' ? 'warning' : 'error',
@@ -572,7 +583,8 @@ onMounted(() => {
         },
       })
     } else if (state == '1') {
-      pageLoading.value = false
+      // pageLoading.value = false
+      // 接收成功和失败的消息
     }
     
   };
@@ -620,6 +632,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     margin: 20px 0;
+    color: #606266;
   }
 
   &-top {

@@ -125,6 +125,11 @@ export default {
                 title: '采集模版管理',
                 policy: "pagesystemanagecollectiontemplates",
               },
+              {
+                index: '/systemanage/calitemplates?logger=trash',
+                title: '标定流程管理',
+                policy: "pagesystemanagecalitemplates",
+              }
             ]
           }
         ]

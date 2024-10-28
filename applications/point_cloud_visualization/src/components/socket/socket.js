@@ -1,8 +1,11 @@
+/**
+ * 实时可视化
+ */
 import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/initThree';
+import { DracoPoint, renderODBox, scene, renderObjBox, renderDUTBox, clearGeometry } from '../visualization/lib/initThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -46,39 +49,48 @@ let isData = false;
  * 1. 两个数组参数，一个为所有ip，一个为当前连接ip，进行对比
  */
 let connectedIPs = []
+let closedIPs = []
 
 let webSockets  = {}
 
 let ipList = []
 
-// let ipvalue = 'ws://10.86.24.49'
-let ipvalue = `ws://${window.parent.location.hostname}`
-let reconnectInterval = null;    
+let allportArray = []
+const timeouts = {}; // 每个通道的超时ID
 
-export const connectWebSocketArray = (portarray, allport) => {
+let ipvalue = `ws://${window.parent.location.hostname}`
+// let ipvalue = `ws://loggertrash`
+let reconnectInterval = null;  
+
+
+export const connectWebSocketArray = (portarray, allports) => {
+  dataSet = dataSetStore();
   const currentport = portarray ? portarray.split(',') : []
-  const allportArray = allport ? allport.split(',') : []
+  allportArray = JSON.parse(allports)
 
   //断开所有连接
   if (currentport.length === 0) {
-    const lists = allportArray.map(item => `${ipvalue}:${item}`)
+    const lists = allportArray.map(item => `${ipvalue}:${item.port}`)
     disconnectFromAllIPs(lists)
   } else {
-    const connectlist = currentport.map(item => `${ipvalue}:${item}`)
-    const disconnectlist = allportArray.filter(item => !currentport.includes(item)).map(item => `${ipvalue}:${item}`)
+    const connectlist = currentport.map(item => {
+      return {
+        port: `${ipvalue}:${item}`,
+        type: allportArray.find(it => it.port == item).type
+      }
+    })
+    const disconnectlist = allportArray.filter(item => !currentport.includes(item.port)).map(it => `${ipvalue}:${it.port}`)
     disconnectFromAllIPs(disconnectlist)
     connectToAllIPs(connectlist)
   }
 }
-
-export const connectWebSocket = (ip) => {
+let urlval = ''
+export const connectWebSocket = (ip, type) => {
   if (webSockets[ip] && webSockets[ip].status === 'Connected') {
     console.log(`Already connected to ${ip}`);
     return;
   }
-
   const socket = new WebSocket(ip)
-
   webSockets[ip] = {
     socket,
     status: 'Connecting...',
@@ -87,14 +99,31 @@ export const connectWebSocket = (ip) => {
   socket.onopen = () => {
     webSockets[ip].status = 'Connected';
     connectedIPs.push(ip);
-    clearInterval(reconnectInterval);
+
+    const index = closedIPs.find(it => it.ip === ip);
+    if (index) {
+        clearInterval(index.timer);
+        closedIPs = closedIPs.filter(it => it.ip !== ip);
+    }
     console.log(`socket.onopen: Connected to ${ip}`);
   };
 
   socket.onmessage = (event) => {
-    // 点云数据
+    // 需求：一秒没接到数据清空上一帧
+    clearTimeout(timeouts[ip]);
+    timeouts[ip] = setTimeout(() => {
+      clearGeometry(ip)
+    }, 1000);
     reader.readAs('ArrayBuffer',event.data,function(result){
-      DracoPoint(result)
+      if (type == 'lidar') {
+        DracoPoint(result, ip)
+      } else if (type == 'camera') {
+        let url = arrayBufferToBase64(result)
+        dataSet.activeCamInfo[type] = url
+        if(url){
+          dataSet.activeCam.value = url
+        }
+      }
     });
   }
 
@@ -104,25 +133,36 @@ export const connectWebSocket = (ip) => {
     if (index > -1) {
       connectedIPs.splice(index, 1);
     }
-    if (!reconnectInterval) {
-      reconnectInterval = setInterval(() => {
+
+    const index2 = closedIPs.find(it => it.ip === ip);
+    if (!index2) {
+      let timer = setInterval(() => {
         if (socket.readyState !== WebSocket.OPEN) {
           console.log('尝试重新连接 WebSocket...');
-          connectWebSocket(ip);
+          connectWebSocket(ip, type);
         }
       }, 10000);
+      closedIPs.push({
+        ip,
+        timer
+      });
     }
     console.log(`socket.onclose: Disconnected from ${ip}`);
   };
 
   socket.onerror = (error) => {
-    if (!reconnectInterval) {
-      reconnectInterval = setInterval(() => {
+    const index2 = closedIPs.find(it => it.ip === ip);
+    if (!index2) {
+      let timer = setInterval(() => {
         if (socket.readyState !== WebSocket.OPEN) {
           console.log('尝试重新连接 WebSocket...');
-          connectWebSocket(ip);
+          connectWebSocket(ip, type);
         }
       }, 10000);
+      closedIPs.push({
+        ip,
+        timer
+      });
     }
     console.error('socket.onerror: WebSocket error:', error)
   }
@@ -139,8 +179,9 @@ const disconnectFromIP = (ip) => {
 
 // 连接所有 IP
 const connectToAllIPs = (lists) => {
-  lists.forEach((ip) => {
-    connectWebSocket(ip);
+  dataSet.lidarDevices = lists.filter(it => it.type === 'lidar').map(it => it.port)
+  lists.forEach((item,index) => {
+    connectWebSocket(item.port, item.type);
   });
 };
 
@@ -152,30 +193,13 @@ const disconnectFromAllIPs = (lists) => {
 };
 
 
-// 创建 hub
-export const createHub = async ()=>{
-  // console.log("parent.window.server.domain", parent.window.server.domain)
-  // await Post(`http://dms${parent.window.server.domain}/api/func_pods_hub/`,{
-  await Post(`http://dms.10.86.14.200.nip.io/api/func_pods_hub/`,{
-    service_name: "func-visualization",
-    client_name: getQueryString('client_name')
-  }).then(res=>{
-    // hub 通道创建成功后才会初始化socket
-    if(res.data.data.status == "Succeeded"){
-      console.log("2:hub通道创建成功,获取pod_url")
-      podUrl.value = res.data.data.pod_url;
-      initSocket()
-    }
-  })
-}
-
 // 执行点云压缩命令
 export const pcdencode = ()=>{
   encodeWs = new WebSocket(`${podUrl.value}pcdencode`);
   console.log("6:启动点云压缩通道")
 }
 
-// 初始化socket
+// // 初始化socket
 export const initSocket = ()=>{
   ws = new WebSocket(`${podUrl.value}check`);
   dataSet = dataSetStore();
@@ -229,7 +253,7 @@ export const initSocket = ()=>{
   };
 }
 
-// 初始化点云文件通道
+// // 初始化点云文件通道
 export const initPcdSocket = ()=>{
   pcdWs = new WebSocket(`${podUrl.value}pcd`);
 
@@ -238,7 +262,7 @@ export const initPcdSocket = ()=>{
   };
 }
 
-// 获取pcd压缩数据并渲染
+// // 获取pcd压缩数据并渲染
 export const pcdWsSend = (frame)=>{
   try{
     pcdWs.send(JSON.stringify({
@@ -258,7 +282,7 @@ export const pcdWsSend = (frame)=>{
   }
 }
 
-// 初始化视觉数据
+// // 初始化视觉数据
 export const initCamSocket = ()=>{
   camWs = new WebSocket(`${podUrl.value}cam`);
 
@@ -277,7 +301,7 @@ export const initCamSocket = ()=>{
   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
-//获取视觉数据并渲染
+// //获取视觉数据并渲染
 export const camWsSend = (frame)=>{
   try{
     const cams = dataSet.info.meta_json.cam;
@@ -309,7 +333,7 @@ export const camWsSend = (frame)=>{
   }
 }
 
-// 初始化组合数据
+// // 初始化组合数据
 export const initAllSocket = ()=>{
   allWs = new WebSocket(`${podUrl.value}all`);
 
@@ -332,7 +356,7 @@ export const initAllSocket = ()=>{
   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 }
 
-//获取视觉数据并渲染
+// //获取视觉数据并渲染
 export const allWsSend = (frame,play)=>{
   try{
     let options = {

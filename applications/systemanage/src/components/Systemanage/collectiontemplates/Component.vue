@@ -42,9 +42,9 @@
           <el-table-column property="name" label="模板名称"  />
           <el-table-column property="type" label="类型" />
           <el-table-column property="description" label="描述"/>
-          <el-table-column label="创建时间">
+          <!-- <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
-          </el-table-column>
+          </el-table-column> -->
         </el-table>
       </div>
     </div>
@@ -93,7 +93,6 @@ const queryDeviceDrivers = (page: number) => {
     const params = {
       offset: step.value * page,
       limit: step.value,
-      sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
     findAll('/models/viewport-templates', params).then((res: any) => {

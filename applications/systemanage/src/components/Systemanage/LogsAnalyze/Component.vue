@@ -36,10 +36,8 @@
               range-separator="-"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-              :disabledDate="disabledDateFn"
-              :disabled-hours="disabledHours"
-              :disabled-minutes="disabledMinutes"
-              :disabled-seconds="disabledSeconds"
+              :disabled-date="disabledDateFn"
+              @change="handleDateChange"
             />
           </el-config-provider>
         </el-form-item>
@@ -58,10 +56,9 @@ import { ref, reactive } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 import zhCn from "element-plus/es/locale/lang/zh-cn"
+import { ElMessage } from 'element-plus'
 
 const locale = zhCn
-const monitorPrefix = ref(window.server.monitorPrefix)
-
 const logsinput = ref('')
 const sensorvalue = ref('')
 const containerValue = ref('device')
@@ -73,6 +70,23 @@ const oneHourBefore = new Date(currentTime.getTime() - 60 * 60 * 1000);
 // 将当前时间和前一小时设置为默认的时间范围
 const dateRange = ref([oneHourBefore, currentTime]);
 
+const handleDateChange = (value) => {
+  if (value[0].getTime() > new Date().getTime() || value[1].getTime() > new Date().getTime()) {
+    ElMessage({
+      message: "不可选择大于当前时间的日期和时间",
+      type: 'error',
+    })
+    dateRange.value = [new Date(new Date().getTime() - 60 * 60 * 1000), new Date()]
+  }
+}
+
+const selectedCurrentData = (value) => {
+  const currentDate = value === 'start' ? dateRange.value[0] : dateRange.value[1]
+  return currentDate?.getFullYear() === currentTime.getFullYear() &&
+        currentDate?.getMonth() === currentTime.getMonth() &&
+        currentDate?.getDate() === currentTime.getDate();
+}
+
 const getTimestamp = (date: Date) => {
   return Math.floor(date.getTime())
 }
@@ -80,30 +94,6 @@ const getTimestamp = (date: Date) => {
 // 禁用大于当前日期的日期
 const disabledDateFn = (time: any) => {
     return time.getTime() > currentTime.getTime()
-}
-
-// 禁用小时
-const disabledHours = () => {
-  const hours = currentTime.getHours()
-  return Array.from({ length: 24 }, (_, i) => i).filter(h => h > hours)
-}
-
-// 禁用分钟
-const disabledMinutes = (hour) => {
-  if (hour === currentTime.getHours()) {
-    const minutes = currentTime.getMinutes()
-    return Array.from({ length: 60 }, (_, i) => i).filter(m => m > minutes)
-  }
-  return []
-}
-
-// 禁用秒
-const disabledSeconds = (hour, minute) => {
-  if (hour === currentTime.getHours() && minute === currentTime.getMinutes()) {
-    const seconds = currentTime.getSeconds()
-    return Array.from({ length: 60 }, (_, i) => i).filter(s => s > seconds)
-  }
-  return []
 }
 
 const queryCurrentDrivers = () => {
