@@ -1,8 +1,6 @@
 <template>
   <div id="thumbvisualization">
-    <!-- <topBarVue  @currentSceneClick="currentSceneClick" /> -->
     <div class="view">
-      <toolBarVue/>
       <div class="main">
         <div class="container">
           <threeDView />
@@ -14,9 +12,7 @@
   </div>
 </template>
 
-<script setup>
-import toolBarVue from "./components/toolBar.vue";
-import topBarVue from "./components/topBar.vue";
+<script setup lang="ts">
 import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/replayThreeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
@@ -24,28 +20,8 @@ import { createHub } from '../../components/socket/thumbnailsocket';
 import { ref , watch } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
-const activeCam = ref(dataSet.activeCam);
-const currentScene = ref({})
-const currentSceneClick = (data) => {
-  currentScene.value = data
-}
-
-watch(()=>dataSet.activeCam,(newVal)=>{
-  dataSet.value = newVal
-},{deep:true})
-
 createHub();
-console.log("1:createHub")
-
-function print(val) {
-  document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'
-}
-
-const x = ref(document.documentElement.clientWidth - 408)
-const y = ref(document.documentElement.clientHeight - 620)
 </script>
-
-
 
 <style lang="scss">
 #thumbvisualization{

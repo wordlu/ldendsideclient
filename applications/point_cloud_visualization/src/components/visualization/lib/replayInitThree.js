@@ -163,6 +163,10 @@ function createGeometry(geometryData, type) {
   }
 }
 
+export const clearGeometry = (type) => {
+  renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
+}
+
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {
   var numComponents = attribute.num_components()
   var numPoints = dracoGeometry.num_points()

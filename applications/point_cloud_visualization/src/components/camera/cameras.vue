@@ -1,19 +1,24 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
 const activeCamInfo = ref(dataSet.activeCamInfo);
-
+const showPic = ref(true);
 const cutActiveCam = (value)=>{
   dataSet.activeCam.cam = value
   dataSet.activeCam.value = dataSet.activeCamInfo[value]
 }
+
+const imgOnError = (e) => {
+  showPic.value = false
+}
+
 </script>
 
 <template>
   <div id="cameras">
     <div class="cameras-item" v-for="(key,value) in activeCamInfo" :key="value" @click="cutActiveCam(value)">
-      <img :src="key" style="width: 100%;">
+      <img :src="key" alt="暂无图片" :onerror="imgOnError" style="width: 100%;" v-show="showPic">
     </div>
   </div>
 </template>

@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, scene  } from '../visualization/lib/replayInitThree';
+import { DracoPoint, scene, clearGeometry  } from '../visualization/lib/replayInitThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -32,7 +32,7 @@ scene.add(group);
 let odAllGroup = { //当前帧目标物组合
   list:new Array()
 }
-
+let currentSelectedSensor = []
 let dutAllGroup = { //当前帧目标物组合
   list:new Array()
 }
@@ -67,6 +67,7 @@ export const createHub = ()=>{
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
       dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
+      currentSelectedSensor = getQueryString('currentSelectedSensor') ? JSON.parse(getQueryString('currentSelectedSensor')) : [];
       initAllSocket()
       dataSet.loading = false
     }catch(err){
@@ -188,7 +189,7 @@ export const startPlaying = () => {
     if (bufferedFrames.length > 0) {
       let frameData = bufferedFrames.length > 1 ? bufferedFrames.shift() : bufferedFrames[0];
       renderFrame(frameData); // 渲染当前帧
-      console.log('当前帧数111：'+frameData.splitInfo.frame_index)
+      // console.log('当前帧数111：'+frameData.splitInfo.frame_index)
       // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
       if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-1)) {
         allWsSend(totalFrames, 1)
@@ -219,16 +220,28 @@ function renderFrame(frameData) {
     dataSet.lidarDevices.forEach((key,index)=>{
       if (key === "frame_index") return;
       const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-      DracoPoint(res, key)
+      if (currentSelectedSensor.includes(key)) {
+        DracoPoint(res, key)
+      } else {
+        clearGeometry(key)
+      }
     })
     // 渲染摄像头数据
     dataSet.cameraDevices.forEach((key,index)=>{
       const res = result.slice(splitInfo[key][0],splitInfo[key][1])
       let url = arrayBufferToBase64(res)
-      dataSet.activeCamInfo[key] = url
-      if(url){
-        dataSet.activeCam.value = url
+      if (currentSelectedSensor.includes(key)) {
+        dataSet.activeCamInfo[key] = url
+        if(url){
+          dataSet.activeCam.value = url
+        }
+      } else {
+        dataSet.activeCamInfo[key] = ''
+        if(url){
+          dataSet.activeCam.value = ''
+        }
       }
+      
     })
   });
 }

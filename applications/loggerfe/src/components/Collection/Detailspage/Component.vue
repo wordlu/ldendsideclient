@@ -7,15 +7,8 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <!-- <el-button type="primary" class="info-btn" @click="startupDevice">调试设备</el-button>
-        <el-button type="primary" class="info-btn" @click="recordOnDevice">开始采集</el-button>
-        <el-button type="primary" class="info-btn" @click="recordOffCollect">结束采集</el-button>
-        <el-button type="primary" class="info-btn" @click="shutdownDevice">结束调试</el-button> -->
         <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
-
-
         <!-- <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button> -->
-
         <!-- <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
           标定
           <template #dropdown>
@@ -28,11 +21,13 @@
     </div>
     <div v-loading="showLoading" element-loading-background="rgba(200, 200, 200, 0.6)" class="visible">
       <div class="point">
-        <BasicScene :allports="allports" :datasetprefix="datasetprefix" :currentSelectedSensor="currentSelectedSensor"
+        <BasicScene :datasetprefix="datasetprefix" :currentSelectedSensor="currentSelectedSensor"
           :cloudpointparams="cloudpointparams" :devicesHub="devicesHub" :isCollapsedConfig="isCollapsed" />
+
         <sensorConfigs v-show="isCollapsed" ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :deviceids="deviceids"
           @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" @changeProps="changeProps"
           @setDevicesHub="setDevicesHub" />
+          
         <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
         <div>
           <el-icon>
@@ -44,7 +39,7 @@
         </div>
       </div>
     </div>
-    <el-dialog v-model="dialogVisible" title="添加作业标签" width="680" :before-close="handleClose">
+    <!-- <el-dialog v-model="dialogVisible" title="添加作业标签" width="680" :before-close="handleClose">
       <el-transfer class="tags-transfer" v-model="transferDataValue" :titles="['全部标签', '作业标签']"
         filter-placeholder="搜索标签名称" :data="transferData" />
       <template #footer>
@@ -56,9 +51,7 @@
     </el-dialog>
     <el-dialog v-model="checkTagsDialogVisible" title="已打标签" width="800" :before-close="handleCheckTagsClose">
       <el-table :data="taggingsTableData" height="360">
-        <!-- <el-table-column prop="tagid" label="标签ID" width="120"  show-overflow-tooltip /> -->
         <el-table-column prop="tagname" label="标签名称" show-overflow-tooltip />
-        <!-- <el-table-column prop="tagtype" label="标签类型" width="100" show-overflow-tooltip/> -->
         <el-table-column prop="tagcategory" label="标签分类" width="150" show-overflow-tooltip />
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
           <template #default="scope">{{
@@ -91,7 +84,7 @@
           <el-button @click="checkTagsDialogVisible = false">取消</el-button>
         </div>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -149,14 +142,10 @@ const taggingsTableData = ref([]);
 const currentSelectedSensor = ref([]);
 
 const devicesHub = ref([]);
+
+// 所有设备及类型
 const setDevicesHub = (keys) => {
   devicesHub.value = keys;
-};
-
-//iframe参数：所有端口
-const allports = ref([]);
-const setAllTreeKeys = (keys) => {
-  allports.value = keys;
 };
 
 const handleLeafNodes = (leafNodes) => {
@@ -230,14 +219,10 @@ const transferData = ref<Option[]>();
 const transferDataValue = ref([]);
 const directive = ref("");
 
-// 获取当前勾选设备的port
-const currentSelectedSensorId = ref([]);
+// 获取当前勾选设备的名称
 const getCurrentPorts = () => {
   currentSelectedSensor.value = selectedLeafNodes.value.map(
-    (node) => node.port
-  );
-  currentSelectedSensorId.value = selectedLeafNodes.value.map(
-    (node) => node.deviceid
+    (node) => node.label
   );
 };
 
@@ -289,9 +274,6 @@ const getDatasetDetails = () => {
 
 const getDevices = () => {
   deviceids.value = datasetData.value.devices;
-  // if (sensorConfigsRef.value) {
-  //   sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
-  // }
 };
 
 getDatasetDetails();
