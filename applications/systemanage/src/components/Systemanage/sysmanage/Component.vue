@@ -51,8 +51,8 @@
               <el-descriptions :title="'网口设备'+(index+1)" border column="2">
                   <el-descriptions-item label="网卡名称">{{ item.devicename }}</el-descriptions-item>
                   <el-descriptions-item label="网卡类型">{{ item.type }}</el-descriptions-item>
-                  <el-descriptions-item label="是否开机启动">{{ item.onboot }}</el-descriptions-item>
-                  <el-descriptions-item label="开机方法">{{ item.bootproto }}</el-descriptions-item>
+                  <!-- <el-descriptions-item label="是否开机启动">{{ item.onboot }}</el-descriptions-item> -->
+                  <!-- <el-descriptions-item label="开机方法">{{ item.bootproto }}</el-descriptions-item> -->
                   <el-descriptions-item label="地址">{{ item.ipaddr }}</el-descriptions-item>
                   <el-descriptions-item label="子网掩码">{{ item.netmask }}</el-descriptions-item>
                   <el-descriptions-item label="网关">{{ item.gateway }}</el-descriptions-item>
