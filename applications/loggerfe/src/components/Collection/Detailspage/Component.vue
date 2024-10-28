@@ -355,7 +355,7 @@ const handleCommand = (command, row) => {
         let msg = "删除失败";
         if (errors && errors[0]) {
           const errmsg = errors[0]["detail"];
-          msg = t(`algorithm['${errmsg}']`);
+          msg = errmsg
         }
         ElMessage({
           message: msg,
