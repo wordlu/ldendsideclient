@@ -97,7 +97,7 @@ import { useCollectStore } from '@/store/modules/collect'
 import TopOprt from '@/components/collect/TopOprt.vue'
 import OperatingTags from '@/components/tags/OperatingTags.vue'
 import PrepareInfo from '@/components/collect/PrepareInfo.vue'
-import { ref, onMounted, watchEffect, reactive, nextTick, markRaw } from 'vue'
+import { ref, onMounted, watchEffect, reactive, nextTick, markRaw, watch } from 'vue'
 import { setCollectionStatus } from '@/api/s1/collect'
 // import Monitor from '@/components/monitor/Index.vue'
 import { Search } from "@element-plus/icons-vue"
@@ -118,13 +118,24 @@ interface Tree {
 const baseStyle = ref({})
 const loadingtext = ref('')
 const pageLoading = ref(false)
-
 const router = useRouter();
 const form = reactive({})
-
+const setConfigValue = ref(true)
+const treeRef = ref<InstanceType<typeof ElTree>>()
+const selectedNode = ref(null);
+// 获取canvas的ref
+const sensorCanvas = ref(null);
+const backgroundImage = ref(null);
+const parent = ref(null);
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
+const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const search = ref('')
+
+watch(()=>selectedNode.value, (newVal) => {
+  createSensorCanvas(treedata.value)
+})
+
 const onDelete = () => {
   const params = {
       data: {
@@ -158,7 +169,6 @@ const refresh = () => {
   }, 1000);
 }
 
-const remoteComponentRef = ref(null); // 用于获取远程组件实例
 
 const getRemoteFormData = () => {
   if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
@@ -228,9 +238,6 @@ const onSubmit = async () => {
   }
 }
 
-const setConfigValue = ref(true)
-const treeRef = ref<InstanceType<typeof ElTree>>()
-const selectedNode = ref(null);
 const handleNodeClick = (nodeData: Tree, node: any) => {
   if (isLeaf(nodeData)) {
     selectedNode.value = node; 
@@ -263,6 +270,7 @@ const currentDriver = ref(null)
 const handleDriverChange = (row: any) => {
   currentDriver.value = driversdata.value.find(it => it.id === row)
   console.log(currentDriver.value, 'currentDriver.value')
+  setFormDataNull()
   loadRemoteComponent()
 
 }
@@ -278,7 +286,6 @@ const getSensoronfigs = (nodedata) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
-
         currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
         setFormData(datavalue[0])
@@ -297,6 +304,15 @@ const getSensoronfigs = (nodedata) => {
 const setFormData = (details: any) => {
   form.type = details.driver
   Object.assign(form, details['device-params']);
+  console.log(form, 'form')
+}
+
+const setFormDataNull = () => {
+  for(const key in form) {
+    if (key !== 'type') {
+      form[key] = ''
+    }
+  }
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)
@@ -367,19 +383,11 @@ const totree = () => {
   return tree;
 }
 
-
-// 获取canvas的ref
-const sensorCanvas = ref(null);
-const backgroundImage = ref(null);
-const parent = ref(null);
-
 const resizeCanvas = () => {
   if (parent.value && sensorCanvas.value) {
     // 设置canvas的内部像素大小
     sensorCanvas.value.width = parent.value.clientWidth;
     sensorCanvas.value.height = parent.value.clientHeight;
-    // sensorCanvas.value.height = 490;
-    // sensorCanvas.value.width = 490;
   }
 };
 
@@ -394,16 +402,32 @@ onMounted(async () => {
 });
 
 // 弹窗提示
-const showPopup = (sensor) => {
-  
+const showPopup = (sensor) => {  
   const node = treeRef.value.getNode(sensor.type+'_'+sensor.id);
   if (node) {
     handleNodeClick(node.data, node)
   }
-
 };
+const deployDevices = ref([])
+const getAllDevices = async() => {
+  try {
+    await findAll('/models/devices').then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('devices')
+      deployDevices.value = datavalue
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
 
-const createSensorCanvas = (treeData) => {
+
+
+const createSensorCanvas = async (treeData) => {
+  await getAllDevices()
   const canvas = sensorCanvas.value;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
@@ -423,20 +447,20 @@ const drawSensors = (ctx) => {
 
 
   sensorData.value.forEach((sensor) => {
-    let color;
-    switch (sensor.type) {
-      case 'camera':
-        color = 'green';
-        break;
-      case 'lidar':
-        color = '#ff7900';
-        break;
-      case 'imu':
-        color = 'yellow';
-        break;
-      default:
-        color = 'blue';
-    }
+    let color = '#ff7900'
+    // switch (sensor.type) {
+      // case 'camera':
+      //   color = 'green';
+      //   break;
+      // case 'lidar':
+      //   color = '#ff7900';
+      //   break;
+      // case 'imu':
+      //   color = 'yellow';
+      //   break;
+      // default:
+      //   color = 'blue';
+    // }
 
     // @wodelu:TODO 计算适应缩放后的坐标
     const scaleX = imageWidth / imageWidth
@@ -447,22 +471,33 @@ const drawSensors = (ctx) => {
     
     // 绘制圆形
     ctx.beginPath();
-    // ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
     ctx.arc(adjustedX, adjustedY, 10, 0, 2 * Math.PI) // 半径为5
-    ctx.fillStyle = color;
-    ctx.fill();
+    ctx.lineWidth = 3;
+    if (deployDevices.value.find(it => it.slot === sensor.id)) {
+      ctx.fillStyle = color;
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
     ctx.closePath();
 
-    // 绘制 ID
+    // 绘制设备名称
     ctx.font = '14px bold';
-    ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
+    if (sensor.id === selectedNode.value?.data?.label) {
+      ctx.fillStyle = '#ff7900';
+    } else {
+      ctx.fillStyle = 'black';
+    }
 
     const textX = adjustedX + 15; // 文字x坐标，偏移圆形
     const textY = adjustedY + 3 // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
+     
+    
   });
 };
 
