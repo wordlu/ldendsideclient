@@ -1,6 +1,6 @@
 
 <template>
-  <div id="visualization">
+  <div id="visualization" v-loading="pageLoading">
     <topBarVue />
     <div class="view">
       <toolBarVue />
@@ -15,7 +15,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import toolBarVue from "./components/toolBar.vue";
 import topBarVue from "./components/topBar.vue";
 import videoBarVue from "./components/videoBar.vue";
@@ -26,8 +26,10 @@ import { ref , watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { dataSetStore } from '../../pinia/dataSet';
 
+const dataSet = dataSetStore();
 const route = useRoute();
 const routeQuery = ref(route.query);
+const pageLoading = ref(false);
 
 console.log("1:createHub")
 connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports)
@@ -38,6 +40,10 @@ function print(val) {
 
 const x = ref(document.documentElement.clientWidth - 408)
 const y = ref(document.documentElement.clientHeight - 620)
+
+watch(dataSet.pageLoading, (newVal, oldVal) => {
+  pageLoading.value = newVal
+})
 </script>
 
 

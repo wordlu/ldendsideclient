@@ -66,6 +66,9 @@ let reconnectInterval = null;
 export const connectWebSocketArray = (portarray, allports) => {
   dataSet = dataSetStore();
   const currentport = portarray ? portarray.split(',') : []
+  if (currentport.length > 0) {
+    dataSet.pageLoading = true;
+  }
   allportArray = JSON.parse(allports)
 
   //断开所有连接
@@ -109,6 +112,7 @@ export const connectWebSocket = (ip, type) => {
   };
 
   socket.onmessage = (event) => {
+    dataSet.pageLoading = false;
     // 需求：一秒没接到数据清空上一帧
     clearTimeout(timeouts[ip]);
     timeouts[ip] = setTimeout(() => {

@@ -21,7 +21,8 @@ export const dataSetStore = defineStore('dataSet', {
       odInfo:[],
       kpiInfo:[],
       lidarDevices:[],
-      loading:true
+      loading:true,
+      pageLoading: false
     }
   },
   getters: { 
