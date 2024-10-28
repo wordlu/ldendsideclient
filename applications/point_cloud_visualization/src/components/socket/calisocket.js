@@ -17,8 +17,8 @@ function getQueryString(name) {
   return null;
 }
 // 数据回显
-const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
-// const podUrl = ref(`ws://loggertrash/replay/`);
+// const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
+const podUrl = ref(`ws://loggertrash/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
