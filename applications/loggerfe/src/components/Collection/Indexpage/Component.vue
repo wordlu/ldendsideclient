@@ -29,6 +29,7 @@
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs ref="sensorConfigsRef" 
           :viewportId="viewportId"
+          :testDevice="testDevice"
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />
@@ -160,7 +161,7 @@ const startupDevice = () => {
     switchLoading.value = false
     console.error(err, 'err')
     const errmsg = err?.response?.data?.errors[0]?.detail
-
+    testDevice.value = false
     ElMessage({
       message: "启动设备失败: "+errmsg,
       type: 'error',
@@ -173,7 +174,6 @@ const shutdownDevice = async () => {
   if (sensorConfigsRef.value) {
     sensorConfigsRef.value.clearAllNodes(); // 调用子组件的方法
   }
-  // directive.value = 'shutdown'
   const params = {
     "data": {
       "type": "actions",
@@ -185,17 +185,12 @@ const shutdownDevice = async () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = false
     switchLoading.value = false
-    // ElMessage({
-    //   message: "设备关闭中，请稍后...",
-    //   type: 'success',
-    // })
   }).catch((err: any) => {
     switchLoading.value = false
-    // showRecordOnDevice.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
+    testDevice.value = true
     ElMessage({
       message: "关闭设备失败: "+errmsg,
       type: 'error',
@@ -216,18 +211,11 @@ const recordOnDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = false
     switchLoading.value = false
-    // pageLoading.value = true
-    // loadingtext.value = '设备采集开启中，请稍后...'
-    // ElMessage({
-    //   message: "设备正在采集中",
-    //   type: 'success',
-    // })
   }).catch((err: any) => {
     console.error(err, 'err')
     switchLoading.value = false
-    // showRecordOnDevice.value = false
+    startCollect.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail
     ElMessage({
       message: "设备采集失败: "+errmsg,
@@ -249,19 +237,12 @@ const recordOffDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = true
     switchLoading.value = false
-    // pageLoading.value = true
-    // loadingtext.value = '设备结束采集中，请稍后...'
-    // ElMessage({
-    //   message: "设备正在结束采集中",
-    //   type: 'success',
-    // })
   }).catch((err: any) => {
-    // showRecordOnDevice.value = true
     switchLoading.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail
     console.error(err, 'err')
+    startCollect.value = true
     ElMessage({
       message: "结束采集失败: "+errmsg,
       type: 'error',

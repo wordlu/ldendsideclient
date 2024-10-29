@@ -17,7 +17,7 @@
                 <span style="color: black;">成功</span>
               </div>
               <div style="display: flex;align-items: center;">
-                <div style="width: 10px;height: 10px;background-color: #e6a23c; margin-right: 6px;"></div> 
+                <div style="width: 10px;height: 10px;background-color: #ffc107; margin-right: 6px;"></div> 
                 <span style="color: black;">警告</span>
               </div>
               <div style="display: flex;align-items: center;">
@@ -40,7 +40,7 @@
       <div class="tree-area">
         <el-tree
           ref="treeRef"
-          style="width: 300px"
+          style="width: 360px"
           :data="treedata"
           show-checkbox
           default-expand-all
@@ -108,9 +108,9 @@
 import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
-import { ElTree, ElMessage } from 'element-plus'
+import { ElTree, ElMessage, ElMessageBox } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-import { findAll, findItem } from '@/api/jsonApi'
+import { findAll, findItem, addItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
@@ -126,7 +126,8 @@ interface Tree {
 }
 
 const props = defineProps({
-  viewportId: String
+  viewportId: String,
+  testDevice: Boolean
 });
 
 const form = reactive({})
@@ -219,7 +220,6 @@ const getSensoronfigs = (lidarname: string) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0 && datavalue[0].type === 'lidar') {
         setConfigValue.value = false
-        // loadRemoteComponent()
       } else {
         setConfigValue.value = true
       }
@@ -244,13 +244,13 @@ const renderContentUrl = `http://loggertrash/monitor/d-solo/c23d6b86-b6db-4188-8
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
-   if (!data.children && data.devicedata) {
+  if (!data.children && data.devicedata) {
     return h('div',{
         style: 'display:flex;align-items:center;',
       },
       [
       h('div', {
-        style: 'margin-right: 20px;',
+        style: 'margin-right: 20px;min-width:60px;',
       },node.label), // 节点标签
       h('iframe', {
       src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=1`,
@@ -268,11 +268,52 @@ const renderContent = (h, { node, data }) => {
       src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=4`,
       style: renderContentStyle,
       }),
+      h('div', { 
+        style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
+        onClick: () => handleTreeReconnectClick(node, data)
+      }, '重连'),  // 重新连接
     ]);
   } else {
     return h('span', node.label); // 非叶子节点只显示标签
   }
 };
+
+const handleTreeReconnectClick = (node, data) => {
+  if (!props.testDevice) {
+    ElMessage.warning('请先初始化设备！')
+    return;
+  }
+  ElMessageBox.alert(`是否重新启动设备 ${data.label} ?`, '', {
+    confirmButtonText: '确认',
+    autofocus: false,
+    callback: (action: Action) => {
+      if (action === 'confirm') {
+        const params = {
+          "data": {
+            "type": "actions",
+            "attributes": {
+              "command": "reboot",
+              "devices": [node.data.devicedata.id],
+              "viewport": props.viewportId
+            }
+          }
+        }
+        addItem('/models/actions', params).then((res: any) => {
+          ElMessage({
+            message: "设备正在重启中 ",
+            type: 'success',
+          })
+        }).catch((err: any) => {
+          const errmsg = err?.response?.data?.errors[0]?.detail
+          ElMessage({
+            message: "重启设备失败: "+errmsg,
+            type: 'error',
+          })
+        })
+      }
+    }
+  })
+}
 
 const treedata = ref([])
 const sensorData = ref([])
@@ -347,206 +388,7 @@ const totree = (data) => {
   return tree;
 }
 
-
-// 获取canvas的ref
-const sensorCanvas = ref(null);
-const parent = ref(null);
-
-const resizeCanvas = () => {
-  if (parent.value && sensorCanvas.value) {
-    // 设置canvas的内部像素大小
-    sensorCanvas.value.width = parent.value.clientWidth;
-    sensorCanvas.value.height = parent.value.clientHeight;
-    // sensorCanvas.value.height = 490;
-    // sensorCanvas.value.width = 490;
-  }
-};
-
-onMounted(() => {
-  resizeCanvas();
-  // 监听 parent 大小变化
-  watchEffect(() => {
-    resizeCanvas();
-  });
-});
-
-// 弹窗提示
-const showPopup = (sensor) => {
-  alert(`Sensor Type: ${sensor.type}, Position: (${sensor.x}, ${sensor.y})`);
-};
-
-// const createSensorCanvas = (treeData) => {
-//   const canvas = sensorCanvas.value;
-//   const ctx = canvas.getContext("2d");
-//   ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
-//   drawSensors(ctx);
-// }
-
-// 画传感器
-const drawSensors = (ctx) => {
-  sensorData.value.forEach((sensor) => {
-    let color;
-    switch (sensor.type) {
-      case 'camera':
-        color = 'green';
-        break;
-      case 'lidar':
-        color = 'red';
-        break;
-      default:
-        color = 'blue';
-    }
-
-    // 绘制圆形
-    ctx.beginPath();
-    ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.closePath();
-
-    // 绘制 ID
-    ctx.font = '12px Arial';
-    ctx.fillStyle = 'white'; // 白色字体
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-
-    const textX = sensor.x + 15; // 文字x坐标，偏移圆形
-    const textY = sensor.y; // 文字y坐标，与圆形对齐
-
-    ctx.fillText(sensor.id, textX, textY);
-  });
-};
-
-// 点击事件处理
-const handleCanvasClick = (event) => {
-  const canvas = sensorCanvas.value;
-  const ctx = canvas.getContext("2d");
-
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-
-  sensorData.value.forEach((sensor) => {
-    const distance = Math.sqrt(
-      (x - sensor.x) ** 2 + (y - sensor.y) ** 2
-    );
-    // 如果点击位置在传感器范围内
-    if (distance < 10) {
-      showPopup(sensor);
-    }
-  });
-};
-
-
 queryCurrentDrivers()
-
-const loadRemoteComponent = async () => {
-  try {
-    // Step 1: Fetch the remote .vue file content
-    const response = await fetch(`http://daily-report-dev.10.86.14.200.nip.io/test.vue`);
-    const vueFile = await response.text();
-
-    // Step 2: Parse the .vue file using @vue/compiler-sfc
-    const { descriptor } = parse(vueFile);
-
-    // Step 3: Compile <script> and <template> sections
-    const script = compileScript(descriptor, { id: 'remote-component' });
-    const { code: templateCode } = compileTemplate({ source: descriptor.template!.content });
-
-    // Create a new Vue component using the compiled script and template
-    const component = {
-      template: descriptor.template!.content,
-      setup: () => {
-        const scriptExports = {};
-        eval(script.code); // Dynamically evaluate script code
-        return scriptExports;
-      },
-    };
-
-    // Compile and apply styles (if present)
-    if (descriptor.styles.length > 0) {
-      descriptor.styles.forEach(style => {
-        const { code: styleCode } = compileStyle({
-          source: style.content,
-          id: 'remote-component',
-          scoped: style.scoped
-        });
-        const styleTag = document.createElement('style');
-        styleTag.innerHTML = styleCode;
-        document.head.appendChild(styleTag);
-      });
-    }
-
-    // Set the compiled component to render
-    RemoteComponent.value = Vue.extend(component);
-  } catch (err) {
-    console.error('Failed to load remote component:', err);
-  }
-};
-
-const colorPropOpt = ['x', 'y', 'z', 'intensity'] // 颜色策略
-
-const getStorage = () => {
-  let storage
-  try {
-    storage = JSON.parse(localStorage.getItem('user_settings') || '{}')
-  } catch {
-    storage = {}
-  }
-  // 设置默认值:固定颜色自动赋色
-  if (storage.isFixColor === undefined) storage.isFixColor = true
-  if (storage.autoColorRange === undefined) storage.autoColorRange = true
-  return storage
-}
-
-// 获取localStorage保存的值
-const storageVal = getStorage()
-
-const activeName = ref<string>('dataSources')
-const pointSize = ref<number>(storageVal.pointSize || 0.01) // 点云大小
-const colorProp = ref<string>(storageVal.isFixColor ? 'fixed' : storageVal.colorProp) // 颜色策略
-const color = ref<string>(storageVal.color || '#00ffff') // 固定颜色值
-const minColorPropVal = ref<number>(storageVal.minColorPropVal || 0) // 颜色范围最小值
-const maxColorPropVal = ref<number>(storageVal.maxColorPropVal || 100) // 颜色范围最大值
-const autoColorRange = ref<boolean>(storageVal.autoColorRange || false) // 是否是自动赋色
-
-// 保存设置到localStorage
-const setPropStorage = (params: { [key: string]: string | number | boolean }) => {
-  for (let key in params) {
-    if (Object.prototype.hasOwnProperty.call(params, key)) {
-      storageVal[key] = params[key]
-    }
-  }
-  changeProps(params)
-  if (storageVal) {
-    localStorage.setItem('user_settings', JSON.stringify(storageVal))
-  }
-}
-
-const changePointSize = (value: number) => {
-  emit('changeProps', { size: value })
-}
-
-const changeColorProp = (value: string) => {
-  emit('changeProps', { color: value.slice(1) })
-}
-
-const changeColor = (value: string) => {
-  setPropStorage({ color: value })
-}
-
-const changeMinColor = (value: number) => {
-  setPropStorage({ minColorPropVal: value })
-}
-
-const changeMaxColor = (value: number) => {
-  setPropStorage({ maxColorPropVal: value })
-}
-
-const changeAuto = (value: boolean) => {
-  setPropStorage({ autoColorRange: value })
-}
-
 
 defineExpose({
   selectAllNodes,
@@ -555,7 +397,22 @@ defineExpose({
 });
 
 </script>
+<style lang="scss">
+.panel-header {
+  display: none !important;
+}
 
+.el-button--primary {
+  background: #FF7900;
+  border: none;
+}
+
+.el-button--primary:hover{
+  color: #FF7900;
+  background: #FFF1E5;
+  border: 1px solid #FF7900;
+}
+</style>
 <style scoped lang="scss">
 .item-wrap {
   padding: 0 16px;
@@ -592,8 +449,9 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   padding-right: 20px;
-  height: 200px;
+  min-height: 220px;
   overflow: auto;
+  overflow-x: hidden;
 }
 
 .display-panel {
@@ -607,18 +465,19 @@ defineExpose({
 
   .title-area {
     display: flex;
+    margin-bottom: 10px;
+    align-items: center;
     .title {
       display: flex;
       align-items: center;
       font-size: 18px;
       font-weight: 600;
       color: #5A5E72;
-      margin-bottom: 10px;
       text-align: left;
     }
 
     .status-title {
-      margin-left: 55px;
+      margin-left: 58px;
 
       .status-title-item {
         font-size: 12px;
@@ -661,8 +520,5 @@ defineExpose({
   padding-left: 0.75rem;
 }
 </style>
-<style>
-.panel-header {
-  display: none !important;
-}
-</style>
+
+
