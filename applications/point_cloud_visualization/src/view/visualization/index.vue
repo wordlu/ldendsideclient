@@ -1,6 +1,8 @@
 
 <template>
-  <div id="visualization" v-loading="pageLoading">
+  <div id="visualization" 
+    element-loading-background="rgba(122, 122, 122, 0.8)"
+    v-loading="pageLoading">
     <topBarVue />
     <div class="view">
       <toolBarVue />
@@ -29,7 +31,7 @@ import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
 const route = useRoute();
 const routeQuery = ref(route.query);
-const pageLoading = ref(false);
+const pageLoading = ref(dataSet.pageLoading);
 
 console.log("1:createHub")
 connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports)
@@ -41,13 +43,17 @@ function print(val) {
 const x = ref(document.documentElement.clientWidth - 408)
 const y = ref(document.documentElement.clientHeight - 620)
 
-watch(dataSet.pageLoading, (newVal, oldVal) => {
+watch(()=>dataSet.pageLoading, (newVal, oldVal) => {
   pageLoading.value = newVal
-})
+},
+{immediate: true, deep:true})
 </script>
 
 
 <style lang="scss">
+.el-loading-spinner .path {
+  stroke: #ff7900 !important;
+}
 #visualization{
   width: 100%;
   height: 100%;

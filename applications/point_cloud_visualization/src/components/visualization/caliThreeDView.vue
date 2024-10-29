@@ -10,7 +10,7 @@ import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } fro
 import * as THREE from 'three';
 import { points1, points2, camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/caliInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
+import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/calisocket';
 import { dataSetStore } from '@/pinia/dataSet.js';
 
 const props = defineProps({
