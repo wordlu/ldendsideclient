@@ -68,7 +68,6 @@
                     <el-form :model="form" label-width="auto"  style="max-width: 600px">
                       <el-form-item label="设备驱动类型:" label-width="110px">
                         <el-select v-model="form.type" style="width: 300px;" placeholder="请选择驱动" @change="handleDriverChange">
-                          <!-- <el-option label="Zone one" value="shanghai" /> -->
                           <el-option v-for="item in driversdataOptions" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                       </el-form-item>
@@ -78,7 +77,6 @@
                       </div>
                     </el-form>
                 </el-tab-pane>
-                <!-- <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane> -->
               </el-tabs>
             </div>
           </div>
@@ -92,23 +90,15 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useVisualizeStore } from '@/store/modules/visualize'
-import { useCollectStore } from '@/store/modules/collect'
-import TopOprt from '@/components/collect/TopOprt.vue'
-import OperatingTags from '@/components/tags/OperatingTags.vue'
-import PrepareInfo from '@/components/collect/PrepareInfo.vue'
 import { ref, onMounted, watchEffect, reactive, nextTick, markRaw, watch } from 'vue'
-import { setCollectionStatus } from '@/api/s1/collect'
-// import Monitor from '@/components/monitor/Index.vue'
 import { Search } from "@element-plus/icons-vue"
 import { ElTree, ElMessage } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll, addItem, patchItem, deleteItem } from '@/api/jsonApi'
-import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
-
+import Vue from 'vue/dist/vue.esm-bundler.js';
 
 interface Tree {
   id: number
@@ -547,6 +537,7 @@ const loadRemoteComponent = async () => {
     }
 
     RemoteComponent.value = markRaw(component);
+    RemoteComponent.value = Vue.extend(component);
   } catch (err) {
     console.error('Failed to load remote component:', err);
   }
