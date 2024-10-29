@@ -91,7 +91,7 @@
                   @change="changePointSize" />
               </div>
               <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-              <div v-if="colorProp === 'fixed'" class="item-wrap">
+              <div class="item-wrap">
                 <span class="mr-4">颜色值</span>
                 <el-color-picker v-model="color" size="small" @change="changeColorProp" />
               </div>
@@ -132,7 +132,9 @@ const props = defineProps({
 
 const renderTreeCheckbox = (isStartCollect: boolean) => {
   treedata.value.forEach((parent) => {
-    if (parent.children) {
+    const childrensBoolean = parent.children && parent.children.length > 0
+    parent.disabled = isStartCollect ? true : (childrensBoolean ? false : true)
+    if (childrensBoolean) {
       parent.children.forEach((child) => {
         child.disabled = isStartCollect ? true : (child.devicedata ? false : true)
       })
@@ -358,7 +360,17 @@ const totree = (data) => {
   return tree;
 }
 
-queryCurrentDrivers()
+const changePointSize = (value: number) => {
+  emit('changeProps', { size: value })
+}
+
+const changeColorProp = (value: string) => {
+  emit('changeProps', { color: value.slice(1) })
+}
+
+onMounted(() => {
+  queryCurrentDrivers()
+});
 
 defineExpose({
   selectAllNodes,
