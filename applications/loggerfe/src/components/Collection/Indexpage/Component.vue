@@ -30,6 +30,7 @@
         <sensorConfigs ref="sensorConfigsRef" 
           :viewportId="viewportId"
           :testDevice="testDevice"
+          :startCollect="startCollect"
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />

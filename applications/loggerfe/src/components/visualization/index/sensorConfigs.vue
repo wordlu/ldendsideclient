@@ -1,7 +1,6 @@
 <template>
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
-      <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
      <div class="title-area">
       <div class="title">
         配置信息
@@ -105,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, reactive, defineEmits, defineProps } from 'vue'
+import { ref, onMounted, watch, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
 import { ElTree, ElMessage, ElMessageBox } from 'element-plus'
@@ -127,11 +126,21 @@ interface Tree {
 
 const props = defineProps({
   viewportId: String,
-  testDevice: Boolean
+  testDevice: Boolean,
+  startCollect: Boolean,
 });
 
-const form = reactive({})
+const renderTreeCheckbox = (isStartCollect: boolean) => {
+  treedata.value.forEach((parent) => {
+    if (parent.children) {
+      parent.children.forEach((child) => {
+        child.disabled = isStartCollect ? true : (child.devicedata ? false : true)
+      })
+    }
+  })
+}
 
+const form = reactive({})
 const activeNameTab = ref('second')
 const RemoteComponent = ref<any>(null);
 
@@ -143,33 +152,7 @@ const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
-
-const isPageChecked = ref(true)
-const isProgrammaticChange = ref(false);
-/**
- * 正常流程：
- * 1.勾选节点的时候，判断当前页面是否为采集状态
- * 2.若为采集中，则提示不可修改，并取消操作
- * 3.目前问题：无法分辨是程序执行过程中的点击还是用户点击
- */
 const handleCheckChange = async(data, checked, indeterminate) => {
-  if (isProgrammaticChange.value) {
-    // 如果是程序触发的变更，直接跳过
-    return;
-  }
-  if (isPageChecked.value && !data.children) {
-    const currentStatus = await findItem('/viewport_status', props.viewportId)
-    if (currentStatus.data.isrecording) {
-      ElMessage.warning('采集中，不可修改')
-      isProgrammaticChange.value = true; // 标志位设置为程序操作
-      treeRef.value.setChecked(data.id, !checked);
-      setTimeout(() => {
-        isProgrammaticChange.value = false; // 恢复为正常
-      })
-      return;
-    }
-    
-  }
   //获取叶子节点信息并传递给父级组件
   const checkedNodes = treeRef.value.getCheckedNodes();
   console.log(checkedNodes)
@@ -181,22 +164,14 @@ const allTreeKeys = ref([])
 
 const selectAllNodes = () => {
   if (treeRef.value) {
-    isPageChecked.value = false
     treeRef.value.setCheckedKeys(allTreeKeys.value.map(node => node.value));
-    setTimeout(() => {
-      isPageChecked.value = true
-    })
   }
 };
 
 const selectSomeNodes = (isrecordingNodes) => {
   const isrecordingArr = isrecordingNodes.map((node) => node.deviceKey);
   if (treeRef.value) {
-    isPageChecked.value = false
     treeRef.value.setCheckedKeys(allTreeKeys.value.filter(it => isrecordingArr.includes(it.key)).map(node => node.value));
-    setTimeout(() => {
-      isPageChecked.value = true
-    })
   }
 }
 
@@ -324,7 +299,6 @@ const queryCurrentDrivers = () => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
-      console.log(datavalue, 'datavalue')
       name.value = datavalue[0].name
       const devicehub = datavalue[0]['device-hub']
       const device = datavalue[0]['devices']
@@ -336,8 +310,6 @@ const queryCurrentDrivers = () => {
         }
       })
       treedata.value = totree(devicehubdata)
-      console.log(treedata.value, 'treedata')
-      // createSensorCanvas(treedata.value)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -372,7 +344,6 @@ const totree = (data) => {
       disabled: !sensor.devicedata
     });
     if (sensor.devicedata) {
-      // allports.push(sensor.devicedata['display-port'])
       allports.push({
         port:sensor.devicedata['display-port'],
         type:sensor.devicedata.type
@@ -383,7 +354,6 @@ const totree = (data) => {
       })
     }
   });
-  // selectAllNodes()
   emit('setAllTreeKeys', allports)
   return tree;
 }
@@ -395,6 +365,10 @@ defineExpose({
   clearAllNodes,
   selectSomeNodes
 });
+
+watch(() => props.startCollect, (newVal) => {
+  renderTreeCheckbox(newVal)
+},{immediate: true})
 
 </script>
 <style lang="scss">
