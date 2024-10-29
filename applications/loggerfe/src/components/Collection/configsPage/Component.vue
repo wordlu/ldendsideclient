@@ -183,16 +183,6 @@ const getRemoteFormData = () => {
 const onSubmit = async () => {
   getRemoteFormData()
   try {
-    // const deviceparams = {
-    //   "points_topic": form.points_topic,
-    //   "host_name": form.host_name,
-    //   "timestamp_mode": form.timestamp_mode,
-    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-    //   "point_type": form.point_type,
-    //   "receive_topic": form.receive_topic,
-    //   "save_topic": form.save_topic,
-    //   "bag_file_name": form.bag_file_name,
-    // }
     const {type, ...deviceparams} = form
     const params = {
       data: {
@@ -444,24 +434,8 @@ const drawSensors = (ctx) => {
   sensorCanvas.value.width = imageWidth
   sensorCanvas.value.height = imageHeight
 
-
-
   sensorData.value.forEach((sensor) => {
-    let color = '#ff7900'
-    // switch (sensor.type) {
-      // case 'camera':
-      //   color = 'green';
-      //   break;
-      // case 'lidar':
-      //   color = '#ff7900';
-      //   break;
-      // case 'imu':
-      //   color = 'yellow';
-      //   break;
-      // default:
-      //   color = 'blue';
-    // }
-
+    let color = '#999'
     // @wodelu:TODO 计算适应缩放后的坐标
     const scaleX = imageWidth / imageWidth
     const scaleY = imageHeight / imageHeight
@@ -474,12 +448,12 @@ const drawSensors = (ctx) => {
     ctx.arc(adjustedX, adjustedY, 10, 0, 2 * Math.PI) // 半径为5
     ctx.lineWidth = 3;
     if (deployDevices.value.find(it => it.slot === sensor.id)) {
-      ctx.fillStyle = color;
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = color;
-      ctx.stroke();
+      color = '#ff7900'
     }
+    ctx.fillStyle = color;
+    ctx.fill();
+    // ctx.strokeStyle = color;
+    // ctx.stroke();
     ctx.closePath();
 
     // 绘制设备名称
