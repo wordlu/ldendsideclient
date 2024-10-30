@@ -170,9 +170,9 @@ export const startPlaying = () => {
     if (bufferedFrames.length > 0) {
       let frameData = bufferedFrames.length > 1 ? bufferedFrames.shift() : bufferedFrames[0];
       renderFrame(frameData); // 渲染当前帧
-      // console.log('当前帧数111：'+frameData.splitInfo.frame_index)
+      console.log('当前帧数111：'+frameData.splitInfo.frame_index)
       // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
-      if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-1)) {
+      if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-2)) {
         allWsSend(totalFrames, 1)
       }
     } else {
@@ -202,8 +202,8 @@ function renderFrame(frameData) {
       if (key === "frame_index") return;
       const res = result.slice(splitInfo[key][0],splitInfo[key][1])
       if (currentSelectedSensor.includes(key)) {
-        // DracoPoint(res, key)
-        updateGeometry(res, key)
+        DracoPoint(res, key)
+        // updateGeometry(res, key)
       } else {
         clearGeometry(key)
       }
@@ -230,14 +230,15 @@ function renderFrame(frameData) {
 
 
 // 每次返回的数据帧数
-let request_count = 10
+let request_count = 20
 export const allWsSend = (frame, play, request_count_val)=>{
   try{
     let options = {
       "dataset": getQueryString('dataset'),
       "devices": dataSet.info.devices,
       "request_index": frame,
-      "request_count": request_count_val || request_count
+      "request_count": request_count_val || request_count,
+      "skip": 1
     }
 
     allWs.send(JSON.stringify(options));
@@ -250,6 +251,9 @@ export const allWsSend = (frame, play, request_count_val)=>{
     }
     // console.log("8:all websocket发送消息")
     allWs.onmessage = async function(evt) {
+      if (!play && !request_count_val) {
+        return;
+      }
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
         // console.log("10:string数据"+evt.data)
@@ -270,13 +274,10 @@ export const allWsSend = (frame, play, request_count_val)=>{
         // console.log("10:ArrayBuffer数据")
       }
 
+      // 不是播放中直接渲染当前帧数据
       if (!play) {
-        // 不是播放中直接渲染当前数据
         renderFrame(bufferedFrames[0]);
       }
-      // if (play && dataSet.activefame + (request_count -2) <= splitInfo.frame_index) {
-      //   dataSet.activefame = dataSet.activefame + request_count
-      // }
     };
   }catch(err){
     console.error('Init camWsSend error:'+err);

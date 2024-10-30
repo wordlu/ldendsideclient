@@ -31,8 +31,6 @@
 import { dataSetStore } from '../../../pinia/dataSet'
 import { ref , watch , computed } from 'vue'
 import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
-import {dataval} from './dataval'
-import { func_scene_thumbnail } from '../../../api/api'
 import * as THREE from 'three';
 
 const startframe = ref(0)
@@ -133,6 +131,9 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
     activeFrame.value = dataSet.activefame
     if(activeFrame.value <= frame_count.value){
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
+    }
+    if (activeFrame.value + 1 === frame_count.value){
+      allWsSend(activeFrame.value+1, false, 1);
     }
     if(activeFrame.value >= frame_count.value){
       isStart.value = false;
