@@ -57,7 +57,7 @@ export const setCamera = (width, height) => {
 
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
-  setControlsEnable(false)
+  // setControlsEnable(false)
   controls.addEventListener('change',()=>{
     renderer.render(scene, camera)
   })

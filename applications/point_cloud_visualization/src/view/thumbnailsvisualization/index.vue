@@ -6,6 +6,7 @@
           <threeDView />
         </div>
         <cameras />
+        <toolBarVue />
         <videoBarVue :currentScene="currentScene"/>
       </div>
     </div>
@@ -14,6 +15,7 @@
 
 <script setup lang="ts">
 import videoBarVue from "./components/videoBar.vue";
+import toolBarVue from "./components/toolBar.vue";
 import threeDView from "../../components/visualization/replayThreeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
 import { createHub } from '../../components/socket/thumbnailsocket';
