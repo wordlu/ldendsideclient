@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, scene, clearGeometry  } from '../visualization/lib/replayInitThree';
+import { DracoPoint, scene, clearGeometry, updateGeometry  } from '../visualization/lib/replayInitThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -54,7 +54,7 @@ export const createHub = ()=>{
       dataset: getQueryString('dataset')
     }
     ws.send(JSON.stringify(options))
-    console.log("4:websocket发送消息"+JSON.stringify(options))
+    // console.log("4:websocket发送消息"+JSON.stringify(options))
   };
 
   ws.onmessage = function(evt) {
@@ -111,25 +111,6 @@ export const pcdWsSend = (frame)=>{
     console.error('Init pcdWsSend error:'+err);
   }
 }
-
-// 初始化视觉数据
-// export const initCamSocket = ()=>{
-//   camWs = new WebSocket(`${podUrl.value}cam`);
-
-//   camWs.onclose = function() {
-//     console.log("连接已关闭...");
-//   };
-
-//   const cams = dataSet.info.meta_json.cam;
-
-//   //生成摄像头数据的结构
-//   //cam 摄像头的名称
-//   for(let cam in cams){
-//     dataSet.activeCamInfo[cam] = null;
-//   }
-
-//   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
-// }
 
 //获取视觉数据并渲染
 export const camWsSend = (frame)=>{
@@ -221,7 +202,8 @@ function renderFrame(frameData) {
       if (key === "frame_index") return;
       const res = result.slice(splitInfo[key][0],splitInfo[key][1])
       if (currentSelectedSensor.includes(key)) {
-        DracoPoint(res, key)
+        // DracoPoint(res, key)
+        updateGeometry(res, key)
       } else {
         clearGeometry(key)
       }
@@ -312,7 +294,7 @@ var reader = {
     try{
       r['readAs'+type](blob);
     }catch(e){
-      console.log('error')
+      console.log('数据解析出错:'+e);
     }
   }
 }

@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import DracoDecoderModule from './draco_decoder'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { setSceneGround } from './caliInitThree';
 let camera,controls;
 let geometry = new THREE.BufferGeometry()//创建图形对象
 let geometry_draco; // draco 图形对象
@@ -155,7 +156,17 @@ function createGeometry(geometryData, type) {
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
+  if (type) {
+    renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  } else {
+    geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
+  }
+}
 
+export const updateGeometry = (arrayBuffer, type) => {
+  let name = 'position'
+  let itemSize = 3
+  let array = new Float32Array(arrayBuffer)
   if (type) {
     renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   } else {
