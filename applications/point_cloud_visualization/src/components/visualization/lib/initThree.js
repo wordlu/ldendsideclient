@@ -46,13 +46,30 @@ export { scene , renderer , controls , camera}
 //创建相机
 export const setCamera = (width, height) => {
   camera = new THREE.PerspectiveCamera(80, width / height, 0.1, 3000)
-  camera.position.set(0, 10, 20)
-  camera.lookAt(0, 0, 0)
+  // camera.position.set(0, 10, 20)
+  // camera.lookAt(0, 0, 0)
+  setCameraPosition('xy')
   camera.up.set(0, 0, 1)
-  
   // 在大多数属性发生改变之后，你将需要调用.updateProjectionMatrix来使得这些改变生效
   camera.updateProjectionMatrix()
   return camera;
+}
+
+
+export const setCameraPosition = (view) => {
+  if (view === 'xy') {
+    // 正视图
+    camera.position.set(0, 0, 30);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+  } else if (view === 'yz') {
+    // 左视图
+    camera.position.set(-30, 0, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+  } else {
+    // 俯视图
+    camera.position.set(0, 30, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+  }
 }
 
 export const setControls = (camera) => {
