@@ -24,8 +24,14 @@
         <BasicScene :datasetprefix="datasetprefix" :currentSelectedSensor="currentSelectedSensor"
           :cloudpointparams="cloudpointparams" :devicesHub="devicesHub" :isCollapsedConfig="isCollapsed" />
 
-        <sensorConfigs v-show="isCollapsed" ref="sensorConfigsRef" @getCurrentPorts="getCurrentPorts" :deviceids="deviceids"
-          @update:leafNodes="handleLeafNodes" @setAllTreeKeys="setAllTreeKeys" @changeProps="changeProps"
+        <sensorConfigs 
+          v-if="isCollapsed && deviceids.length > 0" 
+          ref="sensorConfigsRef" 
+          :deviceids="deviceids"
+          @getCurrentPorts="getCurrentPorts" 
+          @update:leafNodes="handleLeafNodes" 
+          @setAllTreeKeys="setAllTreeKeys" 
+          @changeProps="changeProps"
           @setDevicesHub="setDevicesHub" />
           
         <!-- <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/> -->
