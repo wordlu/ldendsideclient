@@ -78,7 +78,7 @@
                   >
                 </div>
               </div>
-              <div class="item-wrap">
+              <!-- <div class="item-wrap">
                 <span class="mr-2">点云大小</span>
                 <el-input-number
                   class="size-input"
@@ -89,12 +89,12 @@
                   :max="10"
                   :step="0.01"
                   @change="changePointSize" />
-              </div>
+              </div> -->
               <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-              <div class="item-wrap">
+              <!-- <div class="item-wrap">
                 <span class="mr-4">颜色值</span>
                 <el-color-picker v-model="color" size="small" @change="changeColorProp" />
-              </div>
+              </div> -->
           </el-tab-pane>
           </el-tabs>
         </div>
@@ -217,7 +217,7 @@ const defaultProps = {
   label: 'label',
 }
 
-const renderContentUrl = `http://loggertrash/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
+const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {

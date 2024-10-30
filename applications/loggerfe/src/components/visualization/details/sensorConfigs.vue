@@ -45,7 +45,7 @@
                   >
                 </div>
               </div>
-              <div class="item-wrap">
+              <!-- <div class="item-wrap">
                 <span class="mr-2">点云大小</span>
                 <el-input-number
                   v-model="pointSize"
@@ -56,12 +56,12 @@
                   :max="10"
                   :step="0.01"
                   @change="changePointSize" />
-              </div>
+              </div> -->
               <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-              <div v-if="colorProp === 'fixed'" class="item-wrap">
+              <!-- <div v-if="colorProp === 'fixed'" class="item-wrap">
                 <span class="mr-4">颜色值</span>
                 <el-color-picker v-model="color" size="small" @change="changeColorProp" />
-              </div>
+              </div> -->
             </el-tab-pane>
           </el-tabs>
         </div>
