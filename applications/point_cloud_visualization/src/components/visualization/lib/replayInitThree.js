@@ -13,10 +13,10 @@ let renderObject = {}
 //创建一个三维场景
 const scene = new THREE.Scene()
 //添加光源
-const ambient = new THREE.AmbientLight(0x93BE2E, 0.5), light1 = new THREE.PointLight(0x93BE2E, 0.4)
+const ambient = new THREE.AmbientLight(0x93BE2E, 0.5), light = new THREE.PointLight(0x93BE2E, 0.4)
 scene.add(ambient)
-light1.position.set(1000,1000,1000)
-scene.add(light1)
+light.position.set(1000,1000,1000)
+scene.add(light)
 
 //创建辅助坐标轴
 const axesHelper = new THREE.AxesHelper(10)

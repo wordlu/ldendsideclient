@@ -3,31 +3,25 @@
 <template>
   <div id="thumbnailsvideoBar">
     <div class="control">
-      <!-- <div class="control-prev control-item" @click="prev" style="margin-right: 10px;">
-        <img src="../../../assets/prev.svg" alt="" style="margin-right: 3px;" />
-      </div> -->
       <div class="control-prev-next" @click="prev">
-         上一帧
+        上一帧
       </div>
       <div class="control-stop" @click="start">
         <img src="../../../assets/pause.svg" alt="" v-if="isStart" />
         <img src="../../../assets/stop.svg" alt="" class="marginLeft3" v-else />
       </div>
       <div class="control-prev-next" @click="next">
-         下一帧
+        下一帧
       </div>
-      <!-- <div class="control-next control-item" @click="next" style="margin-left: 10px;">
-        <img src="../../../assets/next.svg" alt="" style="margin-left: 3px;" />
-      </div> -->
     </div>
     <div class="progress-area">
+      <div style="font-size: 12px;position: absolute;right: 10px; bottom: 45px;">{{ activeFrame }} / {{ currentTimeString }} / {{ time_value }}</div>
       <div class="Progress-thumbnails">
         <div class="Progress_back"
           @mousedown="setProgressPosDown"
           @mousemove="progressMove">
           <div class="Progress_line"></div>
         </div>
-        <span style="min-width: 100px;font-size: 12px;margin-left: 10px;text-align: center;">{{ activeFrame }}/{{ currentTimeString }}/{{ time_value }}</span>
       </div>
     </div>
   </div>
