@@ -1,9 +1,10 @@
 import * as THREE from 'three'
-
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import DracoDecoderModule from './draco_decoder'
-
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { setSceneGround } from './caliInitThree';
+
 let camera,controls;
 let geometry = new THREE.BufferGeometry()//创建图形对象
 let geometry_draco; // draco 图形对象
@@ -19,8 +20,35 @@ light.position.set(1000,1000,1000)
 scene.add(light)
 
 //创建辅助坐标轴，X 轴为红色，Y 轴为绿色，Z 轴为蓝色。
-const axesHelper = new THREE.AxesHelper(10)
+const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
+
+
+const loader = new FontLoader();
+// 创建文字标识函数
+const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
+  loader.load('./src/components/visualization/lib/helvetiker_regular.typeface.json', function (font) {
+      const geometry = new TextGeometry(text, {
+          font: font,
+          size: 1,
+          height: 0.01,
+          curveSegments: 12,
+          bevelEnabled: false,
+      });
+
+      const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(position);
+      // 应用旋转
+      mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+      scene.add(mesh);
+  });
+};
+
+// 添加 XYZ 文字标识
+createLabel('X', new THREE.Vector3(5, 0, 0));  // X轴标识
+createLabel('Y', new THREE.Vector3(0, 5, 0));  // Y轴标识
+createLabel('Z', new THREE.Vector3(-0.3, -0.3, 5), new THREE.Vector3(Math.PI / 2, 0, 0));  // Z轴标识
 
 
 // 渲染动画
