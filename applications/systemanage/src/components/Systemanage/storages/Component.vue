@@ -65,10 +65,9 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll, deleteItem } from '@/api/jsonApi'
+import { findAll, deleteItem, findItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
-
 interface Row {}
 
 const count = ref(0)
@@ -110,6 +109,7 @@ const prevPage = () => {
 
 onMounted(() => {
   queryDatasets(current.value)
+  queryCurrentDrivers()
 })
 
 const queryDatasets = (page: number) => {
@@ -140,8 +140,36 @@ const change = () => {
   queryDatasets(0)
 }
 
-const handleCommand = (command, row) => {
+const viewportId = ref('')
+const queryCurrentDrivers = () => {
+  try {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+      viewportId.value = res.data.data[0].id
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const handleCommand = async (command, row) => {
   if(command == '数据详情'){
+    if (row.size <= 0) {
+      ElMessage({
+        message: "当前数据集无法查看数据详情！",
+        type: 'warning',
+      })
+      return;
+    }
+    const currentStatus = await findItem('viewport_status', viewportId.value)
+    if (currentStatus.data.isluanching) {
+      ElMessage({
+        message: "有正在运行的设备，请关闭设备后再查看数据详情！",
+        type: 'warning',
+      })
+      return;
+    }
     window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
   }else if(command == '删除'){  
     ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
