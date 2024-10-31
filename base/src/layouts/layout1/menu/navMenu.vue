@@ -4,7 +4,7 @@
     v-show="subMenu.length > 0"
   >
     <el-menu
-      :default-active="$route.path"
+      :default-active="currentPath"
       :router="true"
       class="el-menu-vertical-demo"
       :collapse="isCollapse"
@@ -17,12 +17,7 @@
           v-if="subMenuItem.type === 'elSubmenu'"
         >
           <template slot="title">
-            <!-- <i class="el-icon-document"></i> -->
-            <img
-              class="navicon"
-              :src="require('@/assets/navicon.svg')"
-              alt=""
-            />
+            <img class="navicon" :src="require('@/assets/navicon.svg')"/>
             <span
               slot="title"
               class="submenuTitle"
@@ -55,7 +50,6 @@
         </el-menu-item>
       </template>
     </el-menu>
-    <!-- <i class="el-icon-menu navMenu-icon" @click="setIsCollapse"></i> -->
   </div>
 </template>
 
@@ -63,7 +57,6 @@
 import { mapGetters } from "vuex";
 import Cookies from "js-cookie";
 import axios from 'axios';
-// import { func_gts_ingress } from "@/api/ingress"
 
 export default {
   props: {
@@ -74,10 +67,10 @@ export default {
   data () {
     return {
       isCollapse: false,
-      // defaultActive:'',
       subMenu: [],
       opends: ["1"],
-      ingressValue: ""
+      ingressValue: "",
+      currentPath: ""
     };
   },
   computed: {
@@ -90,9 +83,20 @@ export default {
     "$i18n.locale" (newValue) {
       this.getAllMenu();
     },
+    "$route.path": {
+      handler(newPath, oldpath) {
+        if (newPath === "/loggerfe/root/createConfig") {
+          this.currentPath = "/loggerfe/root/configs";
+        } else if(newPath.indexOf('/loggerfe/datasetdetail') > -1) {
+          this.currentPath = "/systemanage/storages";
+        } else {
+          this.currentPath = newPath;
+        }
+      },
+      immediate: true,
+    },
   },
   created () {
-    // this.defaultActive = this.$route.path
     this.getAllMenu();
   },
   methods: {
@@ -125,11 +129,11 @@ export default {
                 title: '采集模版管理',
                 policy: "pagesystemanagecollectiontemplates",
               },
-              {
-                index: '/systemanage/calitemplates?logger=trash',
-                title: '标定流程管理',
-                policy: "pagesystemanagecalitemplates",
-              }
+              // {
+              //   index: '/systemanage/calitemplates?logger=trash',
+              //   title: '标定流程管理',
+              //   policy: "pagesystemanagecalitemplates",
+              // }
             ]
           }
         ]
