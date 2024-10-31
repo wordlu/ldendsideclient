@@ -393,11 +393,11 @@ watch(() => props.startCollect, (newVal) => {
   border: none;
 }
 
-.el-button--primary:hover{
-  color: #FF7900;
-  background: #FFF1E5;
-  border: 1px solid #FF7900;
-}
+// .el-button--primary:hover{
+//   color: #FF7900;
+//   background: #FFF1E5;
+//   border: 1px solid #FF7900;
+// }
 </style>
 <style scoped lang="scss">
 .item-wrap {
