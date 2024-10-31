@@ -43,8 +43,11 @@ let refAllGroup = { //当前帧目标物组合
 
 let isData = false;
 
+let viewportData = null;
+
 // 初始化socket,原initSocket
-export const createHub = ()=>{
+export const createHub = (data)=>{
+  viewportData = data;
   ws = new WebSocket(`${podUrl.value}info`);
   dataSet = dataSetStore();
   ws.onopen = function() {
@@ -62,7 +65,9 @@ export const createHub = ()=>{
       console.log("5:websocket接收到消息"+evt.data)
       // 初始化数据，获取设备信息
       dataSet.info = JSON.parse(evt.data);
-      const devicesHub = getQueryString('deviceshub') ? JSON.parse(getQueryString('deviceshub')) : [];
+      const devicesHub = viewportData['device-hub']
+      dataSet.initDisplays = viewportData.displays;
+      // const devicesHub = getQueryString('deviceshub') ? JSON.parse(getQueryString('deviceshub')) : [];
       const lidarDevices = devicesHub.filter(item => item.type == 'lidar').map(it => it.id);
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));

@@ -106,7 +106,7 @@ export const setControlsEnable = (val) => {
   controls.enablePan = val; // 禁用平移 
 }
 
-export const setPointCloud = (lidarDevices) => {
+export const setPointCloud = (lidarDevices, initDisplays) => {
   function getRandomHexColor() {
     const randomColor = Math.floor(Math.random() * 16777215).toString(16); // 16777215 是 #ffffff 的十进制表示
     return `#${randomColor.padStart(6, '0')}`; // 确保颜色代码为6位
@@ -118,13 +118,14 @@ export const setPointCloud = (lidarDevices) => {
       scene.add(points)
     }
   }
-
   lidarDevices.forEach((item,index)=>{
+    const colorvalue = initDisplays[item].color || getRandomHexColor()
+    const sizevalue = initDisplays[item].size || 0.001
     renderObject[item] = {
       geometry: new THREE.BufferGeometry(),
       material:  new THREE.PointsMaterial({
-        color: getRandomHexColor(),
-        size: 0.001,
+        color: colorvalue,
+        size: sizevalue,
       })
     }
   })

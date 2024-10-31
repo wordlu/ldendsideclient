@@ -19,10 +19,31 @@ import toolBarVue from "./components/toolBar.vue";
 import threeDView from "../../components/visualization/replayThreeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
 import { createHub } from '../../components/socket/thumbnailsocket';
-import { ref , watch } from 'vue';
+import { ref , watch, onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
+import { findAll } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
+
 const dataSet = dataSetStore();
-createHub();
+const viewportData = ref<any>(null);
+const queryCurrentDrivers = async() => {
+  try {
+    await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      viewportData.value = gostore.findAll('viewports')[0]
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+onMounted(async () => {
+  await queryCurrentDrivers()
+  createHub(viewportData.value);
+})
 </script>
 
 <style lang="scss">
