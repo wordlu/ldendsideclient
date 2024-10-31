@@ -170,7 +170,20 @@ const getRemoteFormData = () => {
   }
 };
 
+const validRemoteFormData = () => {
+  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
+    return remoteComponentRef.value.validFormData();
+  } else {
+    console.error('远程组件加载错误，无法获取表单数据');
+  }
+}
+
 const onSubmit = async () => {
+  const validFormDataErrMsg = validRemoteFormData()
+  if (validFormDataErrMsg) {
+    ElMessage.error(validFormDataErrMsg)
+    return;
+  }
   getRemoteFormData()
   try {
     const {type, ...deviceparams} = form
