@@ -23,17 +23,31 @@ import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
 import { connectWebSocketArray } from "../../components/socket/socket";
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { dataSetStore } from "../../pinia/dataSet";
+import { findAll } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
 
 const dataSet = dataSetStore();
 const route = useRoute();
 const routeQuery = ref(route.query);
 const pageLoading = ref(dataSet.pageLoading);
 
-console.log("1:createHub");
-connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports);
+const viewportData = ref<any>(null);
+const queryCurrentDrivers = async() => {
+  try {
+    await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      viewportData.value = gostore.findAll('viewports')[0]
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 function print(val) {
   document.getElementById("activeCamImg").style.width =
@@ -50,6 +64,13 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+onMounted(async () => {
+  await queryCurrentDrivers()
+  console.log("1:createHub");
+  connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports, viewportData.value);
+})
+
 </script>
 
 

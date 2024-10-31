@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import DracoDecoderModule from './draco_decoder'
-
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 let camera,controls;
@@ -25,8 +25,35 @@ light2.position.set(-1000,-1000,-1000)
 scene.add(light2)
 
 //创建辅助坐标轴
-const axesHelper = new THREE.AxesHelper(10)
+const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
+
+const loader = new FontLoader();
+// 创建文字标识函数
+const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
+  loader.load('./src/components/visualization/lib/helvetiker_regular.typeface.json', function (font) {
+      const geometry = new TextGeometry(text, {
+          font: font,
+          size: 1,
+          height: 0.01,
+          curveSegments: 12,
+          bevelEnabled: false,
+      });
+
+      const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(position);
+      // 应用旋转
+      mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+      scene.add(mesh);
+  });
+};
+
+// 添加 XYZ 文字标识
+createLabel('X', new THREE.Vector3(5, 0, 0));  // X轴标识
+createLabel('Y', new THREE.Vector3(0, 5, 0));  // Y轴标识
+createLabel('Z', new THREE.Vector3(-0.3, -0.3, 5), new THREE.Vector3(Math.PI / 2, 0, 0));  // Z轴标识
+
 
 // 渲染动画
 const animate = () => {
@@ -282,28 +309,21 @@ function initpoint(renderObject) {
 }
 
 let renderObject = {}
-export const setPointCloud = (lidarDevices) => {
-
+export const setPointCloud = (lidarDevices, initDisplays) => {
   lidarDevices.forEach((item,index)=>{
+    const display = initDisplays.find(it => it.ip === item)
+    const colorvalue = display && display.color ? display.color : getRandomHexColor()
+    const sizevalue = display && display.size ? display.size : 0.001
     renderObject[item] = {
       geometry: new THREE.BufferGeometry(),
       material:  new THREE.PointsMaterial({
-        color: getRandomHexColor(),
-        size: 0.001,
+        color: colorvalue,
+        size: sizevalue,
       })
     }
   })
  
   initpoint(renderObject) //  创建点云并添加到场景中
-}
-
-export const setPointCloud2 = () => {
-  // console.log(cloudpointparams)
-         
-  // function initpoint() {
-  //   scene.add(points2)
-  // }
-  // initpoint() //  创建点云并添加到场景中
 }
 
 // 原始点云创建

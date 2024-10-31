@@ -8,7 +8,7 @@
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import {camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/initThree';
+import {camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, renderDUTBox } from './lib/initThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { allWsSend , ws } from '../socket/socket';
 import { dataSetStore } from '@/pinia/dataSet.js';
@@ -32,7 +32,7 @@ const initThree = async () =>{
   renderer.render(scene,camera); // 创建渲染器
   setControls(camera); // 创建轨道控制器
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
-  setPointCloud(dataSet.lidarDevices); //  创建点云并添加到场景中
+  setPointCloud(dataSet.lidarDevices, dataSet.initDisplays); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);

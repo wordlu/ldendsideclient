@@ -57,13 +57,14 @@ let ipList = []
 
 let allportArray = []
 const timeouts = {}; // 每个通道的超时ID
-
+let viewportData = null;
 // let ipvalue = `ws://${window.parent.location.hostname}`
 let ipvalue = `ws://loggertrash`
 let reconnectInterval = null;  
 
 
-export const connectWebSocketArray = (portarray, allports) => {
+export const connectWebSocketArray = (portarray, allports, data) => {
+  viewportData = data;
   dataSet = dataSetStore();
   const currentport = portarray ? portarray.split(',') : []
   if (currentport.length > 0) {
@@ -184,6 +185,16 @@ const disconnectFromIP = (ip) => {
 // 连接所有 IP
 const connectToAllIPs = (lists) => {
   dataSet.lidarDevices = lists.filter(it => it.type === 'lidar').map(it => it.port)
+  const displayArr = []
+  for(const item in viewportData.displays){
+    const itemDisplay = viewportData.devices.find(it => it.slot === item)
+    const itemDisplayPort = itemDisplay ? itemDisplay['display-port'] : ''
+    const ip = dataSet.lidarDevices.find(it => it.indexOf(itemDisplayPort) > -1)
+    const obj = viewportData.displays[item]
+    obj.ip = ip
+    displayArr.push(obj)
+  }
+  dataSet.initDisplays = displayArr
   lists.forEach((item,index) => {
     connectWebSocket(item.port, item.type);
   });
