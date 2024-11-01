@@ -9,7 +9,7 @@
             <div style="display: flex;flex-direction: column;">
               <div style="display: flex;align-items: center;">
                 <div style="width: 10px;height: 10px;background-color: #d0d7de; margin-right: 6px;"></div> 
-                <span style="color: black;">未连接</span>
+                <span style="color: black;">未知</span>
               </div>
               <div style="display: flex;align-items: center;">
                 <div style="width: 10px;height: 10px;background-color: #28a745; margin-right: 6px;"></div> 
@@ -248,7 +248,7 @@ const renderContent = (h, { node, data }) => {
       h('div', { 
         style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
         onClick: () => handleTreeReconnectClick(node, data)
-      }, '重连'),  // 重新连接
+      }, '重启'),  // 重新连接
     ]);
   } else {
     return h('span', node.label); // 非叶子节点只显示标签
