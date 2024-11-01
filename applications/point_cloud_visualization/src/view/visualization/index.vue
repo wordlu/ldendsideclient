@@ -8,7 +8,7 @@
     <div class="view">
       <div class="main">
         <div class="container">
-          <threeDView />
+          <threeDView  v-if="viewportData" />
         </div>
         <cameras />
         <toolBarVue />
@@ -35,19 +35,6 @@ const routeQuery = ref(route.query);
 const pageLoading = ref(dataSet.pageLoading);
 
 const viewportData = ref<any>(null);
-const queryCurrentDrivers = async() => {
-  try {
-    await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      viewportData.value = gostore.findAll('viewports')[0]
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.error(error)
-  }
-}
 
 function print(val) {
   document.getElementById("activeCamImg").style.width =
@@ -66,8 +53,10 @@ watch(
 );
 
 onMounted(async () => {
-  await queryCurrentDrivers()
-  console.log("1:createHub");
+  const usingViewport = await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true})
+  gostore.reset()
+  gostore.sync(usingViewport.data)
+  viewportData.value = gostore.findAll('viewports')[0]
   connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports, viewportData.value);
 })
 

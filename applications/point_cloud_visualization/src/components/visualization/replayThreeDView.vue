@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import {camera, scene, renderer, setCamera, setControls, setControlsEnable, setPointCloud } from './lib/replayInitThree';
+import {camera, scene, renderer, setCamera, setControls, setPointCloud } from './lib/replayInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import { allWsSend , ws } from '../socket/thumbnailsocket';
 import { dataSetStore } from '@/pinia/dataSet.js';

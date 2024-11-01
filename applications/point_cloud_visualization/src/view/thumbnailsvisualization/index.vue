@@ -3,7 +3,7 @@
     <div class="view">
       <div class="main">
         <div class="container">
-          <threeDView />
+          <threeDView v-if="viewportData" />
         </div>
         <cameras />
         <toolBarVue />
@@ -26,22 +26,12 @@ import gostore from '@/services/governance-store'
 
 const dataSet = dataSetStore();
 const viewportData = ref<any>(null);
-const queryCurrentDrivers = async() => {
-  try {
-    await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      viewportData.value = gostore.findAll('viewports')[0]
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.error(error)
-  }
-}
 
 onMounted(async () => {
-  await queryCurrentDrivers()
+  const usingViewport = await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true})
+  gostore.reset()
+  gostore.sync(usingViewport.data)
+  viewportData.value = gostore.findAll('viewports')[0]
   createHub(viewportData.value);
 })
 </script>
