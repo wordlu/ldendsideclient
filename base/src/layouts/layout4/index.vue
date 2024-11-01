@@ -37,18 +37,18 @@
 </template>
 
 <script>
-import LangSelect from '@/components/LangSelect'
+// import LangSelect from '@/components/LangSelect'
 import { mapGetters } from 'vuex'
 import Cookies from 'js-cookie'
 import Breadcrumb from '@/components/Breadcrumb'
-import Dropdown from '@/components/Dropdown/Dropdown.vue'
+// import Dropdown from '@/components/Dropdown/Dropdown.vue'
 import navMenu from './menu/navMenu.vue'
 import drawerMenu from './menu/drawerMenu.vue'
 import { debounce } from '@/utils'
 import actions from '@/micros/actions'
 export default {
   components:{
-    Breadcrumb , Dropdown , navMenu, drawerMenu,LangSelect
+    Breadcrumb, navMenu, drawerMenu
   },
   computed: {
     ...mapGetters([

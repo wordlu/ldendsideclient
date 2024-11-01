@@ -32,11 +32,11 @@
 <script>
 import Cookies from 'js-cookie'
 import Breadcrumb from '@/components/Breadcrumb'
-import Dropdown from '@/components/Dropdown/Dropdown.vue'
+// import Dropdown from '@/components/Dropdown/Dropdown.vue'
 import navMenu from './navMenu/navMenu.vue'
 export default {
   components:{
-    Breadcrumb , Dropdown , navMenu
+    Breadcrumb, navMenu
   },
   data(){
     return{
