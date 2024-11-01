@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
 const activeCamInfo = ref(dataSet.activeCamInfo);
@@ -12,6 +12,10 @@ const cutActiveCam = (value)=>{
 const imgOnError = (e) => {
   showPic.value = false
 }
+
+watch(()=>dataSet.activeCamInfo,(newVal)=>{
+  showPic.value = true
+},{deep:true})
 
 </script>
 
