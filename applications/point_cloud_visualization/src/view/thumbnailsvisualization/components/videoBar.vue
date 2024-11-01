@@ -17,9 +17,18 @@
     <div class="progress-area">
       <div style="font-size: 12px;position: absolute;right: 10px; bottom: 45px;">{{ activeFrame }} / {{ currentTimeString }} / {{ time_value }}</div>
       <div class="Progress-thumbnails">
+        <div
+          class="tooltip"
+          v-if="tooltipVisible"
+          :style="{ left: (offsetX-10) + 'px', bottom: '32px', fontSize: '12px' }"
+        >
+          {{ tooltipContent }}
+        </div>
         <div class="Progress_back"
           @mousedown="setProgressPosDown"
-          @mousemove="progressMove">
+          @mousemove="progressMove"
+          @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave">
           <div class="Progress_line"></div>
         </div>
       </div>
@@ -56,6 +65,9 @@ const moveFrame = ref()
 const isStart = ref(false)
 
 const loading = ref(dataSet.loading)
+
+const tooltipVisible = ref(false);
+const tooltipContent = ref('');
 
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
@@ -105,16 +117,25 @@ const currentTimeString = computed(() => {
   const seconds = durationInSeconds % 60;  // 计算秒数
   // 判断是否超过 1 小时
   if (hours > 0) {
-    // 超过1小时，显示为 "HH:mm:ss"
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   } else {
-    // 不超过1小时，显示为 "mm:ss"
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
-  // const seconds = Math.floor(currentTime.value / 1000);
-  // const milliseconds = currentTime.value % 1000;
-  // return `${seconds}.${String(milliseconds).padStart(3, '0')}s`;
 });
+
+const getTooltipContent = (moveFrame) => {
+  const durationMs = moveFrame * frame_duration.value;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+}
 
 watch(info,(newVal)=>{
   // 处理帧数
@@ -142,9 +163,19 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
   }
 })
 
+const handleMouseLeave = () => {
+  tooltipVisible.value = false; // 鼠标离开时隐藏tooltip
+};
+
+const handleMouseEnter = () => {
+  tooltipVisible.value = false; // 鼠标进入时隐藏tooltip，确保显示正确
+};
+
 const progressMove = (e)=>{
   offsetX.value = e.offsetX;
   moveFrame.value = parseInt(e.offsetX / step.value);
+  tooltipVisible.value = true;
+  tooltipContent.value = getTooltipContent(moveFrame.value);
 }
 
 const setProgressPosDown = ()=>{
@@ -213,6 +244,15 @@ const next=()=>{
   flex-direction: column;
   align-items: center;
   width: 100%;
+
+  .tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    transition: opacity 0.2s;
+  }
 
   .marginLeft3{
     margin-left: 3px;
