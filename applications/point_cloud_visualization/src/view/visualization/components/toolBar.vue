@@ -24,7 +24,7 @@ const setCamera = (camera: any) => {
     <div class="view-btns">
       <div>摄像头：</div>
       <div class="camreas" v-for="camera in cameraDevices" :key="camera.slot">
-        <div style="margin: 0 10px;cursor: pointer;" @click="setCamera(camera)">{{ camera.slot }}</div>
+        <el-button style="margin-right: 6px;" size="small" @click="setCamera(camera)">{{ camera.slot }}</el-button>
       </div>
     </div>
     <div class="view-btns">

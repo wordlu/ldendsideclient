@@ -4,19 +4,25 @@ import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
 const activeCamInfo = ref(dataSet.activeCamInfo);
 const showPic = ref(true);
-
+const loading = ref(true);
 const imgOnError = (e) => {
   showPic.value = false
 }
 
+watch(()=>dataSet.currentCamera,(newVal)=>{
+  loading.value = true
+  showPic.value = true
+},{deep:true})
+
 watch(()=>dataSet.activeCamInfo,(newVal)=>{
+  loading.value = false
   showPic.value = true
 },{deep:true})
 
 </script>
 
 <template>
-  <div id="cameras">
+  <div id="cameras" v-loading="loading" element-loading-background="rgba(122, 122, 122, 0.8)">
     <div class="cameras-item" v-for="(key,value) in activeCamInfo" :key="value">
       <img :src="key" alt="暂无图片" :onerror="imgOnError" style="width: 100%;" v-show="showPic">
     </div>
@@ -27,7 +33,7 @@ watch(()=>dataSet.activeCamInfo,(newVal)=>{
 <style lang="scss">
 #cameras{
   width: 300px;
-  // height: 250px;
+  min-height: 150px;
   // background: #191919;
   background: #000;
   position: absolute;
