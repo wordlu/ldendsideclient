@@ -30,6 +30,7 @@
         <el-form-item label="时间">
           <el-config-provider :locale="locale">
             <el-date-picker
+              :editable="false"
               :clearable="false"
               v-model="dateRange"
               type="datetimerange"
