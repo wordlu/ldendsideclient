@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -438,7 +438,7 @@ const drawSensors = (ctx) => {
   sensorCanvas.value.height = imageHeight
 
   sensorData.value.forEach((sensor) => {
-    let color = '#999'
+    let color = '#bbb'
     // @wodelu:TODO 计算适应缩放后的坐标
     const scaleX = imageWidth / imageWidth
     const scaleY = imageHeight / imageHeight
@@ -622,7 +622,8 @@ const loadRemoteComponent = async () => {
 
     .tree-content {
       width: 300px; 
-      height: 260px; 
+      // height: 260px; 
+      height: auto;
       overflow: auto;
     }
   }

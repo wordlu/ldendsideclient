@@ -31,10 +31,11 @@ scene.add(axesHelper)
 const loader = new FontLoader();
 // 创建文字标识函数
 const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
-  loader.load('./src/components/visualization/lib/helvetiker_regular.typeface.json', function (font) {
+  // ./src/components/visualization/lib/helvetiker_regular.typeface.json
+  loader.load('http://loggertrash/pointcloud/helvetiker_regular.typeface.json', function (font) {
       const geometry = new TextGeometry(text, {
           font: font,
-          size: 1,
+          size: 0.5,
           height: 0.01,
           curveSegments: 12,
           bevelEnabled: false,

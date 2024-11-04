@@ -123,10 +123,12 @@ export const connectWebSocket = (ip, type) => {
       if (type == 'lidar') {
         DracoPoint(result, ip)
       } else if (type == 'camera') {
-        let url = arrayBufferToBase64(result)
-        dataSet.activeCamInfo[type] = url
-        if(url){
-          dataSet.activeCam.value = url
+        if (dataSet.currentCamera.port == ip) {
+          let url = arrayBufferToBase64(result)
+          if(url){
+            dataSet.activeCamInfo[type] = url
+            // dataSet.activeCam.value = url
+          }
         }
       }
     });
@@ -185,6 +187,17 @@ const disconnectFromIP = (ip) => {
 // 连接所有 IP
 const connectToAllIPs = (lists) => {
   dataSet.lidarDevices = lists.filter(it => it.type === 'lidar').map(it => it.port)
+  const cameras = lists.filter(it => it.type === 'camera')
+  dataSet.cameraDevices = cameras.map(it => {
+    const device = viewportData.devices.find(item => it.port.indexOf(item['display-port']) > -1)
+    return {
+      port: it.port,
+      slot: device.slot
+    }
+  })
+  dataSet.currentCamera = dataSet.cameraDevices[0]
+  console.log("camera设备："+dataSet.cameraDevices)
+  console.log("lidar设备："+dataSet.lidarDevices)
   const displayArr = []
   for(const item in viewportData.displays){
     const itemDisplay = viewportData.devices.find(it => it.slot === item)
@@ -206,131 +219,6 @@ const disconnectFromAllIPs = (lists) => {
     disconnectFromIP(ip);
   });
 };
-
-// //获取视觉数据并渲染
-export const allWsSend = (frame,play)=>{
-  try{
-    let options = {
-      frame_index:frame,
-      pcd: dataSet.info.meta_json.pcd,
-      cam: dataSet.info.meta_json.cam,
-      data_files_prefix: dataSet.info.data_files_prefix,
-      od: dataSet.info.meta_json.od,
-      kpi: getQueryString('kpi'),
-      client_name: getQueryString('client_name')
-    }
-
-    if(getQueryString('endtime')){
-      options.end_ts = parseTimestamp(getQueryString('endtime'));
-    }
-
-    if(getQueryString('starttime')){
-      options.start_ts = parseTimestamp(getQueryString('starttime'));
-    }
-
-    allWs.send(JSON.stringify(options));
-    console.log("8:all websocket发送消息"+JSON.stringify(options))
-
-    allWs.onmessage = async function(evt) {
-      console.log("9:all websocket接收消息"+evt.data)
-      // console.log("env.data",evt.data)
-      // 根据后端返回数据格式区分 数据类型
-      if(typeof evt.data == 'string'){
-        console.log("10:all websocket接收到string格式数据")
-        splitInfo = JSON.parse(evt.data);
-        /**
-         * od 真值数据
-         * kpi 包含ref&dut ref是待测数据 dut是真值数据
-         */
-        dataSet.odInfo = splitInfo.od?splitInfo.od:[];
-        dataSet.kpiInfo = splitInfo.kpi?splitInfo.kpi:[];
-      }else{
-        console.log("10:all websocket接收到ArrayBuffer格式数据")
-        // 点云数据
-        reader.readAs('ArrayBuffer',evt.data,function(result){
-          for(let key in splitInfo){
-            // activeCamInfo 当前帧的摄像头数据
-            if(dataSet.activeCamInfo.hasOwnProperty(key)){
-              // 摄像头数据生成 base64的url
-              let url = arrayBufferToBase64(result.slice(splitInfo[key][0],splitInfo[key][1]))
-              dataSet.activeCamInfo[key] = url
-              if(dataSet.activeCam.cam == key){
-                dataSet.activeCam.value = url
-              }
-            }
-            if(dataSet.activePcdInfo.meta_key == key){
-              DracoPoint(result)
-            }
-          }
-        });
-
-        // 生成车辆的框
-        odAllGroup = renderODBox(dataSet.odInfo,odAllGroup,dataSet.activefame-1);
-        if(odAllGroup.list.length > 0){
-          for(let i=0;i<odAllGroup.list.length;i++){
-            if(i == dataSet.activefame-1){
-              odAllGroup.list[i].forEach((item,index)=>{
-                odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(odAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              odAllGroup.list[i].forEach((item,index)=>{
-                group.remove(odAllGroup[`allGroup_${i}_${index}`]);
-                delete odAllGroup[`allGroup_${i}_${index}`];
-              })
-            }
-          }
-        }
-
-        refAllGroup = renderObjBox(dataSet.kpiInfo,refAllGroup);
-        if(refAllGroup.list.length > 0){
-          for(let i=0;i<refAllGroup.list.length;i++){
-            if(i == dataSet.activefame-1){
-              refAllGroup.list[i].forEach((item,index)=>{
-                refAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                refAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                refAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(refAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              refAllGroup.list[i].forEach((item,index)=>{
-                group.remove(refAllGroup[`allGroup_${i}_${index}`]);
-                delete refAllGroup[`allGroup_${i}_${index}`];
-              })
-            }
-          }
-        }
-        
-        dutAllGroup = renderDUTBox(dataSet.kpiInfo,dutAllGroup);
-        if(dutAllGroup.list.length > 0){
-          for(let i=0;i<dutAllGroup.list.length;i++){
-            if(i == dataSet.activefame-1){
-              dutAllGroup.list[i].forEach((item,index)=>{
-                dutAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-                dutAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-                dutAllGroup[`allGroup_${i}_${index}`].add(item.line);
-                group.add(dutAllGroup[`allGroup_${i}_${index}`]);
-              })
-            }else{
-              dutAllGroup.list[i].forEach((item,index)=>{
-                group.remove(dutAllGroup[`allGroup_${i}_${index}`]);
-                delete dutAllGroup[`allGroup_${i}_${index}`];
-              })
-            }
-          }
-        }
-
-        if(play){
-          dataSet.activefame++
-        }
-      }
-    };
-  }catch(err){
-    console.error('Init camWsSend error:'+err);
-  }
-}
 
 
 // 数据解析

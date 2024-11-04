@@ -217,7 +217,7 @@ const defaultProps = {
   label: 'label',
 }
 
-const renderContentUrl = `/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
+const renderContentUrl = `http://loggertrash/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
@@ -227,7 +227,7 @@ const renderContent = (h, { node, data }) => {
       },
       [
       h('div', {
-        style: 'margin-right: 20px;min-width:60px;',
+        style: 'margin-right: 16px;min-width:90px;text-align:left;',
       },node.label), // 节点标签
       h('iframe', {
       src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=1`,
@@ -251,7 +251,7 @@ const renderContent = (h, { node, data }) => {
       }, '重启'),  // 重新连接
     ]);
   } else {
-    return h('span', node.label); // 非叶子节点只显示标签
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
   }
 };
 
@@ -463,7 +463,7 @@ watch(() => props.startCollect, (newVal) => {
     }
 
     .status-title {
-      margin-left: 58px;
+      margin-left: 83px;
 
       .status-title-item {
         font-size: 12px;
