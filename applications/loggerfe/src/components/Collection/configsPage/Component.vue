@@ -41,6 +41,7 @@
               :highlight-current="false"
               @node-click="handleNodeClick"
               :props="defaultProps"
+              :render-content="renderContent"
             >
               <template #default="{ node, data }">
                 <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
@@ -83,6 +84,35 @@
         </div>
       </el-col>
     </el-row>
+
+    <el-dialog
+      v-model="dialogVisible"
+      title="导入标定文件"
+      width="500"
+      :before-close="handleClose"
+    >
+      <el-upload
+        ref="uploadRef"
+        class="upload-demo"
+        :auto-upload="false"
+        :action="uploadUrl"
+        :limit="1"
+        method="PATCH"
+        accept=".json"
+        :on-success="uploadSuccess"
+        :on-error="errorMessage"
+      >
+        <template #trigger>
+          <el-button type="primary">选择标定文件</el-button>
+        </template>
+      </el-upload>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitUpload">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
   
 </template>
@@ -121,10 +151,89 @@ const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
 const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const search = ref('')
+const dialogVisible = ref(false)
+const uploadUrl = ref('')
+
+const uploadRef = ref<UploadInstance>()
+
+const submitUpload = () => {
+  uploadRef.value!.submit()
+}
+
+const handleClose = () => {
+  dialogVisible.value = false
+}
+
+const handleConfirm = () => {
+  dialogVisible.value = false
+}
+
+const errorMessage = (response) => {
+  ElMessage.error('上传文件失败!')
+};
+const uploadSuccess = (response, file, fileList) => {
+  ElMessage.success('上传成功')
+  uploadRef.value!.clearFiles()
+  dialogVisible.value = false
+};
 
 watch(()=>selectedNode.value, (newVal) => {
   createSensorCanvas(treedata.value)
 })
+
+// 自定义树节点的渲染内容
+const renderContent = (h, { node, data }) => {
+  if (!data.children && data.devicedata) {
+    return h('div',{
+        style: 'display:flex;align-items:center;',
+      },
+      [
+      h('div', {
+        style: 'margin-right: 16px;min-width:90px;text-align:left;',
+      },node.label), // 节点标签
+      h('div', { 
+        style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
+        onClick: () => handleTreeUploadClick(node, data)
+      }, '导入标定文件'),  // 重新连接
+    ]);
+  } else {
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
+  }
+};
+
+const handleTreeUploadClick = (node: Node, data: Tree) => {
+  dialogVisible.value = true
+}
+
+// 文件上传函数
+const handleFileUpload = (event, nodeData) => {
+  const file = event.target.files[0];
+  if (file) {
+    console.log('正在上传文件到节点:', nodeData.label);
+    console.log('文件信息:', file);
+
+    // 可以在这里处理上传逻辑，例如通过 API 上传文件
+    // 示例：将 file 发送到服务器
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // 假设有上传接口 /upload
+    fetch('/upload', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log('文件上传成功');
+        } else {
+          console.log('文件上传失败');
+        }
+      })
+      .catch((error) => {
+        console.error('上传出错:', error);
+      });
+  }
+};
 
 const onDelete = () => {
   const params = {
@@ -238,7 +347,7 @@ const handleNodeClick = (nodeData: Tree, node: any) => {
   }
 }
 const isLeaf = (nodeData, node) => {
-  if (!selectedNode.value && !node.data.children) {
+  if (!selectedNode.value && (node && node.data && !node.data.children)) {
     selectedNode.value = node; 
     getSensoronfigs(nodeData)
   }
@@ -279,6 +388,7 @@ const getSensoronfigs = (nodedata) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
+        uploadUrl.value = `http://loggertrash/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
         currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
         setFormData(datavalue[0])
@@ -323,7 +433,7 @@ const currentViewport = ref(null)
 const viewport_bg = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true, include: 'devices',}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -335,8 +445,16 @@ const queryCurrentDrivers = () => {
         width: '559px',
       }
       name.value = datavalue[0].name
-      sensorData.value = datavalue[0]['device-hub']
-      treedata.value = totree(datavalue[0]['device-hub'])
+      const devicehub = datavalue[0]['device-hub']
+      sensorData.value = devicehub
+      const device = datavalue[0]['devices']
+      const devicehubdata = devicehub.map((item: any) => {
+        return {
+          ...item,
+          devicedata: device.find((it: any) => it.slot === item.id),
+        }
+      })
+      treedata.value = totree(devicehubdata)
       setTimeout(() => {
         createSensorCanvas(treedata.value)
       }, 100)
@@ -348,10 +466,10 @@ const queryCurrentDrivers = () => {
   }
 }
 
-const totree = () => {
+const totree = (data) => {
   const tree = [];
   // 通过类型(type)分组
-  sensorData.value.forEach(sensor => {
+  data.forEach(sensor => {
     // 查找当前type是否已经存在于树结构中
     let parent = tree.find(node => node.label === sensor.type);
     
@@ -369,10 +487,10 @@ const totree = () => {
     parent.children.push({
       id: sensor.type+'_'+sensor.id,  // 子节点id
       label: sensor.id,   
+      devicedata: sensor.devicedata,
       type: sensor.type    // 用坐标作为label
     });
   });
-  console.log(tree, 'tree')
   return tree;
 }
 
@@ -474,7 +592,6 @@ const drawSensors = (ctx) => {
 
     ctx.fillText(sensor.id, textX, textY);
      
-    
   });
 };
 
