@@ -338,7 +338,8 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   padding-right: 20px;
-  height: 200px;
+  // height: 200px;
+  height: auto;
   overflow: auto;
 }
 

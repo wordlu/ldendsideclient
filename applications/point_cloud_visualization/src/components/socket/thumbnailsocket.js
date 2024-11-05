@@ -72,6 +72,7 @@ export const createHub = (data)=>{
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
       dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
+      dataSet.currentCamera = dataSet.cameraDevices[0] ? dataSet.cameraDevices[0] : {};
       currentSelectedSensor = getQueryString('currentSelectedSensor') ? JSON.parse(getQueryString('currentSelectedSensor')) : [];
       initAllSocket()
       dataSet.loading = false
@@ -89,14 +90,6 @@ export const createHub = (data)=>{
   };
 }
 
-// 初始化点云文件通道
-// export const initPcdSocket = ()=>{
-//   pcdWs = new WebSocket(`${podUrl.value}pcd`);
-
-//   pcdWs.onclose = function() {
-//     console.log("连接已关闭...");
-//   };
-// }
 // 获取pcd压缩数据并渲染
 export const pcdWsSend = (frame)=>{
   try{
@@ -168,6 +161,33 @@ let totalFrames = 0; // 已请求最大帧数
 let isRequesting = false; // 是否正在请求数据
 let playInterval;
 
+
+export const changeCamera = (camera) => {
+  const frameData = bufferedFrames.find(it => it.splitInfo.frame_index === dataSet.activefame);
+  const ArrayBufferData = frameData.ArrayBufferData;
+  const splitInfo = frameData.splitInfo;
+  reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
+    // 渲染摄像头数据
+    dataSet.cameraDevices.forEach((key,index)=>{
+      const res = result.slice(splitInfo[key][0],splitInfo[key][1])
+      if (camera == key) {
+        let url = arrayBufferToBase64(res)
+        if (currentSelectedSensor.includes(key)) {
+          if(url){
+            dataSet.activeCamInfo[key] = url
+            // dataSet.activeCam.value = url
+          }
+        } else {
+          if(url){
+            // dataSet.activeCam.value = ''
+            dataSet.activeCamInfo[key] = ''
+          }
+        }
+      }
+    })
+  })
+}
+
 export const startPlaying = () => {
   if (totalFrames >= dataSet.info.frame_count) totalFrames = 0;
   // 100 毫秒每帧，即每秒 10 帧
@@ -175,7 +195,7 @@ export const startPlaying = () => {
     if (bufferedFrames.length > 0) {
       let frameData = bufferedFrames.length > 1 ? bufferedFrames.shift() : bufferedFrames[0];
       renderFrame(frameData); // 渲染当前帧
-      console.log('当前帧数111：'+frameData.splitInfo.frame_index)
+      // console.log('当前帧数111：'+frameData.splitInfo.frame_index)
       // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
       if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-2)) {
         allWsSend(totalFrames, 1)
@@ -216,19 +236,20 @@ function renderFrame(frameData) {
     // 渲染摄像头数据
     dataSet.cameraDevices.forEach((key,index)=>{
       const res = result.slice(splitInfo[key][0],splitInfo[key][1])
-      let url = arrayBufferToBase64(res)
-      if (currentSelectedSensor.includes(key)) {
-        dataSet.activeCamInfo[key] = url
-        if(url){
-          dataSet.activeCam.value = url
-        }
-      } else {
-        dataSet.activeCamInfo[key] = ''
-        if(url){
-          dataSet.activeCam.value = ''
+      if (dataSet.currentCamera == key) {
+        let url = arrayBufferToBase64(res)
+        if (currentSelectedSensor.includes(key)) {
+          if(url){
+            dataSet.activeCamInfo[key] = url
+            // dataSet.activeCam.value = url
+          }
+        } else {
+          if(url){
+            // dataSet.activeCam.value = ''
+            dataSet.activeCamInfo[key] = ''
+          }
         }
       }
-      
     })
   });
 }

@@ -21,7 +21,7 @@ const setCamera = (camera: any) => {
 
 <template>
   <div id="toolBar">
-    <div class="view-btns">
+    <div class="view-btns" v-show="cameraDevices.length>0">
       <div>摄像头：</div>
       <div class="camreas" v-for="camera in cameraDevices" :key="camera.slot">
         <el-button style="margin-right: 6px;" size="small" @click="setCamera(camera)">{{ camera.slot }}</el-button>
