@@ -101,6 +101,7 @@
         accept=".json"
         :on-success="uploadSuccess"
         :on-error="errorMessage"
+        :on-exceed="handleExceed"
       >
         <template #trigger>
           <el-button type="primary">选择标定文件</el-button>
@@ -108,7 +109,7 @@
       </el-upload>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="handleClose">取消</el-button>
           <el-button type="primary" @click="submitUpload">确认</el-button>
         </div>
       </template>
@@ -122,11 +123,11 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { ref, onMounted, watchEffect, reactive, nextTick, markRaw, watch } from 'vue'
 import { Search } from "@element-plus/icons-vue"
-import { ElTree, ElMessage } from 'element-plus'
+import { ElTree, ElMessage, genFileId } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll, addItem, patchItem, deleteItem } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
-import type { TabsPaneContext } from 'element-plus'
+import type { UploadInstance, UploadProps, UploadRawFile, TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import Vue from 'vue/dist/vue.esm-bundler.js';
 
@@ -153,7 +154,6 @@ const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const search = ref('')
 const dialogVisible = ref(false)
 const uploadUrl = ref('')
-
 const uploadRef = ref<UploadInstance>()
 
 const submitUpload = () => {
@@ -161,21 +161,26 @@ const submitUpload = () => {
 }
 
 const handleClose = () => {
-  dialogVisible.value = false
-}
-
-const handleConfirm = () => {
+  uploadRef.value!.clearFiles()
   dialogVisible.value = false
 }
 
 const errorMessage = (response) => {
-  ElMessage.error('上传文件失败!')
+  ElMessage.error('上传文件失败'+ (response.message ? `:${response.message}!` : '!'))
 };
+
 const uploadSuccess = (response, file, fileList) => {
   ElMessage.success('上传成功')
   uploadRef.value!.clearFiles()
   dialogVisible.value = false
 };
+
+const handleExceed: UploadProps['onExceed'] = (files) => {
+  uploadRef.value!.clearFiles()
+  const file = files[0] as UploadRawFile
+  file.uid = genFileId()
+  uploadRef.value!.handleStart(file)
+}
 
 watch(()=>selectedNode.value, (newVal) => {
   createSensorCanvas(treedata.value)
