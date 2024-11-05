@@ -197,11 +197,14 @@ export const startPlaying = () => {
       renderFrame(frameData); // 渲染当前帧
       // console.log('当前帧数111：'+frameData.splitInfo.frame_index)
       // 如果缓冲帧数少于5帧，并且当前缓存最后一帧的帧数大于已请求最大帧数，则请求下一批数据
-      if (bufferedFrames.length <= 5 && bufferedFrames[bufferedFrames.length - 1].splitInfo.frame_index >= (totalFrames-2)) {
+      if (bufferedFrames.length <= 5 && (bufferedFrames[bufferedFrames.length - 1]?.splitInfo?.frame_index >= (totalFrames-2) || !frameData)) {
         allWsSend(totalFrames, 1)
       }
     } else {
       console.log('等待新数据...');
+      if (dataSet.activefame + 1 == dataSet.info.frame_count) {
+        dataSet.activefame = dataSet.info.frame_count
+      }
     }
   }, 100);
 }
@@ -209,7 +212,7 @@ export const startPlaying = () => {
 // 结束播放
 export const stopPlaying = () => {
   bufferedFrames = [bufferedFrames[bufferedFrames.length - 1]];
-  totalFrames = bufferedFrames[0].splitInfo.frame_index;
+  totalFrames = bufferedFrames[0]?.splitInfo?.frame_index || dataSet.info.frame_count;
   if (playInterval) {
     clearInterval(playInterval);
   }
@@ -217,9 +220,10 @@ export const stopPlaying = () => {
 
 // 渲染当前帧
 function renderFrame(frameData) {
+  if (!frameData) return;
   const splitInfo = frameData.splitInfo;
-  const ArrayBufferData = frameData.ArrayBufferData;
   dataSet.activefame = splitInfo.frame_index
+  const ArrayBufferData = frameData.ArrayBufferData;
   // console.log('当前帧数：'+dataSet.activefame)
   reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
     // 渲染点云数据
@@ -277,13 +281,17 @@ export const allWsSend = (frame, play, request_count_val)=>{
     }
     // console.log("8:all websocket发送消息")
     allWs.onmessage = async function(evt) {
-      if (!play && !request_count_val) {
-        return;
-      }
+      let savearr = true;      
       // 根据后端返回数据格式区分 数据类型
       if(typeof evt.data == 'string'){
         // console.log("10:string数据"+evt.data)
         splitInfo = JSON.parse(evt.data);
+        // 暂停中并且收到的帧数大于当前帧数，则过滤
+        if (!play && splitInfo.frame_index !== dataSet.activefame) {
+          savearr = false;
+          console.log("过滤")
+          return;
+        }
         if (splitInfo.frame_index > dataSet.info.frame_count) {
           return;
         }
@@ -292,12 +300,12 @@ export const allWsSend = (frame, play, request_count_val)=>{
           ArrayBufferData: null
         })
       }else{
+        if (!savearr) return;
         if (splitInfo.frame_index > dataSet.info.frame_count) {
           return;
         }
         // 将接收到的ArrayBuffer数据存储到缓冲区中
         bufferedFrames[bufferedFrames.length - 1].ArrayBufferData = evt.data;
-        // console.log("10:ArrayBuffer数据")
       }
 
       // 不是播放中直接渲染当前帧数据

@@ -45,7 +45,7 @@ onMounted(async () => {
     height: 100%;
     display: flex;
     #toolBar{
-      height: 100%;
+      height: 80%;
     }
     .main{
       flex: 1;
