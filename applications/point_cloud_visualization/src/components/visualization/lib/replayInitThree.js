@@ -116,6 +116,7 @@ export const setPointCloud = (lidarDevices, initDisplays) => {
   function initpoint(obj) {
     for (let key in obj) {
       let points = new THREE.Points(obj[key].geometry, obj[key].material)//将上述对象配置到点模型对象上
+      points.frustumCulled = false;
       scene.add(points)
     }
   }

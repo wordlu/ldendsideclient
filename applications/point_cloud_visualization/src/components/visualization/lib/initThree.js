@@ -305,6 +305,7 @@ function getRandomHexColor() {
 function initpoint(renderObject) {
   for (let key in renderObject) {
     let points = new THREE.Points(renderObject[key].geometry, renderObject[key].material)//将上述对象配置到点模型对象上
+    points.frustumCulled = false;
     scene.add(points)
   }
 }
