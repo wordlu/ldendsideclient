@@ -217,7 +217,7 @@ const defaultProps = {
   label: 'label',
 }
 
-const renderContentUrl = `http://loggertrash/monitor/d-solo/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
+const renderContentUrl = `http://loggertrash/monitor/d/c23d6b86-b6db-4188-860d-f48c9c79894c/device-state?orgId=1&refresh=1s&kiosk&theme=light`
 const renderContentStyle = 'width: 20px; height: 20px; background-color: #fff; margin-left:10px;border: 2px solid #fff;'
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
@@ -230,20 +230,9 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 16px;min-width:90px;text-align:left;',
       },node.label), // 节点标签
       h('iframe', {
-      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=1`,
-      style: renderContentStyle,
-      }),
-      h('iframe', {
-      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=2`,
-      style: renderContentStyle,
-      }),
-      h('iframe', {
-      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=3`,
-      style: renderContentStyle,
-      }),
-      h('iframe', {
-      src: `${renderContentUrl}&var-device=${data.devicedata.key}&panelId=4`,
-      style: renderContentStyle,
+        // src: `http://loggertrash/monitor/d/c23d6b86-b6db-4188-860d-f48c9c798/device-state1?orgId=1&refresh=5s&theme=light&kiosk`,
+        src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
+        style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
       }),
       h('div', { 
         style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
@@ -384,6 +373,10 @@ watch(() => props.startCollect, (newVal) => {
 
 </script>
 <style lang="scss">
+
+.el-tree-node__content {
+  height: 32px;
+}
 .panel-header {
   display: none !important;
 }
@@ -463,7 +456,7 @@ watch(() => props.startCollect, (newVal) => {
     }
 
     .status-title {
-      margin-left: 83px;
+      margin-left: 73px;
 
       .status-title-item {
         font-size: 12px;
