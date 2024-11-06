@@ -230,7 +230,6 @@ const renderContent = (h, { node, data }) => {
         style: 'margin-right: 16px;min-width:90px;text-align:left;',
       },node.label), // 节点标签
       h('iframe', {
-        // src: `http://loggertrash/monitor/d/c23d6b86-b6db-4188-860d-f48c9c798/device-state1?orgId=1&refresh=5s&theme=light&kiosk`,
         src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
         style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
       }),
@@ -244,10 +243,6 @@ const renderContent = (h, { node, data }) => {
           }, { default: () => h(Refresh) })
         ]
       ),
-      // h('div', { 
-      //   style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
-      //   onClick: () => handleTreeReconnectClick(node, data)
-      // }, '重启'),  // 重新连接
     ]);
   } else {
     return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签

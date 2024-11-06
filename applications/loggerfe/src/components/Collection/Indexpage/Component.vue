@@ -74,7 +74,7 @@ const changeProps = (obj) => {
 
 const loadingtext = ref('')
 // const pageLoading = ref(false)
-const switchLoading = ref(false)
+const switchLoading = ref(true)
 const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
 const startCollect = ref(false)
@@ -261,9 +261,9 @@ const getCurrentPorts = () => {
 //获取设备树
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true}).then(async (res: any) => {
       viewportId.value = res.data.data[0].id
-      getCurrentStatus(viewportId.value)
+      await getCurrentStatus(viewportId.value)
     }).catch((err: any) => {
       console.log(err, 'err')
     })
@@ -278,7 +278,7 @@ const getCurrentStatus = (viewportId: string) => {
     findItem('/viewport_status', viewportId).then((res: any) => {
       testDevice.value = res.data.isluanching || false
       startCollect.value = res.data.isrecording || false
-
+      switchLoading.value = false
       if(testDevice.value && !startCollect.value) {
         // 设备调试初始化中但未采集，自动勾选全部设备
         if (sensorConfigsRef.value) {
