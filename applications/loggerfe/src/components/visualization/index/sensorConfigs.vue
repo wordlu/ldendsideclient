@@ -107,7 +107,7 @@
 import { ref, onMounted, watch, reactive, defineEmits, defineProps } from 'vue'
 import DataSource from './DataSource.vue'
 import { useI18n } from 'vue-i18n'
-import { ElTree, ElMessage, ElMessageBox } from 'element-plus'
+import { ElTree, ElMessage, ElMessageBox, ElIcon } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll, findItem, addItem } from '@/api/jsonApi'
 import { getRemoteFile } from '@/api/api'
@@ -115,7 +115,7 @@ import gostore from '@/services/governance-store'
 import type { TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
 import Vue from 'vue/dist/vue.esm-bundler.js';
-import { Search, InfoFilled } from "@element-plus/icons-vue"
+import { Search, InfoFilled, Refresh } from "@element-plus/icons-vue"
 const { t } = useI18n()
 
 interface Tree {
@@ -234,10 +234,20 @@ const renderContent = (h, { node, data }) => {
         src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
         style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
       }),
-      h('div', { 
-        style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
-        onClick: () => handleTreeReconnectClick(node, data)
-      }, '重启'),  // 重新连接
+      h(
+        'span',
+        { title: '重启设备' },
+        [
+          h(ElIcon, {
+            style: 'margin-left: 18px;color:#ff7900;font-size:16px;cursor:pointer;',
+            onClick: () => handleTreeReconnectClick(node, data)
+          }, { default: () => h(Refresh) })
+        ]
+      ),
+      // h('div', { 
+      //   style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
+      //   onClick: () => handleTreeReconnectClick(node, data)
+      // }, '重启'),  // 重新连接
     ]);
   } else {
     return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
@@ -456,7 +466,7 @@ watch(() => props.startCollect, (newVal) => {
     }
 
     .status-title {
-      margin-left: 73px;
+      margin-left: 75px;
 
       .status-title-item {
         font-size: 12px;
