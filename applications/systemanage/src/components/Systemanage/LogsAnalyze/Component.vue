@@ -159,7 +159,7 @@ queryCurrentDrivers()
 
 .system-monitor {
   width: 100%;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 210px);
 }
 
 </style>
