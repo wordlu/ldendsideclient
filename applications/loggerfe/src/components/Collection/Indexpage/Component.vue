@@ -327,6 +327,7 @@ onMounted(() => {
         title: '收到一条新事件',
         type: severity !== '2' ? 'warning' : 'error',
         message: content,
+        customClass: 'event-notification',
         duration: 8000,
         position: 'bottom-right',
         onClick() {
@@ -357,6 +358,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+
 .index-page {
   height: 100%;
   display: flex;
@@ -395,3 +397,10 @@ onUnmounted(() => {
 }
 </style>
 
+<style lang="scss">
+.event-notification {
+  .el-notification__content {
+    text-align: left;
+  }
+}
+</style>
