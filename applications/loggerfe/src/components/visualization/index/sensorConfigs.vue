@@ -51,54 +51,6 @@
           @check-change="handleCheckChange"
         />
       </div>
-      <div class="config-area">
-        <div v-if="setConfigValue" class="info-btn-group">
-          <el-divider>
-          </el-divider>
-        </div>
-        <div v-if="!setConfigValue" style="margin-top: 20px">
-          <el-tabs
-            v-model="activeNameTab"
-            type="card"
-            class="demo-tabs"
-            @tab-click="handleClick"
-          >
-            <el-tab-pane label="显示设置" name="second">
-              <div class="item-wrap">
-                <span class="mr-6">视角</span>
-                <div class="py-2">
-                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xy')"
-                    >XY</el-button
-                  >
-                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('xz')"
-                    >XZ</el-button
-                  >
-                  <el-button circle :disabled="selMode !== 'move'" @click="viewChange('yz')"
-                    >YZ</el-button
-                  >
-                </div>
-              </div>
-              <!-- <div class="item-wrap">
-                <span class="mr-2">点云大小</span>
-                <el-input-number
-                  class="size-input"
-                  v-model="pointSize"
-                  :precision="2"
-                  size="small"
-                  :min="0.01"
-                  :max="10"
-                  :step="0.01"
-                  @change="changePointSize" />
-              </div> -->
-              <!-- 当颜色策略为固定颜色值,设置固定颜色值 -->
-              <!-- <div class="item-wrap">
-                <span class="mr-4">颜色值</span>
-                <el-color-picker v-model="color" size="small" @change="changeColorProp" />
-              </div> -->
-          </el-tab-pane>
-          </el-tabs>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -150,7 +102,6 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
   console.log(tab, event)
 }
 
-const setConfigValue = ref(true)
 const treeRef = ref<InstanceType<typeof ElTree>>()
 
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
@@ -192,27 +143,22 @@ const clearAllNodes = () => {
 
 // 点击树节点
 const handleNodeClick = (data: Tree) => {
-  getSensoronfigs(data.label)
+  // getSensoronfigs(data.label)
 }
 
-const getSensoronfigs = (lidarname: string) => {
-  try {
-    findAll('/models/devices', {'filter[slot]': lidarname}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      const datavalue = gostore.findAll('devices')
-      if(datavalue.length > 0 && datavalue[0].type === 'lidar') {
-        setConfigValue.value = false
-      } else {
-        setConfigValue.value = true
-      }
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
-  } catch (error) {
-    console.error(error)
-  }
-}
+// const getSensoronfigs = (lidarname: string) => {
+//   try {
+//     findAll('/models/devices', {'filter[slot]': lidarname}).then((res: any) => {
+//       gostore.reset()
+//       gostore.sync(res.data)
+//       const datavalue = gostore.findAll('devices')
+//     }).catch((err: any) => {
+//       console.log(err, 'err')
+//     })
+//   } catch (error) {
+//     console.error(error)
+//   }
+// }
 
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig`)
