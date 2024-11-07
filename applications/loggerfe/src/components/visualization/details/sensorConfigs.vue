@@ -17,7 +17,6 @@
           :props="defaultProps"
           @check-change="handleCheckChange"
         />
-        <!-- :render-content="renderContent" 去掉标定入口 -->
       </div>
       <div class="config-area">
         <div v-if="setConfigValue" class="info-btn-group">
@@ -67,27 +66,6 @@
         </div>
       </div>
     </div>
-    <!-- <el-dialog
-      v-model="dialogVisible"
-      width="500"
-      :before-close="handleClose"
-    >
-      <el-form>
-        <el-form-item label="标定&配准算法" :label-width="formLabelWidth">
-          <el-select v-model="calitypeid" placeholder="请选择">
-            <el-option :label=item.name :value=item.id v-for="item in calibrationTemplates" :key="item.id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleClickCaliType">
-            确认
-          </el-button>
-        </div>
-      </template>
-    </el-dialog> -->
   </div>
 </template>
 
@@ -107,11 +85,6 @@ import { useRoute } from 'vue-router';
 
 // 获取当前路由对象
 const route = useRoute();
-
-// const calitypeid = ref('')
-// const handleClickCaliType = () => {
-//   window.history.pushState(null, '', `/loggerfe/datasetdetail/${route.params.id}/${calitypeid.value}?devicename=${devicename.value}`)
-// }
 
 interface Tree {
   id: number
@@ -236,51 +209,7 @@ const totree = (data) => {
   return tree;
 }
 
-const devicename = ref('')
-const dialogVisible = ref(false);
-const handleTreeCaliClick = (node, data) => {
-  devicename.value = data.label
-  dialogVisible.value = true;
-}
-
-// 自定义树节点的渲染内容
-// const renderContent = (h, { node, data }) => {
-//    if (!data.children && data.devicedata) {
-//     return h(
-//       'div',
-//       {
-//         style: 'display: flex; align-items: center;justify-content: space-between;width: 100%;',
-//       },
-//       [
-//         h('span', { style: 'margin-right: 20px;' }, node.label), 
-//         h('div', { 
-//           style: 'margin-left: 20px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
-//           onClick: () => handleTreeCaliClick(node, data)
-//         }, '标定'), 
-//       ]
-//     );
-//   } else {
-//     return h('span', node.label); // 非叶子节点只显示标签
-//   }
-// };
-
-// const calibrationTemplates = ref([])
-// const queryCalibrationTemplates = (page: number) => {
-//   try {
-//     findAll(`/sys/calibration-templates`).then((res: any) => {
-//       gostore.reset()
-//       gostore.sync(res.data)
-//       calibrationTemplates.value = gostore.findAll('calibration-templates')
-//     }).catch((err: any) => {
-//       console.log(err, 'err')
-//     })
-//   } catch (error) {
-//     console.log(error)
-//   }
-// }
-
 onMounted(() => {
-  // queryCalibrationTemplates()
   queryCurrentDrivers()
 });
 
