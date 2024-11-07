@@ -401,6 +401,10 @@ onUnmounted(() => {
 .event-notification {
   .el-notification__content {
     text-align: left;
+
+    p {
+      word-break: break-all;
+    }
   }
 }
 </style>
