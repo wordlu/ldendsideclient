@@ -33,15 +33,9 @@ const setCamera = (camera: any) => {
     </div>
     <div class="view-btns">
       <div style="margin-right: 10px;">视角：</div>
-      <el-button circle @click="viewChange('xy')"
-        >XY</el-button
-      >
-      <el-button circle @click="viewChange('xz')"
-        >XZ</el-button
-      >
-      <el-button circle @click="viewChange('yz')"
-        >YZ</el-button
-      >
+      <el-button circle @click="viewChange('xy')">XY</el-button>
+      <el-button circle @click="viewChange('xz')">XZ</el-button>
+      <el-button circle @click="viewChange('yz')">YZ</el-button>
     </div>
   </div>
 </template>

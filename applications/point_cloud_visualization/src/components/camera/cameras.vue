@@ -26,7 +26,7 @@ watch(()=>dataSet.activeCamInfo,(newVal)=>{
     <div class="cameras-item" v-for="(key,value) in activeCamInfo" :key="value">
       <img :src="key" alt="暂无图片" :onerror="imgOnError" style="width: 100%;" v-show="showPic">
     </div>
-    <div class="text">{{ dataSet.currentCamera.slot }}</div>
+    <div class="text">{{ dataSet.currentCamera ? dataSet.currentCamera.slot : '' }}</div>
   </div>
 </template>
 

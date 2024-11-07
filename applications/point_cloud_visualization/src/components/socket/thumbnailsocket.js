@@ -67,13 +67,14 @@ export const createHub = (data)=>{
       dataSet.info = JSON.parse(evt.data);
       const devicesHub = viewportData['device-hub']
       dataSet.initDisplays = viewportData.displays;
+      currentSelectedSensor = getQueryString('currentSelectedSensor') ? JSON.parse(getQueryString('currentSelectedSensor')) : [];
       // const devicesHub = getQueryString('deviceshub') ? JSON.parse(getQueryString('deviceshub')) : [];
       const lidarDevices = devicesHub.filter(item => item.type == 'lidar').map(it => it.id);
       const cameraDevices = devicesHub.filter(item => item.type == 'camera').map(it => it.id);
       dataSet.lidarDevices = dataSet.info.devices.filter(item => lidarDevices.includes(item));
-      dataSet.cameraDevices = dataSet.info.devices.filter(item => cameraDevices.includes(item));
-      dataSet.currentCamera = dataSet.cameraDevices[0] ? dataSet.cameraDevices[0] : {};
-      currentSelectedSensor = getQueryString('currentSelectedSensor') ? JSON.parse(getQueryString('currentSelectedSensor')) : [];
+      const cameraDevicesSelect = dataSet.info.devices.filter(item => cameraDevices.includes(item));
+      dataSet.cameraDevices = cameraDevicesSelect.filter(it => currentSelectedSensor.includes(it));
+      dataSet.currentCamera = dataSet.cameraDevices[0] ? dataSet.cameraDevices[0] : null;
       initAllSocket()
       dataSet.loading = false
     }catch(err){
