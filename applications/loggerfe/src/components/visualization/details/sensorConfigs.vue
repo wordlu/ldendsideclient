@@ -213,7 +213,7 @@ const totree = (data) => {
         id: sensor.type,
         label: sensor.type,
         children: [],
-        disabled: sensor.type === 'imu' || sensor.type === 'randa',
+        disabled: sensor.type === 'imu' || sensor.type === 'radar',
       };
       tree.push(parent);
     }
@@ -223,7 +223,7 @@ const totree = (data) => {
       id: sensor.type+'_'+sensor.id,
       devicedata: sensor.devicedata,
       label: sensor.id,
-      disabled: !sensor.devicedata || sensor.devicedata.type === 'randa' || sensor.devicedata.type === 'imu',
+      disabled: !sensor.devicedata || sensor.devicedata.type === 'radar' || sensor.devicedata.type === 'imu',
     });
     if (sensor.devicedata) {
       // 当前dataset中包含的设备id则自动勾选上
