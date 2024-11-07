@@ -254,7 +254,7 @@ const recordOffDevice = () => {
 const currentSelectedSensorId = ref([])
 
 const getCurrentPorts = () => {
-  currentSelectedSensor.value = selectedLeafNodes.value.map(node => node.port)
+  currentSelectedSensor.value = selectedLeafNodes.value.filter(it => it.type !== 'radar' && it.type !== 'imu').map(node => node.port)
   currentSelectedSensorId.value = selectedLeafNodes.value.map(node => node.deviceid)
 }
 

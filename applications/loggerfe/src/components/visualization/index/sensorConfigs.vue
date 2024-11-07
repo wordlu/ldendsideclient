@@ -159,7 +159,13 @@ const handleCheckChange = async(data, checked, indeterminate) => {
   const checkedNodes = treeRef.value.getCheckedNodes();
   console.log(checkedNodes)
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
-  emit('update:leafNodes', leafNodes.map(node => ({ id: node.id, label: node.label, deviceid: node.devicedata.id, port: node.devicedata['display-port'] })));
+  emit('update:leafNodes', leafNodes.map(node => ({ 
+    id: node.id, 
+    label: node.label, 
+    deviceid: node.devicedata.id, 
+    port: node.devicedata['display-port'] ,
+    type: node.devicedata.type,
+  })));
 };
 
 const allTreeKeys = ref([])
