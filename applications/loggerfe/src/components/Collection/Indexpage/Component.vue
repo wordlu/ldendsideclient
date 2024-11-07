@@ -149,16 +149,8 @@ const startupDevice = () => {
     }
   }
   addItem('/models/actions', params).then((res: any) => {
-    // showRecordOnDevice.value = true
     switchLoading.value = false
-    // pageLoading.value = true
-    // loadingtext.value = '设备启动中，请稍后...'
-    // ElMessage({
-    //   message: "设备正在启动中",
-    //   type: 'success',
-    // })
   }).catch((err: any) => {
-    // showRecordOnDevice.value = true
     switchLoading.value = false
     console.error(err, 'err')
     const errmsg = err?.response?.data?.errors[0]?.detail

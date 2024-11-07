@@ -206,6 +206,10 @@ const handleTreeReconnectClick = (node, data) => {
     ElMessage.warning('请先初始化设备！')
     return;
   }
+  if (props.startCollect) {
+    ElMessage.warning('请先停止采集！')
+    return;
+  }
   ElMessageBox.alert(`是否重新启动设备 ${data.label} ?`, '', {
     confirmButtonText: '确认',
     autofocus: false,
