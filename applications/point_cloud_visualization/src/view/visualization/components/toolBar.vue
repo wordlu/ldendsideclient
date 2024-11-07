@@ -24,7 +24,9 @@ const setCamera = (camera: any) => {
     <div class="view-btns" v-show="cameraDevices.length>0">
       <div>摄像头：</div>
       <div class="camreas" v-for="camera in cameraDevices" :key="camera.slot">
-        <el-button style="margin-right: 6px;" size="small" @click="setCamera(camera)">{{ camera.slot }}</el-button>
+        <el-button class="camera-btn" :class="{active: dataSet.currentCamera.slot === camera.slot}" size="small" @click="setCamera(camera)">
+          {{ camera.slot }}
+        </el-button>
       </div>
     </div>
     <div class="view-btns">
@@ -48,22 +50,33 @@ const setCamera = (camera: any) => {
   position: absolute;
   right: 10px;
   top: 10px;
-}
 
-.view-btns {
-  color: #fff;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  justify-content: flex-end;
-  .el-button.is-circle {
-    border-radius: 50%;
-    padding: 8px;
-    width: 32px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid #fff;
+  .view-btns {
     color: #fff;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    justify-content: flex-end;
+
+    .camera-btn {
+      margin-right: 6px;
+    }
+
+    .active {
+      background: #ff7900;
+      border-color: #ff7900;
+      color: #fff;
+    }
+    
+    .el-button.is-circle {
+      border-radius: 50%;
+      padding: 8px;
+      width: 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #fff;
+      color: #fff;
+    }
   }
 }
 
