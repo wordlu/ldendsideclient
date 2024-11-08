@@ -18,7 +18,7 @@ import videoBarVue from "./components/videoBar.vue";
 import toolBarVue from "./components/toolBar.vue";
 import threeDView from "../../components/visualization/replayThreeDView.vue";
 import cameras from "../../components/camera/replaycameras.vue";
-import { createHub } from '../../components/socket/thumbnailsocket';
+import { createHub } from '../../components/socket/replaysocket';
 import { ref , watch, onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 import { findAll } from '@/api/jsonApi'

@@ -9,7 +9,7 @@ import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } fro
 import * as THREE from 'three';
 import {camera, scene, renderer, setCamera, setControls, setPointCloud } from './lib/replayInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import { allWsSend , ws } from '../socket/thumbnailsocket';
+import { allWsSend } from '../socket/replaysocket';
 import { dataSetStore } from '@/pinia/dataSet.js';
 const dataSet = dataSetStore();
 
@@ -109,8 +109,7 @@ onMounted(()=>{
 })
 
 onBeforeUnmount(()=>{
-  allWsSend.close()
-  ws.close()
+  allWsSend.close();
 })
 
 </script>

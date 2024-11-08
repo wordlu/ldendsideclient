@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, scene, clearGeometry, updateGeometry  } from '../visualization/lib/replayInitThree';
+import { DracoPoint, scene, clearGeometry, updateGeometry, renderODBox  } from '../visualization/lib/replayInitThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -42,7 +42,6 @@ let refAllGroup = { //当前帧目标物组合
 }
 
 let isData = false;
-
 let viewportData = null;
 
 // 初始化socket,原initSocket
@@ -89,58 +88,6 @@ export const createHub = (data)=>{
   ws.onclose = function() {
     console.log("连接已关闭...");
   };
-}
-
-// 获取pcd压缩数据并渲染
-export const pcdWsSend = (frame)=>{
-  try{
-    pcdWs.send(JSON.stringify({
-      frame_index:frame,
-      meta_key:dataSet.activePcdInfo.meta_key,
-      meta_val:dataSet.activePcdInfo.meta_val,
-      data_files_prefix:dataSet.info.data_files_prefix
-    }))
-
-    pcdWs.onmessage = async function(evt) {
-      reader.readAs('ArrayBuffer',evt.data,function(result){
-        DracoPoint(result)
-      });
-    };
-  }catch(err){
-    console.error('Init pcdWsSend error:'+err);
-  }
-}
-
-//获取视觉数据并渲染
-export const camWsSend = (frame)=>{
-  try{
-    const cams = dataSet.info.meta_json.cam;
-    for(let cam in cams){
-      camWs.send(JSON.stringify({
-        frame_index:frame,
-        meta_key:cam,
-        meta_val:cams[cam],
-        data_files_prefix:dataSet.info.data_files_prefix
-      }))
-    }
-    
-    camWs.onmessage = async function(evt) {
-      if(typeof evt.data == 'string'){
-        activeCam = evt.data
-      }else{
-        reader.readAs('ArrayBuffer',evt.data,function(result){
-          // 摄像头数据赋值
-          let url = arrayBufferToBase64(result)
-          dataSet.activeCamInfo[activeCam] = url
-          if(dataSet.activeCam.cam == activeCam){
-            dataSet.activeCam.value = url
-          }
-        });
-      }
-    };
-  }catch(err){
-    console.error('Init camWsSend error:'+err);
-  }
 }
 
 // 初始化组合数据
@@ -226,7 +173,8 @@ function renderFrame(frameData) {
   dataSet.activefame = splitInfo.frame_index
   const ArrayBufferData = frameData.ArrayBufferData;
   // console.log('当前帧数：'+dataSet.activefame)
-  reader.readAs('ArrayBuffer',ArrayBufferData,function(result){
+  if (!ArrayBufferData) return;
+  reader.readAs('ArrayBuffer', ArrayBufferData, function(result){
     // 渲染点云数据
     dataSet.lidarDevices.forEach((key,index)=>{
       if (key === "frame_index") return;
@@ -257,6 +205,59 @@ function renderFrame(frameData) {
       }
     })
   });
+
+  // 生成车辆的框
+  const boundingBox = splitInfo.box ? splitInfo.box : []
+  // const boundingBox = [{
+  //   "timestamp": 1667215911.7006044,
+  //   "obj_id": 1,
+  //   "yaw": 0.0246862993,
+  //   "position_x": -10.3408260345,
+  //   "position_y": -3.7921357155,
+  //   "position_z": 1.5795454979,
+  //   "dimension_x": 7.3658804893,
+  //   "dimension_y": 2.2727267742,
+  //   "dimension_z": 3.1590909958
+  //   },
+  //   {
+  //   "timestamp": 1667215911.7006044,
+  //   "obj_id": 2,
+  //   "yaw": -0.0063693528,
+  //   "position_x": -12.5363492966,
+  //   "position_y": -15.4820775986,
+  //   "position_z": 1.893266201,
+  //   "dimension_x": 9.2399997711,
+  //   "dimension_y": 2.2899999619,
+  //   "dimension_z": 3.9000000954
+  //   }]
+  if (boundingBox.length <= 0) return;
+  odAllGroup = renderODBox(boundingBox,odAllGroup,dataSet.activefame);
+  // 检查是否有框生成
+  if(odAllGroup.list.length > 0){
+    for(let i=0;i<odAllGroup.list.length;i++){
+      // 处理当前激活帧的框
+      if(i == dataSet.activefame){
+        // 如果当前帧是激活帧，则执行以下操作：
+        // 遍历当前帧的所有框。
+        // 为每个框创建一个新的THREE.Group对象，并将框的网格和线条添加到该组中。
+        // 将该组添加到场景的group中。
+        odAllGroup.list[i].forEach((item,index)=>{
+          odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+          odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+          odAllGroup[`allGroup_${i}_${index}`].add(item.line);
+          group.add(odAllGroup[`allGroup_${i}_${index}`]);
+        })
+      }else{
+        // 如果当前帧不是激活帧
+        // 从场景的group中移除对应的组
+        // 删除该组
+        odAllGroup.list[i].forEach((item,index)=>{
+          group.remove(odAllGroup[`allGroup_${i}_${index}`]);
+          delete odAllGroup[`allGroup_${i}_${index}`];
+        })
+      }
+    }
+  }
 }
 
 
@@ -315,14 +316,15 @@ export const allWsSend = (frame, play, request_count_val)=>{
       }
     };
   }catch(err){
-    console.error('Init camWsSend error:'+err);
+    console.error('Init allWsSend error:'+err);
   }
 }
 
 
 // 数据解析
 var reader = { 
-  readAs: function(type,blob,cb){	var r = new FileReader();	r.onloadend = function(){
+  readAs: function(type,blob,cb){	
+    var r = new FileReader();	r.onloadend = function(){
       if(typeof(cb) === 'function') {
         cb.call(r,r.result);
       }

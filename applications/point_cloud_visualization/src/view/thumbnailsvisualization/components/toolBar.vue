@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { dataSetStore } from '@/pinia/dataSet.js';
 import { setCameraPosition } from '../../../components/visualization/lib/replayInitThree'
-import { changeCamera } from '../../../components/socket/thumbnailsocket';
+import { changeCamera } from '../../../components/socket/replaysocket';
 import { watch, ref } from 'vue';
 
 const dataSet = dataSetStore();

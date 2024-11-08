@@ -39,7 +39,7 @@
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
 import { ref , watch , computed } from 'vue'
-import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
+import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/replaysocket'
 import * as THREE from 'three';
 
 const startframe = ref(0)

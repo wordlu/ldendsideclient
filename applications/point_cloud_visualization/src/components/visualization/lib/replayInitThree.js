@@ -225,6 +225,61 @@ export const clearGeometry = (type) => {
   renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
 }
 
+
+
+//设置od box框对象方法
+export const renderODBox = (data,odAllGroup,frame) => {
+  if(!odAllGroup.list[frame]){
+    let group = new Array()
+    data.forEach((item,index)=>{
+      // 创建一个立方体几何体
+      const geometry = new THREE.BoxGeometry(item.dimension_x, item.dimension_y, item.dimension_z);
+      // 创建一个材质
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xF47A20,
+        transparent:true,
+        opacity:0.6
+      })
+
+      // 利用几何体和材质生成网格模型
+      const mesh = new THREE.Mesh(geometry, material);
+
+      // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
+      const edges = new THREE.EdgesGeometry(geometry);
+
+      // 立方体线框，不显示中间的斜线
+      const edgesMaterial = new THREE.LineBasicMaterial({
+        color: 0xF47A20
+      })
+
+      const line = new THREE.LineSegments(edges,edgesMaterial);
+
+      // 网格模型和网格模型对应的轮廓线框插入到场景中
+
+      mesh.position.x = item.position_x
+      mesh.position.y = item.position_y
+      mesh.position.z = item.position_z
+
+      line.position.x = item.position_x
+      line.position.y = item.position_y
+      line.position.z = item.position_z
+
+      //角度 = 弧度 * 180 / Math.PI
+      let angle = item.yaw * 180 / Math.PI
+
+      mesh.rotation.set(0, 0, item.yaw, "XZY");
+      line.rotation.set(0, 0, item.yaw, "XZY");
+      // 把网格模型添加到场景中
+      // scene.add(mesh,line);
+      group.push({mesh:mesh,line:line})
+    })
+    // odAllGroup.list.push(group)
+    odAllGroup.list[frame] = group
+  }
+  
+  return odAllGroup;
+}
+
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {
   var numComponents = attribute.num_components()
   var numPoints = dracoGeometry.num_points()
