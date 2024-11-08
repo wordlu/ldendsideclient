@@ -215,7 +215,7 @@ export const renderDUTBox = (data,dutAllGroup) => {
 
 //设置od box框对象方法
 export const renderODBox = (data,odAllGroup,frame) => {
-  if(!odAllGroup.list[frame]){
+  // if(!odAllGroup.list[frame]){
     let group = new Array()
     data.forEach((item,index)=>{
       // 创建一个立方体几何体
@@ -261,7 +261,7 @@ export const renderODBox = (data,odAllGroup,frame) => {
     })
     // odAllGroup.list.push(group)
     odAllGroup.list[frame] = group
-  }
+  // }
   
   return odAllGroup;
 }

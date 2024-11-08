@@ -130,6 +130,20 @@ export const connectWebSocket = (ip, type) => {
             // dataSet.activeCam.value = url
           }
         }
+      } else if (type == 'perception') {
+        const data = JSON.parse(result)
+        if (data && data.length > 0) {
+          odAllGroup = renderODBox(data,odAllGroup,0);
+          // 检查是否有框生成
+          if(odAllGroup.list[0]){
+            odAllGroup.list[0].forEach((item,index)=>{
+              odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+              odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+              odAllGroup[`allGroup_${i}_${index}`].add(item.line);
+              group.add(odAllGroup[`allGroup_${i}_${index}`]);
+            })
+          }
+        }
       }
     });
   }

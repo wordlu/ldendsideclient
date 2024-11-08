@@ -206,7 +206,6 @@ function renderFrame(frameData) {
     })
   });
 
-  // 生成车辆的框
   const boundingBox = splitInfo.box ? splitInfo.box : []
   // const boundingBox = [{
   //   "timestamp": 1667215911.7006044,
@@ -231,6 +230,7 @@ function renderFrame(frameData) {
   //   "dimension_z": 3.9000000954
   //   }]
   if (boundingBox.length <= 0) return;
+  // 生成车辆的框
   odAllGroup = renderODBox(boundingBox,odAllGroup,dataSet.activefame);
   // 检查是否有框生成
   if(odAllGroup.list.length > 0){
