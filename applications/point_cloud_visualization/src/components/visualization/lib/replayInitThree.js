@@ -256,16 +256,15 @@ export const renderODBox = (data,odAllGroup,frame) => {
 
       // 网格模型和网格模型对应的轮廓线框插入到场景中
 
-      mesh.position.x = item.position_x
-      mesh.position.y = item.position_y
-      mesh.position.z = item.position_z
+      // mesh.position.x = item.position_x
+      // mesh.position.y = item.position_y
+      // mesh.position.z = item.position_z
+      mesh.position.set(item.position_x, item.position_y, item.position_z)
 
-      line.position.x = item.position_x
-      line.position.y = item.position_y
-      line.position.z = item.position_z
-
-      //角度 = 弧度 * 180 / Math.PI
-      let angle = item.yaw * 180 / Math.PI
+      // line.position.x = item.position_x
+      // line.position.y = item.position_y
+      // line.position.z = item.position_z
+      line.position.set(item.position_x, item.position_y, item.position_z)
 
       mesh.rotation.set(0, 0, item.yaw, "XZY");
       line.rotation.set(0, 0, item.yaw, "XZY");
