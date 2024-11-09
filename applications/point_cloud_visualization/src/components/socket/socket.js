@@ -131,16 +131,23 @@ export const connectWebSocket = (ip, type) => {
           }
         }
       } else if (type == 'perception') {
-        const data = JSON.parse(result)
+        const str = arrayBufferToString(result)
+        const obj = JSON.parse(str)
+        const data = obj && obj.objects ? obj.objects : []
         if (data && data.length > 0) {
           odAllGroup = renderODBox(data,odAllGroup,0);
           // 检查是否有框生成
           if(odAllGroup.list[0]){
             odAllGroup.list[0].forEach((item,index)=>{
-              odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-              odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-              odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-              group.add(odAllGroup[`allGroup_${i}_${index}`]);
+              group.remove(odAllGroup[`allGroup_${0}_${index}`]);
+              delete odAllGroup[`allGroup_${0}_${index}`];
+            })
+            odAllGroup.list[0].forEach((item,index)=>{
+              odAllGroup[`allGroup_${0}_${index}`] = new THREE.Group();
+              odAllGroup[`allGroup_${0}_${index}`].add(item.mesh);
+              odAllGroup[`allGroup_${0}_${index}`].add(item.line);
+              group.scale.set(0.3, 0.3, 0.3);
+              group.add(odAllGroup[`allGroup_${0}_${index}`]);
             })
           }
         }
@@ -189,6 +196,10 @@ export const connectWebSocket = (ip, type) => {
   }
 }
 
+function arrayBufferToString(buffer) {
+  const decoder = new TextDecoder('utf-8'); // 'utf-8' 是默认编码
+  return decoder.decode(buffer);
+}
 
 // 断开指定 IP 的 WebSocket
 const disconnectFromIP = (ip) => {
