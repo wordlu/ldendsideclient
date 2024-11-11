@@ -109,61 +109,56 @@ export const setControlsEnable = (val) => {
 }
 //设置od box框对象方法
 export const renderODBox = (data,odAllGroup,frame) => {
-  // if(!odAllGroup.list[frame]){
-    let group = new Array()
-    data.forEach((item,index)=>{
-      // 创建一个立方体几何体
-      const geometry = new THREE.BoxGeometry(item.dimensions_x, item.dimensions_y, item.dimensions_z);
-      // 创建一个材质
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xF47A20,
-        transparent:true,
-        opacity:0.6
-      })
-
-      // 利用几何体和材质生成网格模型
-      const mesh = new THREE.Mesh(geometry, material);
-      // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
-      const edges = new THREE.EdgesGeometry(geometry);
-      // 立方体线框，不显示中间的斜线
-      const edgesMaterial = new THREE.LineBasicMaterial({
-        color: 0xF47A20
-      })
-      const line = new THREE.LineSegments(edges,edgesMaterial);
-      // 网格模型和网格模型对应的轮廓线框插入到场景中
-      mesh.position.set(item.position_x, item.position_y, item.position_z)
-      line.position.set(item.position_x, item.position_y, item.position_z)
-
-      // 使用四元数旋转
-      const quaternion = new THREE.Quaternion(
-        item.orientation_x,
-        item.orientation_y,
-        item.orientation_z,
-        item.orientation_w
-      );
-      // 应用四元数到 Mesh 和 LineSegments
-      mesh.quaternion.copy(quaternion);
-      line.quaternion.copy(quaternion);
-      // 把网格模型添加到场景中
-      // scene.add(mesh,line);
-      group.push({mesh:mesh,line:line})
-
-
-      // // 计算包围盒
-      // const boundingBox = new THREE.Box3().setFromObject(mesh);
-      // // 获取包围盒尺寸
-      // const size = boundingBox.getSize(new THREE.Vector3());
-      // const boxWidth = size.x;  // X 轴上的长度
-      // const boxHeight = size.y; // Y 轴上的高度
-      // const boxDepth = size.z;  // Z 轴上的长度
-
-      // console.log(`Box3 计算的宽度：${boxWidth}`);
-      // console.log(`Box3 计算的高度：${boxHeight}`);
-      // console.log(`Box3 计算的深度：${boxDepth}`);
+  let group = new Array()
+  data.forEach((item,index)=>{
+    // 创建一个立方体几何体
+    const geometry = new THREE.BoxGeometry(item.dimensions_x, item.dimensions_y, item.dimensions_z);
+    // 创建一个材质
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xF47A20,
+      transparent:true,
+      opacity:0.6
     })
-    odAllGroup.list[frame] = group
-  // }
-  
+
+    // 利用几何体和材质生成网格模型
+    const mesh = new THREE.Mesh(geometry, material);
+    // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
+    const edges = new THREE.EdgesGeometry(geometry);
+    // 立方体线框，不显示中间的斜线
+    const edgesMaterial = new THREE.LineBasicMaterial({
+      color: 0xF47A20
+    })
+    const line = new THREE.LineSegments(edges,edgesMaterial);
+    // 网格模型和网格模型对应的轮廓线框插入到场景中
+    mesh.position.set(item.position_x, item.position_y, item.position_z)
+    line.position.set(item.position_x, item.position_y, item.position_z)
+
+    // 使用四元数旋转
+    const quaternion = new THREE.Quaternion(
+      item.orientation_x,
+      item.orientation_y,
+      item.orientation_z,
+      item.orientation_w
+    );
+    // 应用四元数到 Mesh 和 LineSegments
+    mesh.quaternion.copy(quaternion);
+    line.quaternion.copy(quaternion);
+    // 把网格模型添加到场景中
+    group.push({mesh:mesh,line:line})
+
+    // // 计算包围盒
+    // const boundingBox = new THREE.Box3().setFromObject(mesh);
+    // // 获取包围盒尺寸
+    // const size = boundingBox.getSize(new THREE.Vector3());
+    // const boxWidth = size.x;  // X 轴上的长度
+    // const boxHeight = size.y; // Y 轴上的高度
+    // const boxDepth = size.z;  // Z 轴上的长度
+
+    // console.log(`Box3 计算的宽度：${boxWidth}`);
+    // console.log(`Box3 计算的高度：${boxHeight}`);
+    // console.log(`Box3 计算的深度：${boxDepth}`);
+  })
+  odAllGroup.list[frame] = group
   return odAllGroup;
 }
 

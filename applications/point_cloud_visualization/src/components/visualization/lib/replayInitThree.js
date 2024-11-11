@@ -233,7 +233,7 @@ export const renderODBox = (data,odAllGroup,frame) => {
     let group = new Array()
     data.forEach((item,index)=>{
       // 创建一个立方体几何体
-      const geometry = new THREE.BoxGeometry(item.dimension_x, item.dimension_y, item.dimension_z);
+      const geometry = new THREE.BoxGeometry(item.dimensions_x, item.dimensions_y, item.dimensions_z);
       // 创建一个材质
       const material = new THREE.MeshBasicMaterial({
         color: 0xF47A20,
@@ -253,23 +253,24 @@ export const renderODBox = (data,odAllGroup,frame) => {
       })
 
       const line = new THREE.LineSegments(edges,edgesMaterial);
-
       // 网格模型和网格模型对应的轮廓线框插入到场景中
-
-      // mesh.position.x = item.position_x
-      // mesh.position.y = item.position_y
-      // mesh.position.z = item.position_z
       mesh.position.set(item.position_x, item.position_y, item.position_z)
-
-      // line.position.x = item.position_x
-      // line.position.y = item.position_y
-      // line.position.z = item.position_z
       line.position.set(item.position_x, item.position_y, item.position_z)
 
-      mesh.rotation.set(0, 0, item.yaw, "XZY");
-      line.rotation.set(0, 0, item.yaw, "XZY");
+      // mesh.rotation.set(0, 0, item.yaw, "XZY");
+      // line.rotation.set(0, 0, item.yaw, "XZY");
+
+      // 使用四元数旋转
+      const quaternion = new THREE.Quaternion(
+        item.orientation_x,
+        item.orientation_y,
+        item.orientation_z,
+        item.orientation_w
+      );
+      // 应用四元数到 Mesh 和 LineSegments
+      mesh.quaternion.copy(quaternion);
+      line.quaternion.copy(quaternion);
       // 把网格模型添加到场景中
-      // scene.add(mesh,line);
       group.push({mesh:mesh,line:line})
     })
     // odAllGroup.list.push(group)

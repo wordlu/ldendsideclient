@@ -204,31 +204,59 @@ function renderFrame(frameData) {
         }
       }
     })
+    
+    // 渲染OD数据
+    if (!splitInfo['perception']) return;
+    const perception = result.slice(splitInfo['perception'][0],splitInfo['perception'][1])
+    const str = arrayBufferToString(perception)
+    const obj = JSON.parse(str)
+    const data = obj && obj.objects ? obj.objects : []
+    group.clear();
+    if (data && data.length > 0) {
+      // 生成车辆的框
+      odAllGroup = renderODBox(data,odAllGroup,dataSet.activefame);
+      console.log(odAllGroup, 'odAllGroup')
+      // 检查是否有框生成
+      if(odAllGroup.list.length > 0){
+        if (odAllGroup.list[dataSet.activefame]) {
+          odAllGroup.list[dataSet.activefame].forEach((item,index)=>{
+            odAllGroup[`allGroup_${dataSet.activefame}_${index}`] = new THREE.Group();
+            odAllGroup[`allGroup_${dataSet.activefame}_${index}`].add(item.mesh);
+            odAllGroup[`allGroup_${dataSet.activefame}_${index}`].add(item.line);
+            group.add(odAllGroup[`allGroup_${dataSet.activefame}_${index}`]);
+          })
+        }
+
+        // for(let i=0;i<odAllGroup.list.length;i++){
+        //   // 处理当前激活帧的框
+        //   if(i == dataSet.activefame){
+        //     // 如果当前帧是激活帧，则执行以下操作：
+        //     // 遍历当前帧的所有框。
+        //     // 为每个框创建一个新的THREE.Group对象，并将框的网格和线条添加到该组中。
+        //     // 将该组添加到场景的group中。
+        //     odAllGroup.list[i].forEach((item,index)=>{
+        //       odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
+        //       odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
+        //       odAllGroup[`allGroup_${i}_${index}`].add(item.line);
+        //       group.add(odAllGroup[`allGroup_${i}_${index}`]);
+        //     })
+        //   }else{
+        //     if (!odAllGroup.list[i]) return;
+        //     // 如果当前帧不是激活帧
+        //     // 从场景的group中移除对应的组
+        //     // 删除该组
+        //     odAllGroup.list[i].forEach((item,index)=>{
+        //       group.remove(odAllGroup[`allGroup_${i}_${index}`]);
+        //       delete odAllGroup[`allGroup_${i}_${index}`];
+        //     })
+        //     delete odAllGroup.list[i];
+        //   }
+        // }
+      }
+    }
   });
 
   const boundingBox = splitInfo.box ? splitInfo.box : []
-  // const boundingBox = [{
-  //   "timestamp": 1667215911.7006044,
-  //   "obj_id": 1,
-  //   "yaw": 0.0246862993,
-  //   "position_x": -10.3408260345,
-  //   "position_y": -3.7921357155,
-  //   "position_z": 1.5795454979,
-  //   "dimension_x": 7.3658804893,
-  //   "dimension_y": 2.2727267742,
-  //   "dimension_z": 3.1590909958
-  //   },
-  //   {
-  //   "timestamp": 1667215911.7006044,
-  //   "obj_id": 2,
-  //   "yaw": -0.0063693528,
-  //   "position_x": -12.5363492966,
-  //   "position_y": -15.4820775986,
-  //   "position_z": 1.893266201,
-  //   "dimension_x": 9.2399997711,
-  //   "dimension_y": 2.2899999619,
-  //   "dimension_z": 3.9000000954
-  //   }]
   if (boundingBox.length <= 0) return;
   // 生成车辆的框
   odAllGroup = renderODBox(boundingBox,odAllGroup,dataSet.activefame);
@@ -335,6 +363,11 @@ var reader = {
       console.log('数据解析出错:'+e);
     }
   }
+}
+
+function arrayBufferToString(buffer) {
+  const decoder = new TextDecoder('utf-8'); // 'utf-8' 是默认编码
+  return decoder.decode(buffer);
 }
 
 function arrayBufferToBase64 (buffer) {
