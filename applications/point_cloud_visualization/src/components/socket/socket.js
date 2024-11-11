@@ -131,6 +131,12 @@ export const connectWebSocket = (ip, type) => {
           }
         }
       } else if (type == 'perception') {
+        if (odAllGroup.list[0]) {
+          odAllGroup.list[0].forEach((item,index)=>{
+            group.remove(odAllGroup[`allGroup_${0}_${index}`]);
+            delete odAllGroup[`allGroup_${0}_${index}`];
+          })
+        }
         const str = arrayBufferToString(result)
         const obj = JSON.parse(str)
         const data = obj && obj.objects ? obj.objects : []
@@ -139,14 +145,9 @@ export const connectWebSocket = (ip, type) => {
           // 检查是否有框生成
           if(odAllGroup.list[0]){
             odAllGroup.list[0].forEach((item,index)=>{
-              group.remove(odAllGroup[`allGroup_${0}_${index}`]);
-              delete odAllGroup[`allGroup_${0}_${index}`];
-            })
-            odAllGroup.list[0].forEach((item,index)=>{
               odAllGroup[`allGroup_${0}_${index}`] = new THREE.Group();
               odAllGroup[`allGroup_${0}_${index}`].add(item.mesh);
               odAllGroup[`allGroup_${0}_${index}`].add(item.line);
-              group.scale.set(0.3, 0.3, 0.3);
               group.add(odAllGroup[`allGroup_${0}_${index}`]);
             })
           }
@@ -221,8 +222,6 @@ const connectToAllIPs = (lists) => {
     }
   })
   dataSet.currentCamera = dataSet.cameraDevices[0]
-  console.log("camera设备："+dataSet.cameraDevices)
-  console.log("lidar设备："+dataSet.lidarDevices)
   const displayArr = []
   for(const item in viewportData.displays){
     const itemDisplay = viewportData.devices.find(it => it.slot === item)

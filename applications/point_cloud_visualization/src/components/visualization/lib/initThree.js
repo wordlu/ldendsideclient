@@ -219,8 +219,7 @@ export const renderODBox = (data,odAllGroup,frame) => {
     let group = new Array()
     data.forEach((item,index)=>{
       // 创建一个立方体几何体
-      // const geometry = new THREE.BoxGeometry(item.dimension_x, item.dimension_y, item.dimension_z);
-      const geometry = new THREE.BoxGeometry(item.width, item.height, item.length);
+      const geometry = new THREE.BoxGeometry(item.dimension_x, item.dimension_y, item.dimension_z);
       // 创建一个材质
       const material = new THREE.MeshBasicMaterial({
         color: 0xF47A20,
@@ -230,39 +229,44 @@ export const renderODBox = (data,odAllGroup,frame) => {
 
       // 利用几何体和材质生成网格模型
       const mesh = new THREE.Mesh(geometry, material);
-
       // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
       const edges = new THREE.EdgesGeometry(geometry);
-
       // 立方体线框，不显示中间的斜线
       const edgesMaterial = new THREE.LineBasicMaterial({
         color: 0xF47A20
       })
-
       const line = new THREE.LineSegments(edges,edgesMaterial);
-
       // 网格模型和网格模型对应的轮廓线框插入到场景中
       mesh.position.set(item.position_x, item.position_y, item.position_z)
       line.position.set(item.position_x, item.position_y, item.position_z)
 
-      // mesh.position.x = item.position_x
-      // mesh.position.y = item.position_y
-      // mesh.position.z = item.position_z
-
-      // line.position.x = item.position_x
-      // line.position.y = item.position_y
-      // line.position.z = item.position_z
-
-      //角度 = 弧度 * 180 / Math.PI
-      // let angle = item.yaw * 180 / Math.PI
-
-      // mesh.rotation.set(0, 0, item.yaw, "XZY");
-      // line.rotation.set(0, 0, item.yaw, "XZY");
+      // 使用四元数旋转
+      const quaternion = new THREE.Quaternion(
+        item.orientation_x,
+        item.orientation_y,
+        item.orientation_z,
+        item.orientation_w
+      );
+      // 应用四元数到 Mesh 和 LineSegments
+      mesh.quaternion.copy(quaternion);
+      line.quaternion.copy(quaternion);
       // 把网格模型添加到场景中
       // scene.add(mesh,line);
       group.push({mesh:mesh,line:line})
+
+
+      // // 计算包围盒
+      // const boundingBox = new THREE.Box3().setFromObject(mesh);
+      // // 获取包围盒尺寸
+      // const size = boundingBox.getSize(new THREE.Vector3());
+      // const boxWidth = size.x;  // X 轴上的长度
+      // const boxHeight = size.y; // Y 轴上的高度
+      // const boxDepth = size.z;  // Z 轴上的长度
+
+      // console.log(`Box3 计算的宽度：${boxWidth}`);
+      // console.log(`Box3 计算的高度：${boxHeight}`);
+      // console.log(`Box3 计算的深度：${boxDepth}`);
     })
-    // odAllGroup.list.push(group)
     odAllGroup.list[frame] = group
   // }
   
@@ -279,26 +283,6 @@ export const getQueryString = (name) => {
 }
 const cloudpointparams = getQueryString('cloudpointparams') ? JSON.parse(getQueryString('cloudpointparams')) : {}
 
-let material1 = new THREE.PointsMaterial({
-  color: `#${cloudpointparams.color}` || '#0cf36d',//模型颜色
-  // size: Number(cloudpointparams.size) || 0.01 //模型大小
-  size: 0.001, //模型大小
-  // vertexColors: true // 支持每个点使用不同的颜色
-});//配置模型的材质对象   
-
-let material2 = new THREE.PointsMaterial({
-  color: '#ff01f3',//模型颜色
-  size: 0.01, //模型大小
-  // vertexColors: true // 支持每个点使用不同的颜色
-});//配置模型的材质对象 
-
-
-// @wodelu:TODO: 修改点云颜色
-// 选择框选的点并高亮
-export const highlightSelectedPoints = (pointArray, num) => {
-  console.log('修改点云颜色')
-};
-
 
 function getRandomHexColor() {
   const randomColor = Math.floor(Math.random() * 16777215).toString(16); // 16777215 是 #ffffff 的十进制表示
@@ -308,7 +292,8 @@ function getRandomHexColor() {
 function initpoint(renderObject) {
   for (let key in renderObject) {
     let points = new THREE.Points(renderObject[key].geometry, renderObject[key].material)//将上述对象配置到点模型对象上
-    points.frustumCulled = false;
+    renderObject[key].points = points
+    points.frustumCulled = false; // 避免点云被裁剪
     scene.add(points)
   }
 }
@@ -393,7 +378,6 @@ export const DracoPoint = async (arr, type) =>{
       geometry_draco = decodeAttribute(decoderModule, decoder, outputGeometry, attributeName, attributeType, attribute)
     }
   }
-
   // 调用createGeometry函数，将解码后的几何数据转换为可用的几何对象
   createGeometry(geometry_draco, type)
   // 释放解码器、几何对象和缓冲区的资源
@@ -408,15 +392,30 @@ function createGeometry(geometryData, type) {
   let array = attribute.array
   let itemSize = attribute.itemSize
 
-  if (type) {
+  if (type && renderObject[type]) {
     renderObject[type]['geometry'].setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   } else {
     geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize))
   }
+
+  // 计算点云的包围盒
+  // const boundingBox = new THREE.Box3().setFromObject(renderObject[type]['points']);
+
+  // // 获取包围盒的尺寸
+  // const size = boundingBox.getSize(new THREE.Vector3());
+  // const width = size.x;  // X 轴上的长度
+  // const height = size.y; // Y 轴上的高度
+  // const length = size.z; // Z 轴上的长度
+
+  // console.log(`点云${type}的宽度（X 轴）为: ${width} 米`);
+  // console.log(`点云${type}的高度（Y 轴）为: ${height} 米`);
+  // console.log(`点云${type}的长度（Z 轴）为: ${length} 米`);
 }
 
 export const clearGeometry = (type) => {
-  renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
+  if (type && renderObject[type]) {
+    renderObject[type]['geometry'].setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3))
+  }
 }
 
 function decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute) {
