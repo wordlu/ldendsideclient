@@ -14,15 +14,8 @@ let attribue = new THREE.BufferAttribute(vertices, 3)//创建属性对象
 //创建一个三维场景
 const scene = new THREE.Scene()
 //添加光源
-const ambient = new THREE.AmbientLight(0x93BE2E, 0.5),
-light1 = new THREE.PointLight(0x93BE2E, 0.4),
-light2 = new THREE.PointLight(0x93BE2E, 0.4)
-
+const ambient = new THREE.AmbientLight(0x93BE2E, 0.5)
 scene.add(ambient)
-light1.position.set(1000,1000,1000)
-scene.add(light1)
-light2.position.set(-1000,-1000,-1000)
-scene.add(light2)
 
 //创建辅助坐标轴
 const axesHelper = new THREE.AxesHelper(5)
@@ -114,112 +107,13 @@ export const setControlsEnable = (val) => {
   controls.enableZoom = val; // 禁用缩放
   controls.enablePan = val; // 禁用平移 
 }
-
-//设置obj box框对象的方法
-export const renderObjBox = (data,allGroup) => {
-  let group = new Array()
-  data.forEach((item,index)=>{
-    // 创建一个立方体几何体
-    const geometry = new THREE.BoxGeometry(item.obj_dimension_x_dut, item.obj_dimension_y_dut, item.obj_dimension_z_dut);
-    // 创建一个材质
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x67C23A,
-      transparent:true,
-      opacity:0.6
-    })
-
-    // 利用几何体和材质生成网格模型
-    const mesh = new THREE.Mesh(geometry, material);
-
-    // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
-    const edges = new THREE.EdgesGeometry(geometry);
-
-    // 立方体线框，不显示中间的斜线
-    const edgesMaterial = new THREE.LineBasicMaterial({
-      color: 0x67C23A
-    })
-
-    const line = new THREE.LineSegments(edges,edgesMaterial);
-
-    // 网格模型和网格模型对应的轮廓线框插入到场景中
-
-    mesh.position.x = item.obj_x_ref
-    mesh.position.y = item.obj_y_ref
-    mesh.position.z = item.obj_z_ref
-
-    line.position.x = item.obj_x_ref
-    line.position.y = item.obj_y_ref
-    line.position.z = item.obj_z_ref
-
-    //角度 = 弧度 * 180 / Math.PI
-    let angle = item.obj_yaw_ref * 180 / Math.PI
-
-    mesh.rotation.set(0, 0, item.obj_yaw_ref, "XZY");
-    line.rotation.set(0, 0, item.obj_yaw_ref, "XZY");
-    // 把网格模型添加到场景中
-    scene.add(mesh,line);
-    group.push({mesh:mesh,line:line})
-  })
-  allGroup.list.push(group)
-  return allGroup;
-}
-
-//设置obj box框对象的方法
-export const renderDUTBox = (data,dutAllGroup) => {
-  let group = new Array()
-  data.forEach((item,index)=>{
-    // 创建一个立方体几何体
-    const geometry = new THREE.BoxGeometry(item.obj_dimension_x_dut, item.obj_dimension_y_dut, item.obj_dimension_z_dut);
-    // 创建一个材质
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x409EFF,
-      transparent:true,
-      opacity:0.6
-    })
-
-    // 利用几何体和材质生成网格模型
-    const mesh = new THREE.Mesh(geometry, material);
-
-    // 立方体几何体box作为EdgesGeometry参数创建一个新的几何体
-    const edges = new THREE.EdgesGeometry(geometry);
-
-    // 立方体线框，不显示中间的斜线
-    const edgesMaterial = new THREE.LineBasicMaterial({
-      color: 0x409EFF
-    })
-
-    const line = new THREE.LineSegments(edges,edgesMaterial);
-
-    // 网格模型和网格模型对应的轮廓线框插入到场景中
-
-    mesh.position.x = item.obj_x_dut
-    mesh.position.y = item.obj_y_dut
-    mesh.position.z = item.obj_z_dut
-
-    line.position.x = item.obj_x_dut
-    line.position.y = item.obj_y_dut
-    line.position.z = item.obj_z_dut
-
-    //角度 = 弧度 * 180 / Math.PI
-    let angle = item.obj_yaw_dut * 180 / Math.PI
-
-    mesh.rotation.set(0, 0, item.obj_yaw_dut, "XZY");
-    line.rotation.set(0, 0, item.obj_yaw_dut, "XZY");
-    // 把网格模型添加到场景中
-    scene.add(mesh,line);
-    group.push({mesh:mesh,line:line})
-  })
-  dutAllGroup.list.push(group)
-  return dutAllGroup;
-}
-
 //设置od box框对象方法
 export const renderODBox = (data,odAllGroup,frame) => {
   // if(!odAllGroup.list[frame]){
     let group = new Array()
     data.forEach((item,index)=>{
       // 创建一个立方体几何体
-      const geometry = new THREE.BoxGeometry(item.dimension_x, item.dimension_y, item.dimension_z);
+      const geometry = new THREE.BoxGeometry(item.dimensions_x, item.dimensions_y, item.dimensions_z);
       // 创建一个材质
       const material = new THREE.MeshBasicMaterial({
         color: 0xF47A20,

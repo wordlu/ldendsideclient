@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint, renderODBox, scene, renderObjBox, renderDUTBox, clearGeometry } from '../visualization/lib/initThree';
+import { DracoPoint, renderODBox, scene, clearGeometry } from '../visualization/lib/initThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
