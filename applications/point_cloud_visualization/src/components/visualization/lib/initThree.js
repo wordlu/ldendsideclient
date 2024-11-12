@@ -6,23 +6,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 let camera,controls;
 let geometry = new THREE.BufferGeometry()//创建图形对象
-// let geometry2 = new THREE.BufferGeometry()//创建图形对象
 let geometry_draco; // draco 图形对象
 let vertices = new Float32Array()//创建图形的顶点对象
 let attribue = new THREE.BufferAttribute(vertices, 3)//创建属性对象
 
 //创建一个三维场景
 const scene = new THREE.Scene()
-//添加光源
-const ambient = new THREE.AmbientLight(0x93BE2E, 0.5)
-scene.add(ambient)
-
 //创建辅助坐标轴
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
-
+//添加坐标轴文字
 const loader = new FontLoader();
-// 创建文字标识函数
 const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
   // ./src/components/visualization/lib/helvetiker_regular.typeface.json
   loader.load('http://loggertrash/pointcloud/helvetiker_regular.typeface.json', function (font) {
@@ -203,13 +197,6 @@ export const setPointCloud = (lidarDevices, initDisplays) => {
   })
  
   initpoint(renderObject) //  创建点云并添加到场景中
-}
-
-// 原始点云创建
-export const DrawPoint = (arr) => {
-  attribue = new THREE.BufferAttribute(new Float32Array(arr), 3);
-  geometry.attributes.position = attribue;
-  geometry.dispose()
 }
 
 // Draco 解压pcd数据创建数据

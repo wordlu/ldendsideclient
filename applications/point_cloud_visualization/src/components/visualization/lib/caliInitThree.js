@@ -340,22 +340,6 @@ export const setPointCloud = (lidarDevices) => {
   initpoint(renderObject) //  创建点云并添加到场景中
 }
 
-export const setPointCloud2 = () => {
-  // console.log(cloudpointparams)
-         
-  // function initpoint() {
-  //   scene.add(points2)
-  // }
-  // initpoint() //  创建点云并添加到场景中
-}
-
-// 原始点云创建
-export const DrawPoint = (arr) => {
-  attribue = new THREE.BufferAttribute(new Float32Array(arr), 3);
-  geometry.attributes.position = attribue;
-  geometry.dispose()
-}
-
 // Draco 解压pcd数据创建数据
 export const DracoPoint = async (arr, type) =>{
   // 加载Draco解码器模块

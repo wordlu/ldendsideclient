@@ -13,19 +13,11 @@ let attribue = new THREE.BufferAttribute(vertices, 3)//创建属性对象
 let renderObject = {}
 //创建一个三维场景
 const scene = new THREE.Scene()
-//添加光源
-const ambient = new THREE.AmbientLight(0x93BE2E, 0.5), light = new THREE.PointLight(0x93BE2E, 0.4)
-scene.add(ambient)
-light.position.set(1000,1000,1000)
-scene.add(light)
-
 //创建辅助坐标轴，X 轴为红色，Y 轴为绿色，Z 轴为蓝色。
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
-
-
+//添加坐标轴文字
 const loader = new FontLoader();
-// 创建文字标识函数
 const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
   // ./src/components/visualization/lib/helvetiker_regular.typeface.json
   loader.load('http://loggertrash/pointcloud/helvetiker_regular.typeface.json', function (font) {
