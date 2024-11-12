@@ -30,6 +30,7 @@
         <el-form-item label="时间">
           <el-config-provider :locale="locale">
             <el-date-picker
+              :editable="false"
               :clearable="false"
               v-model="dateRange"
               type="datetimerange"
@@ -47,7 +48,7 @@
         </el-form-item>
       </div>
     </el-form>
-    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&viewPanel=2&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput+'&var-container='+containerValue" frameborder="0"></iframe>
+    <iframe class="system-monitor" :src="`/monitor/d/y8_hb1gHk/device_log?orgId=1&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from='+getTimestamp(dateRange[0])+'&to='+getTimestamp(dateRange[1])+'&var-searchable_pattern='+logsinput+'&var-container='+containerValue" frameborder="0"></iframe>
   </div>
 </template>
 
@@ -158,7 +159,7 @@ queryCurrentDrivers()
 
 .system-monitor {
   width: 100%;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 210px);
 }
 
 </style>

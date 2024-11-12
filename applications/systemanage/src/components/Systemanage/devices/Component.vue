@@ -33,6 +33,7 @@
         <el-table ref="multipleTableRef" 
           :data="data" style="width: 100%">
           <el-table-column property="name" label="设备驱动类型" />
+          <el-table-column property="slot" label="设备名称" />
           <el-table-column property="brand" label="品牌"/>
           <el-table-column property="model" label="型号"/>
         </el-table>

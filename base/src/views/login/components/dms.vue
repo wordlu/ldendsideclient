@@ -31,11 +31,11 @@
 <script>
 import Cookies from 'js-cookie'
 import md5 from 'js-md5';
-import LangSelect from '@/components/LangSelect'
+// import LangSelect from '@/components/LangSelect'
 import keycloakInfo from '@/utils/setKeycloak'
 export default {
   components: {
-    LangSelect
+    // LangSelect
   },
   data(){
     var validateUser = (rule, value, callback) => {

@@ -114,9 +114,6 @@ export const setCamera = (width, height) => {
 
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
-  // controls.enableRotate = false; // 禁用旋转
-  // controls.enableZoom = false; // 禁用缩放
-  // controls.enablePan = false; // 禁用平移  
   controls.addEventListener('change',()=>{
     renderer.render(scene, camera)
   })
@@ -341,22 +338,6 @@ export const setPointCloud = (lidarDevices) => {
   })
  
   initpoint(renderObject) //  创建点云并添加到场景中
-}
-
-export const setPointCloud2 = () => {
-  // console.log(cloudpointparams)
-         
-  // function initpoint() {
-  //   scene.add(points2)
-  // }
-  // initpoint() //  创建点云并添加到场景中
-}
-
-// 原始点云创建
-export const DrawPoint = (arr) => {
-  attribue = new THREE.BufferAttribute(new Float32Array(arr), 3);
-  geometry.attributes.position = attribue;
-  geometry.dispose()
 }
 
 // Draco 解压pcd数据创建数据

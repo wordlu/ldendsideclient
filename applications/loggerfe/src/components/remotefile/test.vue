@@ -1,17 +1,10 @@
+<!-- ouster -->
 <template>
   <div class="remote-file">
     <div class="remote-form">
       <div class="remote-form-item">
-        <label for="name">Name:</label>
-        <input class="remote-form-input" @input="search($event)" v-model="name" id="name" type="text" placeholder="Enter your name" />
-      </div>
-      
-      <div class="remote-form-item">
-        <label for="option">Option:</label>
-        <select class="remote-form-select" v-model="option" id="option" @change="getDepartData">
-          <option value="12312321">123123</option>
-          <option value="大师傅大师傅">法大师傅十分</option>
-        </select>
+        <label for="host_name">设备地址:</label>
+        <input class="remote-form-input" @input="setInput($event, 'host_name')" v-model="host_name" type="text" placeholder="请输入" />
       </div>
     </div>
   </div>
@@ -21,38 +14,59 @@
 export default {
   data() {
     return {
-      name: '2222',
-      option: 'Option 1',
+      host_name: '',
     };
   },
   mounted() {
   },
   methods: {
-    search(event){
+    setInput(event, key){
       console.log(event.currentTarget.value)
-      this.name = event.currentTarget.value
+      this[key] = event.currentTarget.value
     },
-    getDepartData(value) {
+    setSelect(value, key) {
       console.log(event.target.value)
-      this.option = event.target.value
+      this[key] = event.target.value
+    },
+    validFormData() {
+      function isValidPort(port) {
+        const portNumber = parseInt(port, 10);
+        return portNumber >= 1025 && portNumber <= 65535;
+      }
+      let errmsg = ''
+      if (!isValidPort(this.msop_port)) {
+        errmsg = "请输入正确的msop包端口"
+      } else if (!isValidPort(this.difop_port)) {
+        errmsg = "请输入正确的difop包端口"
+      }
+      return errmsg
+    },
+    validFormData() {
+      function isValidIP(ip) {
+        const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        return ipv4Pattern.test(ip);
+      }
+      let errmsg = ''
+      if (!isValidIP(this.host_name)) {
+        errmsg = "请输入正确的设备地址"
+      }
+      return errmsg
     },
     getFormData() {
       return {
-        name: this.name,
-        option: this.option,
+        host_name: this.host_name,
       };
     },
   },
 };
 </script>
 
-<style scoped>
-/* Add some basic styles */
+<style>
 
 .remote-file {
   height: 100%;
   width: 100%;
-  padding: 10px;
+  /* padding: 10px; */
 }
 .remote-form {
   display: flex;
@@ -66,7 +80,7 @@ export default {
 }
 
 .remote-form .remote-form-item label {
-  width: 80px;
+  width: 110px;
   text-align: right;
   vertical-align: middle;
   float: left;
@@ -75,7 +89,8 @@ export default {
   line-height: 40px;
   padding: 0 12px 0 0;
   box-sizing: border-box;
-  font-weight: 400;
+  font-weight: 700;
+  text-wrap: nowrap;
 }
 
 .remote-form-input {
@@ -92,7 +107,9 @@ export default {
   outline: none;
   padding: 0 15px;
   transition: border-color .2s cubic-bezier(.645,.045,.355,1);
-  width: 100%;
+  width: 300px;
+  font-size: 14px;
+  height: 32px;
 }
 
 .remote-form-select {
@@ -109,8 +126,9 @@ export default {
   outline: none;
   padding: 0 15px;
   transition: border-color .2s cubic-bezier(.645,.045,.355,1);
-  width: 100%;
+  width: 300px;
+  font-size: 14px;
+  height: 32px;
 }
-
 </style>
 

@@ -41,7 +41,7 @@ import * as echarts from 'echarts'
 
 import vueTree from 'vue-tree-jf'
 
-import fuzzysearch from './fuzzysearch/fuzzysearch.js'
+// import fuzzysearch from './fuzzysearch/fuzzysearch.js'
 import { api } from '@/jsonapi/api'
 import systemApi from '@/jsonapi/system'
 // import Keycloak from '@dsb-norge/vue-keycloak-js';
@@ -76,7 +76,7 @@ Vue.use(Element, {
   size: Cookies.get('size') || 'medium', // set element-ui default size
   i18n: (key, value) => i18n.t(key, value)
 })
-Vue.use(fuzzysearch);
+// Vue.use(fuzzysearch);
 
 // register global utility filters
 Object.keys(filters).forEach(key => {

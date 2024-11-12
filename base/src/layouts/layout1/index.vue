@@ -22,20 +22,20 @@
 </template>
 
 <script>
-import LangSelect from "@/components/LangSelect";
+// import LangSelect from "@/components/LangSelect";
 import { mapGetters } from "vuex";
 import Cookies from "js-cookie";
-import Breadcrumb from "@/components/Breadcrumb";
-import Dropdown from "@/components/Dropdown/Dropdown.vue";
+// import Breadcrumb from "@/components/Breadcrumb";
+// import Dropdown from "@/components/Dropdown/Dropdown.vue";
 import navMenu from "./menu/navMenu.vue";
 import { debounce } from "@/utils";
 import actions from "@/micros/actions";
 export default {
   components: {
-    Breadcrumb,
-    Dropdown,
+    // Breadcrumb,
+    // Dropdown,
     navMenu,
-    LangSelect,
+    // LangSelect,
   },
   computed: {
     ...mapGetters(["menuList"]),
@@ -97,12 +97,7 @@ export default {
 #Layout1 {
   width: 100%;
   height: 100%;
-  .breadcrumb {
-    height: 50px;
-  }
-  .breadcrumb-container {
-    margin-left: 24px;
-  }
+
   #topBar {
     width: 100%;
     height: 80px;

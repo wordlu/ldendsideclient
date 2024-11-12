@@ -1,24 +1,17 @@
 <template>
   <div id="threeDView" ref="container">
     <div id="three" ></div>
-    <!-- <canvas v-show="isCali" ref="overlayCanvas" style="position: absolute; top: 0; left: 0;pointer-events: none;"></canvas> -->
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import {camera, scene, renderer, setCamera, setControls,setControlsEnable, setPointCloud } from './lib/replayInitThree';
+import {camera, scene, renderer, setCamera, setControls, setPointCloud } from './lib/replayInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
+import { allWsSend } from '../socket/replaysocket';
 import { dataSetStore } from '@/pinia/dataSet.js';
 const dataSet = dataSetStore();
-
-const loading = ref(dataSet.loading)
-
-watch(()=>dataSet.loading,(newVal)=>{
-  loading.value = newVal
-},{deep:true})
 
 const initThree = async () =>{
   let width = document.getElementById('threeDView').offsetWidth;
@@ -32,7 +25,7 @@ const initThree = async () =>{
   renderer.render(scene,camera); // 创建渲染器
   setControls(camera); // 创建轨道控制器
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
-  setPointCloud(dataSet.lidarDevices); //  创建点云并添加到场景中
+  setPointCloud(dataSet.lidarDevices, dataSet.initDisplays); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);
@@ -112,108 +105,12 @@ const resizeRendererToDisplaySize = async(renderer) =>{
 onMounted(()=>{
   setTimeout(()=>{
     initThree()
-    // // 设置 Overlay Canvas 大小
-    // const { clientWidth, clientHeight } = container.value;
-    // overlayCanvas.value.width = clientWidth;
-    // overlayCanvas.value.height = clientHeight;
-
-    // // 添加鼠标事件监听
-    // container.value.addEventListener('mousedown', onMouseDown);
-    // container.value.addEventListener('mousemove', onMouseMove);
-    // window.addEventListener('mouseup', onMouseUp);
   },100)
 })
 
 onBeforeUnmount(()=>{
-  dataSet.loading = true;
-  pcdWsSend.close()
-  camWsSend.close()
-  encodeWs.close()
-  allWsSend.close()
-  ws.close()
+  allWsSend.close();
 })
-
-const overlayCanvas = ref(null);
-const container = ref(null);
-
-// 鼠标事件处理
-let isSelecting = false;
-let startPoint = { x: 0, y: 0 };
-let endPoint = { x: 0, y: 0 };
-
-const onMouseDown = (event) => {
-  isSelecting = true;
-  startPoint = { x: event.clientX, y: event.clientY };
-};
-
-const onMouseMove = (event) => {
-  if (isSelecting) {
-    endPoint = { x: event.clientX, y: event.clientY };
-    drawSelectionBox();
-  }
-};
-
-const onMouseUp = () => {
-  isSelecting = false;
-  selectPointsInBox();
-};
-
-// 绘制选择框
-const drawSelectionBox = () => {
-  
-  if(props.isCali) {
-    const ctx = overlayCanvas.value.getContext('2d');
-    ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height);
-    ctx.strokeStyle = 'red';
-    ctx.strokeRect(
-      startPoint.x,
-      startPoint.y,
-      endPoint.x - startPoint.x,
-      endPoint.y - startPoint.y
-    );
-  }
-};
-let selectedPoints = [], selectedIndices = [];
-
-// 判断哪些点在框内，并返回下标
-const selectPointsInBox = () => {
-  console.log('判断哪些点在框内，并返回下标')
-  const rect = new THREE.Box2(
-    new THREE.Vector2(Math.min(startPoint.x, endPoint.x), Math.min(startPoint.y, endPoint.y)),
-    new THREE.Vector2(Math.max(startPoint.x, endPoint.x), Math.max(startPoint.y, endPoint.y))
-  );
-
-  const positions = points2.geometry.attributes.position.array;
-  selectedPoints = [];
-  selectedIndices = [];
-
-  for (let i = 0; i < positions.length; i += 3) {
-    const point = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
-    const vector = point.clone().project(camera);
-    vector.x = (vector.x * 0.5 + 0.5) * container.value.clientWidth;
-    vector.y = (vector.y * -0.5 + 0.5) * container.value.clientHeight;
-
-    // 判断该点是否在框内
-    if (rect.containsPoint(new THREE.Vector2(vector.x, vector.y))) {
-      selectedPoints.push(point); // 存储点的坐标
-      selectedIndices.push(i / 3); // 存储点的下标
-    }
-  }
-
-  console.log('Selected Points:', selectedPoints);
-  console.log('Selected Indices:', selectedIndices);
-  dataSet.selectedIndices = selectedIndices;
-  // @wodelu:TODO:源雷达是补盲雷达，points2，暂时写死
-  // highlightSelectedPoints(selectedIndices, 2)
-};
-
-
-// 清除选择框的函数
-const clearSelectionBox = () => {
-  const ctx = overlayCanvas.value.getContext('2d');
-  ctx.clearRect(0, 0, overlayCanvas.value.width, overlayCanvas.value.height); // 清空 Canvas
-};
-
 
 </script>
 

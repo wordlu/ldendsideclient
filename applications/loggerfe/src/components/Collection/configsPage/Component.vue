@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -41,6 +41,7 @@
               :highlight-current="false"
               @node-click="handleNodeClick"
               :props="defaultProps"
+              :render-content="renderContent"
             >
               <template #default="{ node, data }">
                 <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
@@ -68,7 +69,6 @@
                     <el-form :model="form" label-width="auto"  style="max-width: 600px">
                       <el-form-item label="设备驱动类型:" label-width="110px">
                         <el-select v-model="form.type" style="width: 300px;" placeholder="请选择驱动" @change="handleDriverChange">
-                          <!-- <el-option label="Zone one" value="shanghai" /> -->
                           <el-option v-for="item in driversdataOptions" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                       </el-form-item>
@@ -78,13 +78,42 @@
                       </div>
                     </el-form>
                 </el-tab-pane>
-                <!-- <el-tab-pane label="显示设置" name="second">显示设置</el-tab-pane> -->
               </el-tabs>
             </div>
           </div>
         </div>
       </el-col>
     </el-row>
+
+    <el-dialog
+      v-model="dialogVisible"
+      title="导入标定文件"
+      width="500"
+      :before-close="handleClose"
+    >
+      <el-upload
+        ref="uploadRef"
+        class="upload-demo"
+        :auto-upload="false"
+        :action="uploadUrl"
+        :limit="1"
+        method="PATCH"
+        accept=".json"
+        :on-success="uploadSuccess"
+        :on-error="errorMessage"
+        :on-exceed="handleExceed"
+      >
+        <template #trigger>
+          <el-button type="primary">选择标定文件</el-button>
+        </template>
+      </el-upload>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleClose">取消</el-button>
+          <el-button type="primary" @click="submitUpload">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
   
 </template>
@@ -92,23 +121,15 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useVisualizeStore } from '@/store/modules/visualize'
-import { useCollectStore } from '@/store/modules/collect'
-import TopOprt from '@/components/collect/TopOprt.vue'
-import OperatingTags from '@/components/tags/OperatingTags.vue'
-import PrepareInfo from '@/components/collect/PrepareInfo.vue'
-import { ref, onMounted, watchEffect, reactive, nextTick, markRaw } from 'vue'
-import { setCollectionStatus } from '@/api/s1/collect'
-// import Monitor from '@/components/monitor/Index.vue'
+import { ref, onMounted, watchEffect, reactive, nextTick, markRaw, watch } from 'vue'
 import { Search } from "@element-plus/icons-vue"
-import { ElTree, ElMessage } from 'element-plus'
+import { ElTree, ElMessage, genFileId } from 'element-plus'
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { findAll, addItem, patchItem, deleteItem } from '@/api/jsonApi'
-import { getRemoteFile } from '@/api/api'
 import gostore from '@/services/governance-store'
-import type { TabsPaneContext } from 'element-plus'
+import type { UploadInstance, UploadProps, UploadRawFile, TabsPaneContext } from 'element-plus'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc';
-
+import Vue from 'vue/dist/vue.esm-bundler.js';
 
 interface Tree {
   id: number
@@ -118,13 +139,107 @@ interface Tree {
 const baseStyle = ref({})
 const loadingtext = ref('')
 const pageLoading = ref(false)
-
 const router = useRouter();
 const form = reactive({})
-
+const setConfigValue = ref(true)
+const treeRef = ref<InstanceType<typeof ElTree>>()
+const selectedNode = ref(null);
+// 获取canvas的ref
+const sensorCanvas = ref(null);
+const backgroundImage = ref(null);
+const parent = ref(null);
 const activeName = ref('first')
 const RemoteComponent = ref<any>(null);
+const remoteComponentRef = ref(null); // 用于获取远程组件实例
 const search = ref('')
+const dialogVisible = ref(false)
+const uploadUrl = ref('')
+const uploadRef = ref<UploadInstance>()
+
+const submitUpload = () => {
+  uploadRef.value!.submit()
+}
+
+const handleClose = () => {
+  uploadRef.value!.clearFiles()
+  dialogVisible.value = false
+}
+
+const errorMessage = (response) => {
+  ElMessage.error('上传文件失败'+ (response.message ? `:${response.message}!` : '!'))
+};
+
+const uploadSuccess = (response, file, fileList) => {
+  ElMessage.success('上传成功')
+  uploadRef.value!.clearFiles()
+  dialogVisible.value = false
+};
+
+const handleExceed: UploadProps['onExceed'] = (files) => {
+  uploadRef.value!.clearFiles()
+  const file = files[0] as UploadRawFile
+  file.uid = genFileId()
+  uploadRef.value!.handleStart(file)
+}
+
+watch(()=>selectedNode.value, (newVal) => {
+  createSensorCanvas(treedata.value)
+})
+
+// 自定义树节点的渲染内容
+const renderContent = (h, { node, data }) => {
+  if (!data.children && data.devicedata) {
+    return h('div',{
+        style: 'display:flex;align-items:center;',
+      },
+      [
+      h('div', {
+        style: 'margin-right: 16px;min-width:90px;text-align:left;',
+      },node.label), // 节点标签
+      h('div', { 
+        style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
+        onClick: () => handleTreeUploadClick(node, data)
+      }, '导入标定文件'),  // 重新连接
+    ]);
+  } else {
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
+  }
+};
+
+const handleTreeUploadClick = (node: Node, data: Tree) => {
+  dialogVisible.value = true
+}
+
+// 文件上传函数
+const handleFileUpload = (event, nodeData) => {
+  const file = event.target.files[0];
+  if (file) {
+    console.log('正在上传文件到节点:', nodeData.label);
+    console.log('文件信息:', file);
+
+    // 可以在这里处理上传逻辑，例如通过 API 上传文件
+    // 示例：将 file 发送到服务器
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // 假设有上传接口 /upload
+    fetch('/upload', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log('文件上传成功');
+        } else {
+          console.log('文件上传失败');
+        }
+      })
+      .catch((error) => {
+        console.error('上传出错:', error);
+      });
+  }
+};
+
 const onDelete = () => {
   const params = {
       data: {
@@ -143,7 +258,7 @@ const onDelete = () => {
     let msg =  "删除失败"
     if(errors && errors[0]) {
       const errmsg = errors[0]['detail']
-      msg =  t(`algorithm['${errmsg}']`)
+      msg =  errmsg
     }
     ElMessage({
       message: msg,
@@ -158,7 +273,6 @@ const refresh = () => {
   }, 1000);
 }
 
-const remoteComponentRef = ref(null); // 用于获取远程组件实例
 
 const getRemoteFormData = () => {
   if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
@@ -170,19 +284,22 @@ const getRemoteFormData = () => {
   }
 };
 
+const validRemoteFormData = () => {
+  if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
+    return remoteComponentRef.value.validFormData();
+  } else {
+    console.error('远程组件加载错误，无法获取表单数据');
+  }
+}
+
 const onSubmit = async () => {
+  const validFormDataErrMsg = validRemoteFormData()
+  if (validFormDataErrMsg) {
+    ElMessage.error(validFormDataErrMsg)
+    return;
+  }
   getRemoteFormData()
   try {
-    // const deviceparams = {
-    //   "points_topic": form.points_topic,
-    //   "host_name": form.host_name,
-    //   "timestamp_mode": form.timestamp_mode,
-    //   "ptp_utc_tai_offset": form.ptp_utc_tai_offset,
-    //   "point_type": form.point_type,
-    //   "receive_topic": form.receive_topic,
-    //   "save_topic": form.save_topic,
-    //   "bag_file_name": form.bag_file_name,
-    // }
     const {type, ...deviceparams} = form
     const params = {
       data: {
@@ -228,9 +345,6 @@ const onSubmit = async () => {
   }
 }
 
-const setConfigValue = ref(true)
-const treeRef = ref<InstanceType<typeof ElTree>>()
-const selectedNode = ref(null);
 const handleNodeClick = (nodeData: Tree, node: any) => {
   if (isLeaf(nodeData)) {
     selectedNode.value = node; 
@@ -238,7 +352,7 @@ const handleNodeClick = (nodeData: Tree, node: any) => {
   }
 }
 const isLeaf = (nodeData, node) => {
-  if (!selectedNode.value && !node.data.children) {
+  if (!selectedNode.value && (node && node.data && !node.data.children)) {
     selectedNode.value = node; 
     getSensoronfigs(nodeData)
   }
@@ -263,6 +377,7 @@ const currentDriver = ref(null)
 const handleDriverChange = (row: any) => {
   currentDriver.value = driversdata.value.find(it => it.id === row)
   console.log(currentDriver.value, 'currentDriver.value')
+  setFormDataNull()
   loadRemoteComponent()
 
 }
@@ -278,7 +393,7 @@ const getSensoronfigs = (nodedata) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
-
+        uploadUrl.value = `http://loggertrash/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
         currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
         setFormData(datavalue[0])
@@ -297,6 +412,15 @@ const getSensoronfigs = (nodedata) => {
 const setFormData = (details: any) => {
   form.type = details.driver
   Object.assign(form, details['device-params']);
+  console.log(form, 'form')
+}
+
+const setFormDataNull = () => {
+  for(const key in form) {
+    if (key !== 'type') {
+      form[key] = ''
+    }
+  }
 }
 const gotoSetConfigs = () => {
   window.history.pushState(null, '', `/loggerfe/root/createConfig?type=${selectedNode.value.data.type}&slot=${currentDeviceName.value}&viewport=${currentViewport.value.id}`)
@@ -314,7 +438,7 @@ const currentViewport = ref(null)
 const viewport_bg = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/models/viewports', {'filter[using]': true, include: 'devices',}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -326,8 +450,16 @@ const queryCurrentDrivers = () => {
         width: '559px',
       }
       name.value = datavalue[0].name
-      sensorData.value = datavalue[0]['device-hub']
-      treedata.value = totree(datavalue[0]['device-hub'])
+      const devicehub = datavalue[0]['device-hub']
+      sensorData.value = devicehub
+      const device = datavalue[0]['devices']
+      const devicehubdata = devicehub.map((item: any) => {
+        return {
+          ...item,
+          devicedata: device.find((it: any) => it.slot === item.id),
+        }
+      })
+      treedata.value = totree(devicehubdata)
       setTimeout(() => {
         createSensorCanvas(treedata.value)
       }, 100)
@@ -339,10 +471,10 @@ const queryCurrentDrivers = () => {
   }
 }
 
-const totree = () => {
+const totree = (data) => {
   const tree = [];
   // 通过类型(type)分组
-  sensorData.value.forEach(sensor => {
+  data.forEach(sensor => {
     // 查找当前type是否已经存在于树结构中
     let parent = tree.find(node => node.label === sensor.type);
     
@@ -360,26 +492,18 @@ const totree = () => {
     parent.children.push({
       id: sensor.type+'_'+sensor.id,  // 子节点id
       label: sensor.id,   
+      devicedata: sensor.devicedata,
       type: sensor.type    // 用坐标作为label
     });
   });
-  console.log(tree, 'tree')
   return tree;
 }
-
-
-// 获取canvas的ref
-const sensorCanvas = ref(null);
-const backgroundImage = ref(null);
-const parent = ref(null);
 
 const resizeCanvas = () => {
   if (parent.value && sensorCanvas.value) {
     // 设置canvas的内部像素大小
     sensorCanvas.value.width = parent.value.clientWidth;
     sensorCanvas.value.height = parent.value.clientHeight;
-    // sensorCanvas.value.height = 490;
-    // sensorCanvas.value.width = 490;
   }
 };
 
@@ -394,16 +518,32 @@ onMounted(async () => {
 });
 
 // 弹窗提示
-const showPopup = (sensor) => {
-  
+const showPopup = (sensor) => {  
   const node = treeRef.value.getNode(sensor.type+'_'+sensor.id);
   if (node) {
     handleNodeClick(node.data, node)
   }
-
 };
+const deployDevices = ref([])
+const getAllDevices = async() => {
+  try {
+    await findAll('/models/devices').then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('devices')
+      deployDevices.value = datavalue
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
 
-const createSensorCanvas = (treeData) => {
+
+
+const createSensorCanvas = async (treeData) => {
+  await getAllDevices()
   const canvas = sensorCanvas.value;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空画布
@@ -420,24 +560,8 @@ const drawSensors = (ctx) => {
   sensorCanvas.value.width = imageWidth
   sensorCanvas.value.height = imageHeight
 
-
-
   sensorData.value.forEach((sensor) => {
-    let color;
-    switch (sensor.type) {
-      case 'camera':
-        color = 'green';
-        break;
-      case 'lidar':
-        color = '#ff7900';
-        break;
-      case 'imu':
-        color = 'yellow';
-        break;
-      default:
-        color = 'blue';
-    }
-
+    let color = '#bbb'
     // @wodelu:TODO 计算适应缩放后的坐标
     const scaleX = imageWidth / imageWidth
     const scaleY = imageHeight / imageHeight
@@ -447,22 +571,32 @@ const drawSensors = (ctx) => {
     
     // 绘制圆形
     ctx.beginPath();
-    // ctx.arc(sensor.x, sensor.y, 10, 0, Math.PI * 2);
     ctx.arc(adjustedX, adjustedY, 10, 0, 2 * Math.PI) // 半径为5
+    ctx.lineWidth = 3;
+    if (deployDevices.value.find(it => it.slot === sensor.id)) {
+      color = '#ff7900'
+    }
     ctx.fillStyle = color;
     ctx.fill();
+    // ctx.strokeStyle = color;
+    // ctx.stroke();
     ctx.closePath();
 
-    // 绘制 ID
+    // 绘制设备名称
     ctx.font = '14px bold';
-    ctx.fillStyle = 'black';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
+    if (sensor.id === selectedNode.value?.data?.label) {
+      ctx.fillStyle = '#ff7900';
+    } else {
+      ctx.fillStyle = 'black';
+    }
 
     const textX = adjustedX + 15; // 文字x坐标，偏移圆形
     const textY = adjustedY + 3 // 文字y坐标，与圆形对齐
 
     ctx.fillText(sensor.id, textX, textY);
+     
   });
 };
 
@@ -538,6 +672,7 @@ const loadRemoteComponent = async () => {
     }
 
     RemoteComponent.value = markRaw(component);
+    RemoteComponent.value = Vue.extend(component);
   } catch (err) {
     console.error('Failed to load remote component:', err);
   }
@@ -609,7 +744,8 @@ const loadRemoteComponent = async () => {
 
     .tree-content {
       width: 300px; 
-      height: 260px; 
+      // height: 260px; 
+      height: auto;
       overflow: auto;
     }
   }

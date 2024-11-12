@@ -44,13 +44,13 @@
 
 <script>
 import Cookies from 'js-cookie'
-import LangSelect from '@/components/LangSelect'
+// import LangSelect from '@/components/LangSelect'
 import md5 from 'js-md5';
 import keycloakInfo from '@/utils/setKeycloak'
 
 export default {
   name: 'common',
-  components: { LangSelect },
+  // components: { LangSelect },
   data() {
     var validateUser = (rule, value, callback) => {
       if (value === '') {

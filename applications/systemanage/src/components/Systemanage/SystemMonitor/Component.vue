@@ -24,7 +24,7 @@
         </el-option-group>
       </el-select>
     </div>
-    <iframe v-show="title === '设备监控'" class="device-monitor" :src="`/monitor/d/O_ciWJgHz/device?orgId=1&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
+    <iframe v-show="title === '设备监控'" class="device-monitor" :src="`/monitor/d/O_ciWJgHz/device-monitor?orgId=1&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
   </div>
 </template>
 
@@ -117,4 +117,31 @@ queryCurrentDrivers()
 
   
 }
+</style>
+
+<style>
+/* 针对 Chrome、Edge、Safari */
+::-webkit-scrollbar {
+  width: 8px; /* 滚动条宽度 */
+  height: 8px; /* 横向滚动条高度 */
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: #f0f0f0; /* 轨道颜色 */
+  border-radius: 4px;
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background-color: #888; /* 滑块颜色 */
+  border-radius: 4px;
+  border: 2px solid #f0f0f0; /* 滑块外边框颜色 */
+}
+
+/* 鼠标悬浮时的滚动条滑块 */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* 鼠标悬浮时滑块颜色 */
+}
+
 </style>

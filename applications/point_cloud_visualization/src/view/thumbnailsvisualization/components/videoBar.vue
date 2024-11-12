@@ -3,25 +3,34 @@
 <template>
   <div id="thumbnailsvideoBar">
     <div class="control">
-      <div class="control-prev control-item" @click="prev" style="margin-right: 10px;">
-        <img src="../../../assets/prev.svg" alt="" style="margin-right: 3px;" />
+      <div class="control-prev-next" @click="prev">
+        上一帧
       </div>
       <div class="control-stop" @click="start">
         <img src="../../../assets/pause.svg" alt="" v-if="isStart" />
         <img src="../../../assets/stop.svg" alt="" class="marginLeft3" v-else />
       </div>
-      <div class="control-next control-item" @click="next" style="margin-left: 10px;">
-        <img src="../../../assets/next.svg" alt="" style="margin-left: 3px;" />
+      <div class="control-prev-next" @click="next">
+        下一帧
       </div>
     </div>
     <div class="progress-area">
+      <div style="font-size: 12px;position: absolute;right: 10px; bottom: 45px;">{{ activeFrame }} / {{ currentTimeString }} / {{ time_value }}</div>
       <div class="Progress-thumbnails">
+        <div
+          class="tooltip"
+          v-if="tooltipVisible"
+          :style="{ left: (offsetX-10) + 'px', bottom: '32px', fontSize: '12px' }"
+        >
+          {{ tooltipContent }}
+        </div>
         <div class="Progress_back"
           @mousedown="setProgressPosDown"
-          @mousemove="progressMove">
+          @mousemove="progressMove"
+          @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave">
           <div class="Progress_line"></div>
         </div>
-        <span style="font-size: 12px;margin-left: 10px;">{{ currentTimeString }}/{{ time_value }}</span>
       </div>
     </div>
   </div>
@@ -30,9 +39,7 @@
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
 import { ref , watch , computed } from 'vue'
-import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/thumbnailsocket'
-import {dataval} from './dataval'
-import { func_scene_thumbnail } from '../../../api/api'
+import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/replaysocket'
 import * as THREE from 'three';
 
 const startframe = ref(0)
@@ -58,6 +65,9 @@ const moveFrame = ref()
 const isStart = ref(false)
 
 const loading = ref(dataSet.loading)
+
+const tooltipVisible = ref(false);
+const tooltipContent = ref('');
 
 watch(()=>dataSet.loading,(newVal)=>{
   loading.value = newVal
@@ -107,16 +117,25 @@ const currentTimeString = computed(() => {
   const seconds = durationInSeconds % 60;  // 计算秒数
   // 判断是否超过 1 小时
   if (hours > 0) {
-    // 超过1小时，显示为 "HH:mm:ss"
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   } else {
-    // 不超过1小时，显示为 "mm:ss"
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
-  // const seconds = Math.floor(currentTime.value / 1000);
-  // const milliseconds = currentTime.value % 1000;
-  // return `${seconds}.${String(milliseconds).padStart(3, '0')}s`;
 });
+
+const getTooltipContent = (moveFrame) => {
+  const durationMs = moveFrame * frame_duration.value;
+  const durationInSeconds = Math.round(durationMs);
+  const hours = Math.floor(durationInSeconds / 3600);  // 计算小时
+  const minutes = Math.floor((durationInSeconds % 3600) / 60);  // 计算分钟
+  const seconds = durationInSeconds % 60;  // 计算秒数
+  // 判断是否超过 1 小时
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+}
 
 watch(info,(newVal)=>{
   // 处理帧数
@@ -134,6 +153,9 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
     if(activeFrame.value <= frame_count.value){
       document.querySelector('.Progress_line').style.width = step.value * activeFrame.value + 'px'
     }
+    if (activeFrame.value + 1 === frame_count.value){
+      allWsSend(activeFrame.value+1, false, 1);
+    }
     if(activeFrame.value >= frame_count.value){
       isStart.value = false;
       stopPlaying() // 停止播放
@@ -141,9 +163,19 @@ watch(()=>dataSet.activefame,(newVal,oldVal)=>{
   }
 })
 
+const handleMouseLeave = () => {
+  tooltipVisible.value = false; // 鼠标离开时隐藏tooltip
+};
+
+const handleMouseEnter = () => {
+  tooltipVisible.value = false; // 鼠标进入时隐藏tooltip，确保显示正确
+};
+
 const progressMove = (e)=>{
   offsetX.value = e.offsetX;
   moveFrame.value = parseInt(e.offsetX / step.value);
+  tooltipVisible.value = true;
+  tooltipContent.value = getTooltipContent(moveFrame.value);
 }
 
 const setProgressPosDown = ()=>{
@@ -169,6 +201,7 @@ const start=()=>{
     }else{
       isStart.value = false
       stopPlaying() // 停止播放
+      getCertainFrameData();
     }
   }
 }
@@ -201,49 +234,6 @@ const next=()=>{
 
 
 <style lang="scss">
-
-.mask {
-  position: absolute;
-  bottom: 0;
-  // left: 20px;
-  // right: 20px;
-  // width: 100%;
-  width: calc(100% - 12px);
-  margin: 0 6px;
-  height: 180px;
-  background: rgba(255, 255, 255, 0.35);
-  z-index: 2;
-  transition: clip-path 0.3s ease;
-}
-
-.thumbnail {
-  flex-grow: 1;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  position: relative;
-  width: 160px; /* Example size */
-  height: 160px; /* Example size */
-  border-right: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.highlight {
-  border: 2px solid black;
-}
-
-
-
-.vertical-line {
-  position: absolute;
-  bottom: 0;
-  width: 2px;
-  height: 160px;
-  top: 60px;
-  background-color: red;
-}
-
-
 #thumbnailsvideoBar{
   z-index: 999;
   color: #ffffff;
@@ -255,6 +245,15 @@ const next=()=>{
   flex-direction: column;
   align-items: center;
   width: 100%;
+
+  .tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    transition: opacity 0.2s;
+  }
 
   .marginLeft3{
     margin-left: 3px;
@@ -270,7 +269,7 @@ const next=()=>{
 
   .control{
     display: flex;
-    width: 130px;
+    // width: 130px;
     height: 40px;
     align-items: center;
     margin-bottom: 10px;
@@ -284,6 +283,21 @@ const next=()=>{
       justify-content: center;
       border-radius: 50%;
       cursor: pointer;
+    }
+
+    .control-prev-next {
+      margin: 0 10px;
+      min-width: 40px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .control-prev-next:hover {
+      text-decoration: underline;
+    }
+
+    .control-prev-next:active {
+      color: #FF7900;
     }
 
     .control-stop{

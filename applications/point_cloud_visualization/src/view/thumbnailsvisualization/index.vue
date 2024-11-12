@@ -1,51 +1,40 @@
 <template>
   <div id="thumbvisualization">
-    <!-- <topBarVue  @currentSceneClick="currentSceneClick" /> -->
     <div class="view">
-      <toolBarVue/>
       <div class="main">
         <div class="container">
-          <threeDView />
+          <threeDView v-if="viewportData" />
         </div>
         <cameras />
+        <toolBarVue />
         <videoBarVue :currentScene="currentScene"/>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import toolBarVue from "./components/toolBar.vue";
-import topBarVue from "./components/topBar.vue";
+<script setup lang="ts">
 import videoBarVue from "./components/videoBar.vue";
+import toolBarVue from "./components/toolBar.vue";
 import threeDView from "../../components/visualization/replayThreeDView.vue";
-import cameras from "../../components/camera/cameras.vue";
-import { createHub } from '../../components/socket/thumbnailsocket';
-import { ref , watch } from 'vue';
+import cameras from "../../components/camera/replaycameras.vue";
+import { createHub } from '../../components/socket/replaysocket';
+import { ref , watch, onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
+import { findAll } from '@/api/jsonApi'
+import gostore from '@/services/governance-store'
+
 const dataSet = dataSetStore();
-const activeCam = ref(dataSet.activeCam);
-const currentScene = ref({})
-const currentSceneClick = (data) => {
-  currentScene.value = data
-}
+const viewportData = ref<any>(null);
 
-watch(()=>dataSet.activeCam,(newVal)=>{
-  dataSet.value = newVal
-},{deep:true})
-
-createHub();
-console.log("1:createHub")
-
-function print(val) {
-  document.getElementById('activeCamImg').style.width= document.getElementById('draggable-container').offsetWidth+'px'
-}
-
-const x = ref(document.documentElement.clientWidth - 408)
-const y = ref(document.documentElement.clientHeight - 620)
+onMounted(async () => {
+  const usingViewport = await findAll('logger/models/viewports', {include: 'devices', 'filter[using]': true})
+  gostore.reset()
+  gostore.sync(usingViewport.data)
+  viewportData.value = gostore.findAll('viewports')[0]
+  createHub(viewportData.value);
+})
 </script>
-
-
 
 <style lang="scss">
 #thumbvisualization{
@@ -56,7 +45,7 @@ const y = ref(document.documentElement.clientHeight - 620)
     height: 100%;
     display: flex;
     #toolBar{
-      height: 100%;
+      height: 80%;
     }
     .main{
       flex: 1;

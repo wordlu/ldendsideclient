@@ -8,9 +8,9 @@
 <script setup>
 import { onMounted , ref , computed , watch , onBeforeUnmount, defineProps } from 'vue';
 import * as THREE from 'three';
-import { points1, points2, camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, setPointCloud2, renderDUTBox } from './lib/caliInitThree';
+import { points1, points2, camera, scene, renderer, setCamera, highlightSelectedPoints, setControls,setControlsEnable, renderObjBox, setPointCloud, renderDUTBox } from './lib/caliInitThree';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import { pcdWsSend , camWsSend , encodeWs , allWsSend , ws } from '../socket/socket';
+import { encodeWs , allWsSend , ws } from '../socket/calisocket';
 import { dataSetStore } from '@/pinia/dataSet.js';
 
 const props = defineProps({
@@ -64,7 +64,6 @@ const initThree = async () =>{
   document.getElementById('three')?.appendChild(renderer.domElement); // 将渲染器的 DOM 元素添加到指定的 div 中
 
   setPointCloud(); //  创建点云并添加到场景中
-  setPointCloud2(); //  创建点云并添加到场景中
 
   var animate = function () {
     renderer.render(scene, camera);
@@ -158,11 +157,7 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
   dataSet.loading = true;
-  pcdWsSend.close()
-  camWsSend.close()
-  encodeWs.close()
   allWsSend.close()
-  ws.close()
 })
 
 const overlayCanvas = ref(null);

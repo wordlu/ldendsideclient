@@ -5,7 +5,7 @@ import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
-import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/initThree';
+import { DracoPoint , renderODBox , scene , renderObjBox , renderDUTBox } from '../visualization/lib/caliinitThree';
 import * as THREE from 'three'
 
 function getQueryString(name) {
@@ -17,8 +17,8 @@ function getQueryString(name) {
   return null;
 }
 // 数据回显
-const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
-// const podUrl = ref(`ws://loggertrash/replay/`);
+// const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
+const podUrl = ref(`ws://loggertrash/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
@@ -83,35 +83,6 @@ export const createHub = ()=>{
   };
 }
 
-// 初始化点云文件通道
-// export const initPcdSocket = ()=>{
-//   pcdWs = new WebSocket(`${podUrl.value}pcd`);
-
-//   pcdWs.onclose = function() {
-//     console.log("连接已关闭...");
-//   };
-// }
-
-// 获取pcd压缩数据并渲染
-export const pcdWsSend = (frame)=>{
-  try{
-    pcdWs.send(JSON.stringify({
-      frame_index:frame,
-      meta_key:dataSet.activePcdInfo.meta_key,
-      meta_val:dataSet.activePcdInfo.meta_val,
-      data_files_prefix:dataSet.info.data_files_prefix
-    }))
-
-    pcdWs.onmessage = async function(evt) {
-      reader.readAs('ArrayBuffer',evt.data,function(result){
-        DracoPoint(result)
-      });
-    };
-  }catch(err){
-    console.error('Init pcdWsSend error:'+err);
-  }
-}
-
 // 初始化视觉数据
 // export const initCamSocket = ()=>{
 //   camWs = new WebSocket(`${podUrl.value}cam`);
@@ -131,37 +102,6 @@ export const pcdWsSend = (frame)=>{
 //   dataSet.activeCam.cam = Object.keys(dataSet.activeCamInfo)[0];
 // }
 
-//获取视觉数据并渲染
-export const camWsSend = (frame)=>{
-  try{
-    const cams = dataSet.info.meta_json.cam;
-    for(let cam in cams){
-      camWs.send(JSON.stringify({
-        frame_index:frame,
-        meta_key:cam,
-        meta_val:cams[cam],
-        data_files_prefix:dataSet.info.data_files_prefix
-      }))
-    }
-    
-    camWs.onmessage = async function(evt) {
-      if(typeof evt.data == 'string'){
-        activeCam = evt.data
-      }else{
-        reader.readAs('ArrayBuffer',evt.data,function(result){
-          // 摄像头数据赋值
-          let url = arrayBufferToBase64(result)
-          dataSet.activeCamInfo[activeCam] = url
-          if(dataSet.activeCam.cam == activeCam){
-            dataSet.activeCam.value = url
-          }
-        });
-      }
-    };
-  }catch(err){
-    console.error('Init camWsSend error:'+err);
-  }
-}
 
 // 初始化组合数据
 export const initAllSocket = ()=>{
@@ -277,7 +217,7 @@ export const allWsSend = (frame,play,endframe,request_count_val)=>{
       }
     };
   }catch(err){
-    console.error('Init camWsSend error:'+err);
+    console.error('Init allWsSend error:'+err);
   }
 }
 
