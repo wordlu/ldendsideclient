@@ -201,6 +201,7 @@ const start=()=>{
     }else{
       isStart.value = false
       stopPlaying() // 停止播放
+      getCertainFrameData();
     }
   }
 }
