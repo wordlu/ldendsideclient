@@ -209,8 +209,8 @@ function renderFrame(frameData) {
     if (!splitInfo['perception']) return;
     const perception = result.slice(splitInfo['perception'][0],splitInfo['perception'][1])
     const str = arrayBufferToString(perception)
-    const obj = JSON.parse(str)
-    const data = obj && obj.objects ? obj.objects : []
+    const obj = str && JSON.parse(str)
+    const data = obj || []
     group.clear();
     if (data && data.length > 0) {
       // 生成车辆的框
