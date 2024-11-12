@@ -200,6 +200,7 @@ export const DracoPoint = async (arr, type) =>{
 
 function createGeometry(geometryData, type) {
   let attribute = geometryData
+  if(!attribute) return;
   let name = attribute.name
   let array = attribute.array
   let itemSize = attribute.itemSize
