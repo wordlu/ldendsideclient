@@ -24,7 +24,7 @@
         </el-option-group>
       </el-select>
     </div>
-    <iframe v-show="title === '设备监控'" class="device-monitor" :src="`/monitor/d/O_ciWJgHz/device?orgId=1&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
+    <iframe v-show="title === '设备监控'" class="device-monitor" :src="`/monitor/d/O_ciWJgHz/device-monitor?orgId=1&var-device=`+sensorvalue+'&theme=light&kiosk&refresh=5s&from=now-1h&to=now'" frameborder="0"></iframe>
   </div>
 </template>
 
