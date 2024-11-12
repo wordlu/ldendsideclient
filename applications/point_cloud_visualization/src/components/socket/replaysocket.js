@@ -215,9 +215,9 @@ function renderFrame(frameData) {
     if (data && data.length > 0) {
       // 生成车辆的框
       odAllGroup = renderODBox(data,odAllGroup,dataSet.activefame);
-      console.log(odAllGroup, 'odAllGroup')
       // 检查是否有框生成
       if(odAllGroup.list.length > 0){
+        odAllGroup = removeOdData(odAllGroup,dataSet.activefame);
         if (odAllGroup.list[dataSet.activefame]) {
           odAllGroup.list[dataSet.activefame].forEach((item,index)=>{
             odAllGroup[`allGroup_${dataSet.activefame}_${index}`] = new THREE.Group();
@@ -226,68 +226,32 @@ function renderFrame(frameData) {
             group.add(odAllGroup[`allGroup_${dataSet.activefame}_${index}`]);
           })
         }
-
-        // for(let i=0;i<odAllGroup.list.length;i++){
-        //   // 处理当前激活帧的框
-        //   if(i == dataSet.activefame){
-        //     // 如果当前帧是激活帧，则执行以下操作：
-        //     // 遍历当前帧的所有框。
-        //     // 为每个框创建一个新的THREE.Group对象，并将框的网格和线条添加到该组中。
-        //     // 将该组添加到场景的group中。
-        //     odAllGroup.list[i].forEach((item,index)=>{
-        //       odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-        //       odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-        //       odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-        //       group.add(odAllGroup[`allGroup_${i}_${index}`]);
-        //     })
-        //   }else{
-        //     if (!odAllGroup.list[i]) return;
-        //     // 如果当前帧不是激活帧
-        //     // 从场景的group中移除对应的组
-        //     // 删除该组
-        //     odAllGroup.list[i].forEach((item,index)=>{
-        //       group.remove(odAllGroup[`allGroup_${i}_${index}`]);
-        //       delete odAllGroup[`allGroup_${i}_${index}`];
-        //     })
-        //     delete odAllGroup.list[i];
-        //   }
-        // }
       }
     }
   });
-
-  const boundingBox = splitInfo.box ? splitInfo.box : []
-  if (boundingBox.length <= 0) return;
-  // 生成车辆的框
-  odAllGroup = renderODBox(boundingBox,odAllGroup,dataSet.activefame);
-  // 检查是否有框生成
-  if(odAllGroup.list.length > 0){
-    for(let i=0;i<odAllGroup.list.length;i++){
-      // 处理当前激活帧的框
-      if(i == dataSet.activefame){
-        // 如果当前帧是激活帧，则执行以下操作：
-        // 遍历当前帧的所有框。
-        // 为每个框创建一个新的THREE.Group对象，并将框的网格和线条添加到该组中。
-        // 将该组添加到场景的group中。
-        odAllGroup.list[i].forEach((item,index)=>{
-          odAllGroup[`allGroup_${i}_${index}`] = new THREE.Group();
-          odAllGroup[`allGroup_${i}_${index}`].add(item.mesh);
-          odAllGroup[`allGroup_${i}_${index}`].add(item.line);
-          group.add(odAllGroup[`allGroup_${i}_${index}`]);
-        })
-      }else{
-        // 如果当前帧不是激活帧
-        // 从场景的group中移除对应的组
-        // 删除该组
-        odAllGroup.list[i].forEach((item,index)=>{
-          group.remove(odAllGroup[`allGroup_${i}_${index}`]);
-          delete odAllGroup[`allGroup_${i}_${index}`];
-        })
-      }
-    }
-  }
 }
 
+//去除已经渲染过的od数据
+function removeOdData(data,num){
+  const filteredData = {};
+  // 遍历原始对象的键
+  Object.keys(data).forEach((key) => {
+      // 使用正则表达式匹配命名规则 'allGroup_中间数字_尾数字'
+      const match = key.match(/^allGroup_(\d+)_\d+$/);
+
+      // 如果匹配成功且中间数字 >= 4，保留该项
+      if (match) {
+          const middleNumber = parseInt(match[1], 10);
+          if (middleNumber > num) {
+              filteredData[key] = data[key];
+          }
+      } else {
+          // 非 'allGroup_' 开头的项也保留
+          filteredData[key] = data[key];
+      }
+  });
+  return filteredData;
+}
 
 // 每次返回的数据帧数
 let request_count = 20
