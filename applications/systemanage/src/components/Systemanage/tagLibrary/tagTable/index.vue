@@ -1,10 +1,27 @@
 <template>
-  <div class="tag_table">
+  <div>
+    <div class="panel">
+        <div class="title-panel">
+          <div class="info">
+            <div class="info-detail">
+              <b class="title">标签管理<span class="count"></span></b>
+            </div>
+            <div class="info-btn-group">
+              <el-button type="primary" class="info-btn" @click="trigger">拉取标签</el-button>
+              <!-- <el-button disabled class="info-btn">拉取标签</el-button> -->
+            </div>
+          </div>
+        </div>
+        <div class="mid-panel">
+          <el-input v-model="search.input" class="search-bar" placeholder="搜索标签名称" :prefix-icon="Search" clearable />
+        </div>
+      </div>
+    <div class="tag_table">
     <el-table
       :data="tableData"
       stripe
       style="width: 100%;height: calc(100% - 70px);overflow: auto;">
-      <el-table-column
+      <!-- <el-table-column
         label="标签"
         align="center"
         width="210px">
@@ -18,7 +35,7 @@
             </span>
           </div>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
         prop="name"
         align="center"
@@ -36,14 +53,14 @@
           {{ scope.row.category }}
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         prop="created"
         align="center"
         label="创建时间">
         <template #default="scope">
           {{ formatter(scope.row.created,"yyyy-MM-dd hh:mm:ss") }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
 
     <div class="paging">
@@ -59,6 +76,7 @@
       </el-config-provider>
     </div>
   </div>
+  </div>
 </template>
 
 <script>
@@ -67,6 +85,7 @@ import { findAll} from '@/api/jsonApi'
 import zhCn from "element-plus/es/locale/lang/zh-cn"
 import gostore from '@/services/governance-store'
 import { ElMessageBox, ElSwitch, ElConfigProvider } from 'element-plus'
+import jsonData from "./tag.json";
 export default {
   props:{
     search:Object,
@@ -75,13 +94,14 @@ export default {
   },
   data(){
     return{
+      jsonData: jsonData,
       tableData:[],
       currentPage:0,
       total:0,
       activeRow:{},
       params:{
         offset:0,
-        limit:10,
+        limit:15,
         project:this.$route.params.id,
         sort:'-created'
       }
@@ -114,6 +134,10 @@ export default {
     };
   },
   methods: {
+    trigger(row) {
+      this.tableData = this.jsonData.slice(this.params.offset, this.params.offset + this.params.limit)
+      this.total = 100
+    },
     filterTags(tags){
       let tagsArr = []
       let iconsall = this.iconsall;
@@ -148,7 +172,8 @@ export default {
     handleCurrentChange(val) {
       this.params.offset = this.params.limit * (val - 1)
       console.log(`当前页: ${val}`);
-      this.getList()
+      // this.getList()
+      this.tableData = this.jsonData.slice(this.params.offset, this.params.offset + this.params.limit)
     },
     handleCommand(command, row) {
       ElMessageBox({
@@ -302,6 +327,12 @@ export default {
     justify-content: center;
     align-items: center;
     padding-top: 20px;
+    bottom: 0;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    /* top: 50%; */
+    left: 50%;
+    z-index: 2;
   }
   .cell{
     // width: 240px;

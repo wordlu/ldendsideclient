@@ -8,11 +8,11 @@
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">采集模版管理<span class="count">({{ count }})</span></b>
+            <b class="title">采集模版管理<span class="count">({{ tableCount }})</span></b>
           </div>
           <div class="info-btn-group">
-            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button> -->
-            <el-button disabled class="info-btn">拉取采集模版</el-button>
+            <el-button type="primary" class="info-btn" @click="trigger">拉取采集模版</el-button>
+            <!-- <el-button disabled class="info-btn">拉取采集模版</el-button> -->
           </div>
         </div>
       </div>
@@ -32,7 +32,7 @@
     <div class="list">
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
-          :data="data" style="width: 100%">
+          :data="tableData" style="width: 100%">
           <el-table-column label="" width="80">
             <template #default="scope">
               <div v-show="!currentdata.includes(scope.row.id)" style="width: 13px;height: 13px;border-radius: 50%; border: 1px solid #ccc;"></div>
@@ -61,11 +61,13 @@ import { ElTable } from 'element-plus'
 interface Row {}
 
 const count = ref(0)
+const tableCount = ref(0)
 const step = ref(10)
 const search = ref('')
 const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
+const tableData = ref([])
 const currentdata = ref([])
 
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
@@ -85,6 +87,8 @@ onMounted(() => {
 })
 
 const trigger = () => {
+  tableData.value = data.value
+  tableCount.value = count.value
   // window.history.pushState(null, '', `/loggerfe/configs`)
 }
 
@@ -99,6 +103,8 @@ const queryDeviceDrivers = (page: number) => {
       gostore.reset()
       gostore.sync(res.data)
       data.value = gostore.findAll('viewport-templates')
+      tableData.value = data.value.filter(it => it.name === '浙江交院场端视角')
+      tableCount.value = 1
       count.value = res.data.meta.count
       current.value = page
       currentmax.value = Math.ceil(count.value / step.value)

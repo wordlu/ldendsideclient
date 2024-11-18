@@ -11,8 +11,8 @@
             <b class="title">设备驱动管理<span class="count">({{ count }})</span></b>
           </div>
           <div class="info-btn-group">
-            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取设备驱动</el-button> -->
-            <el-button disabled class="info-btn" >拉取设备驱动</el-button>
+            <el-button type="primary" class="info-btn" @click="trigger">拉取设备驱动</el-button>
+            <!-- <el-button disabled class="info-btn" >拉取设备驱动</el-button> -->
           </div>
         </div>
       </div>
@@ -76,11 +76,13 @@ const prevPage = () => {
 }
 
 onMounted(() => {
-  queryDeviceDrivers(current.value)
+  // queryDeviceDrivers(current.value)
 })
 
 const trigger = () => {
-  window.history.pushState(null, '', `/loggerfe/configs`)
+  queryDeviceDrivers(current.value)
+
+  // window.history.pushState(null, '', `/loggerfe/configs`)
 }
 
 const queryDeviceDrivers = (page: number) => {

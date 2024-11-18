@@ -1,0 +1,642 @@
+[
+  {
+    "category": "道路",
+    "name": "使用对面车道"
+  },
+  {
+    "category": "道路",
+    "name": "Y形交叉口"
+  },
+  {
+    "category": "道路",
+    "name": "非本车道障碍物"
+  },
+  {
+    "category": "道路",
+    "name": "施工现场"
+  },
+  {
+    "category": "行为交互",
+    "name": "物体车切入"
+  },
+  {
+    "category": "行为交互",
+    "name": "行人在本车车道"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车加速"
+  },
+  {
+    "category": "车辆",
+    "name": "工程车"
+  },
+  {
+    "category": "车辆",
+    "name": "摩托车"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-黑"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-红"
+  },
+  {
+    "category": "车辆",
+    "name": "消防车"
+  },
+  {
+    "category": "环境",
+    "name": "雨夹雪"
+  },
+  {
+    "category": "环境",
+    "name": "沙尘暴"
+  },
+  {
+    "category": "环境",
+    "name": "中雪"
+  },
+  {
+    "category": "环境",
+    "name": "中雨"
+  },
+  {
+    "category": "环境",
+    "name": "阴"
+  },
+  {
+    "category": "道路",
+    "name": "乡村道路"
+  },
+  {
+    "category": "环境",
+    "name": "雷阵雨伴有冰雹"
+  },
+  {
+    "category": "行为交互",
+    "name": "后方切入"
+  },
+  {
+    "category": "行为交互",
+    "name": "后方切出"
+  },
+  {
+    "category": "行为交互",
+    "name": "后方跟车"
+  },
+  {
+    "category": "行为交互",
+    "name": "物体车向左换道"
+  },
+  {
+    "category": "行为交互",
+    "name": "物体车向右换道"
+  },
+  {
+    "category": "行为交互",
+    "name": "车道线偏离"
+  },
+  {
+    "category": "行为交互",
+    "name": "并排行驶"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车换道"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车停车"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度16-20"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度0-5"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度6-10"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度11-15"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-橙"
+  },
+  {
+    "category": "批次",
+    "name": "批次"
+  },
+  {
+    "category": "项目",
+    "name": "项目"
+  },
+  {
+    "category": "环境",
+    "name": "晴"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车左转弯"
+  },
+  {
+    "category": "自定义场景",
+    "name": "自定义场景"
+  },
+  {
+    "category": "自定义场景",
+    "name": "切入"
+  },
+  {
+    "category": "自定义场景",
+    "name": "应急车"
+  },
+  {
+    "category": "自定义场景",
+    "name": "换道次数"
+  },
+  {
+    "category": "自定义场景",
+    "name": "漏触发"
+  },
+  {
+    "category": "自定义场景",
+    "name": "误触发"
+  },
+  {
+    "category": "道路",
+    "name": "本车道障碍物"
+  },
+  {
+    "category": "道路",
+    "name": "三车道"
+  },
+  {
+    "category": "道路",
+    "name": "湿润"
+  },
+  {
+    "category": "道路",
+    "name": "T形交叉口"
+  },
+  {
+    "category": "道路",
+    "name": "两车道"
+  },
+  {
+    "category": "道路",
+    "name": "积水"
+  },
+  {
+    "category": "道路",
+    "name": "堵车"
+  },
+  {
+    "category": "道路",
+    "name": "事故现场"
+  },
+  {
+    "category": "道路",
+    "name": "匝道"
+  },
+  {
+    "category": "道路",
+    "name": "单车道"
+  },
+  {
+    "category": "道路",
+    "name": "Road-Construction-2.3-2.5m"
+  },
+  {
+    "category": "道路",
+    "name": "Road Construction _2.5m"
+  },
+  {
+    "category": "道路",
+    "name": "大于四车道"
+  },
+  {
+    "category": "道路",
+    "name": "泥泞"
+  },
+  {
+    "category": "道路",
+    "name": "高架公路"
+  },
+  {
+    "category": "道路",
+    "name": "干燥"
+  },
+  {
+    "category": "道路",
+    "name": "环路"
+  },
+  {
+    "category": "道路",
+    "name": "结冰"
+  },
+  {
+    "category": "道路",
+    "name": "入口(经过)"
+  },
+  {
+    "category": "道路",
+    "name": "十字交叉口"
+  },
+  {
+    "category": "道路",
+    "name": "出口(经过)"
+  },
+  {
+    "category": "道路",
+    "name": "高速公路"
+  },
+  {
+    "category": "道路",
+    "name": "隧道"
+  },
+  {
+    "category": "道路",
+    "name": "城区道路"
+  },
+  {
+    "category": "道路",
+    "name": "其他交叉口"
+  },
+  {
+    "category": "道路",
+    "name": "Road-Construction-2.0-2.2m"
+  },
+  {
+    "category": "道路",
+    "name": "快速路"
+  },
+  {
+    "category": "道路",
+    "name": "收费站"
+  },
+  {
+    "category": "道路",
+    "name": "积雪"
+  },
+  {
+    "category": "道路",
+    "name": "四车道"
+  },
+  {
+    "category": "道路",
+    "name": "桥梁"
+  },
+  {
+    "category": "道路",
+    "name": "环岛"
+  },
+  {
+    "category": "道路",
+    "name": "凹坑"
+  },
+  {
+    "category": "道路",
+    "name": "道路清洁"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车掉头"
+  },
+  {
+    "category": "行为交互",
+    "name": "物体横穿"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车急刹车"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车减速"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车转弯"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度-大于20"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度5-10"
+  },
+  {
+    "category": "trip",
+    "name": "trip"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度10-15"
+  },
+  {
+    "category": "行为交互",
+    "name": "行人在应急车道"
+  },
+  {
+    "category": "行为交互",
+    "name": "行人在其他车道"
+  },
+  {
+    "category": "行为交互",
+    "name": "前方无车"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车匀速行驶"
+  },
+  {
+    "category": "行为交互",
+    "name": "主车跟随前车"
+  },
+  {
+    "category": "行为交互",
+    "name": "周围物体密度15-20"
+  },
+  {
+    "category": "行为交互",
+    "name": "物体车切出"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-绿"
+  },
+  {
+    "category": "车辆",
+    "name": "环卫车"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-棕"
+  },
+  {
+    "category": "车辆",
+    "name": "长卡车未加装保险杠"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-白"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-紫"
+  },
+  {
+    "category": "车辆",
+    "name": "卡车载有非常规货物"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-蓝"
+  },
+  {
+    "category": "车辆",
+    "name": "警车"
+  },
+  {
+    "category": "车辆",
+    "name": "化工车"
+  },
+  {
+    "category": "车辆",
+    "name": "车辆颜色-黄"
+  },
+  {
+    "category": "车辆",
+    "name": "特殊卡车"
+  },
+  {
+    "category": "车辆",
+    "name": "救护车"
+  },
+  {
+    "category": "车辆",
+    "name": "低拖挂长卡车"
+  },
+  {
+    "category": "环境",
+    "name": "霾"
+  },
+  {
+    "category": "环境",
+    "name": "强沙尘暴"
+  },
+  {
+    "category": "环境",
+    "name": "扬沙"
+  },
+  {
+    "category": "环境",
+    "name": "阴影"
+  },
+  {
+    "category": "环境",
+    "name": "阵雪"
+  },
+  {
+    "category": "环境",
+    "name": "大雨"
+  },
+  {
+    "category": "环境",
+    "name": "雷阵雨"
+  },
+  {
+    "category": "环境",
+    "name": "雾"
+  },
+  {
+    "category": "环境",
+    "name": "暴雨"
+  },
+  {
+    "category": "环境",
+    "name": "冻雨"
+  },
+  {
+    "category": "环境",
+    "name": "阵雨"
+  },
+  {
+    "category": "环境",
+    "name": "大雪"
+  },
+  {
+    "category": "环境",
+    "name": "暴雪"
+  },
+  {
+    "category": "环境",
+    "name": "小雨"
+  },
+  {
+    "category": "环境",
+    "name": "浮尘"
+  },
+  {
+    "category": "环境",
+    "name": "特大暴雨"
+  },
+  {
+    "category": "环境",
+    "name": "多云"
+  },
+  {
+    "category": "环境",
+    "name": "无光照"
+  },
+  {
+    "category": "环境",
+    "name": "晨昏日暮"
+  },
+  {
+    "category": "环境",
+    "name": "小雪"
+  },
+  {
+    "category": "环境",
+    "name": "人造光源"
+  },
+  {
+    "category": "环境",
+    "name": "大暴雨"
+  },
+  {
+    "category": "自定义场景",
+    "name": "加油站"
+  },
+  {
+    "category": "自定义场景",
+    "name": "白天"
+  },
+  {
+    "category": "自定义场景",
+    "name": "行人在绿化带"
+  },
+  {
+    "category": "自定义场景",
+    "name": "换道"
+  },
+  {
+    "category": "自定义场景",
+    "name": "无阴影"
+  },
+  {
+    "category": "自定义场景",
+    "name": "特殊车辆"
+  },
+  {
+    "category": "自定义场景",
+    "name": "弯道"
+  },
+  {
+    "category": "自定义场景",
+    "name": "行人"
+  },
+  {
+    "category": "自定义场景",
+    "name": "停车场"
+  },
+  {
+    "category": "自定义场景",
+    "name": "城区路口"
+  },
+  {
+    "category": "自定义场景",
+    "name": "多个行人"
+  },
+  {
+    "category": "自定义场景",
+    "name": "转弯90"
+  },
+  {
+    "category": "自定义场景",
+    "name": "经过十字路口"
+  },
+  {
+    "category": "自定义场景",
+    "name": "多自行车"
+  },
+  {
+    "category": "自定义场景",
+    "name": "超车"
+  },
+  {
+    "category": "自定义场景",
+    "name": "阴天"
+  },
+  {
+    "category": "自定义场景",
+    "name": "人行道"
+  },
+  {
+    "category": "自定义场景",
+    "name": "弯道 结束"
+  },
+  {
+    "category": "自定义场景",
+    "name": "园区道路"
+  },
+  {
+    "category": "自定义场景",
+    "name": "小区出入口"
+  },
+  {
+    "category": "自定义场景",
+    "name": "车辆禁止 开始"
+  },
+  {
+    "category": "自定义场景",
+    "name": "多行人"
+  },
+  {
+    "category": "自定义场景",
+    "name": "弯道 开始"
+  },
+  {
+    "category": "自定义场景",
+    "name": "电瓶车"
+  },
+  {
+    "category": "自定义场景",
+    "name": "未知"
+  },
+  {
+    "category": "自定义场景",
+    "name": "卡车货车较多"
+  },
+  {
+    "category": "自定义场景",
+    "name": "倒车"
+  },
+  {
+    "category": "自定义场景",
+    "name": "车辆静止 结束"
+  },
+  {
+    "category": "自定义场景",
+    "name": "上方有桥梁"
+  },
+  {
+    "category": "自定义场景",
+    "name": "立交桥"
+  }
+]

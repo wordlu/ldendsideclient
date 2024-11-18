@@ -4,22 +4,7 @@
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>标签管理</el-breadcrumb-item>
     </el-breadcrumb>
-    <div class="panel">
-      <div class="title-panel">
-        <div class="info">
-          <div class="info-detail">
-            <b class="title">标签管理<span class="count"></span></b>
-          </div>
-          <div class="info-btn-group">
-            <!-- <el-button type="primary" class="info-btn" @click="trigger">拉取标签</el-button> -->
-            <el-button disabled class="info-btn">拉取标签</el-button>
-          </div>
-        </div>
-      </div>
-      <div class="mid-panel">
-        <el-input v-model="search.input" class="search-bar" placeholder="搜索标签名称" :prefix-icon="Search" clearable />
-      </div>
-    </div>
+    
     <!-- 列表 -->
     <div class="table_list">
       <tagTable :reList="reList" :search="search" @showDetailClick="showDetailClick" />
