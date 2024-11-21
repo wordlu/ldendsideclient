@@ -1,7 +1,7 @@
 /**
  * 可视化回放
  */
-import { Post } from "../../api/api";
+import { Post, downloadFrames } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
@@ -334,6 +334,18 @@ function arrayBufferToBase64 (buffer) {
 function parseTimestamp(timetamp){
   let timetampStr = timetamp.toString()
   return parseFloat(timetampStr.substring(0,10)+'.'+timetampStr.substring(10,13))
+}
+
+export function downloadFrame(frame_index) {
+  const deviceHub = viewportData['device-hub']
+  const lidarOrCameraDevice = deviceHub?.filter(it => it.type === 'lidar' || it.type === 'camera')?.map(it => it.id)
+  const devices = currentSelectedSensor.filter(it => lidarOrCameraDevice.includes(it))
+  const dataset = getQueryString('dataset')
+  downloadFrames({
+    dataset,
+    devices,
+    frame_index
+  })
 }
 
 export { ws , pcdWs , camWs , encodeWs , isData };

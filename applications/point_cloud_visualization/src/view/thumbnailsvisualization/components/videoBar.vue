@@ -15,7 +15,10 @@
       </div>
     </div>
     <div class="progress-area">
-      <div style="font-size: 12px;position: absolute;right: 10px; bottom: 45px;">{{ activeFrame }} / {{ currentTimeString }} / {{ time_value }}</div>
+      <div class="progress-info">
+        <span class="download" v-show="!isStart" @click="downloadCurrentFrame">下载当前帧</span>
+        {{ activeFrame }} / {{ currentTimeString }} / {{ time_value }}
+      </div>
       <div class="Progress-thumbnails">
         <div
           class="tooltip"
@@ -39,7 +42,7 @@
 <script setup>
 import { dataSetStore } from '../../../pinia/dataSet'
 import { ref , watch , computed } from 'vue'
-import { allWsSend, startPlaying, stopPlaying } from '../../../components/socket/replaysocket'
+import { allWsSend, startPlaying, stopPlaying, downloadFrame } from '../../../components/socket/replaysocket'
 import * as THREE from 'three';
 
 const startframe = ref(0)
@@ -82,6 +85,10 @@ const step = computed(()=>{
 
 if(dataSet.info.frame_count){
   isShow.value = true;
+}
+
+const downloadCurrentFrame = () => {
+  downloadFrame(activeFrame.value)
 }
 
 const getTimeValue = (start_time, end_time) => {
@@ -258,9 +265,26 @@ const next=()=>{
   .marginLeft3{
     margin-left: 3px;
   }
+
   .progress-area {
     width: 100%;
     flex: 1;
+
+    .progress-info {
+      font-size: 12px;
+      position: absolute;
+      right: 10px; 
+      bottom: 45px;
+
+      .download {
+        margin-right: 10px;
+        cursor: pointer;
+      }
+
+      .download:hover {
+        text-decoration: underline;
+      }
+    }
   }
 
   .progress-area-bg {
