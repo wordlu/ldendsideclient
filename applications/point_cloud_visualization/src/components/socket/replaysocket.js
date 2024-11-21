@@ -1,7 +1,7 @@
 /**
  * 可视化回放
  */
-import { Post, downloadFrames } from "../../api/api";
+import { Post } from "../../api/api";
 import jsCookie from "js-cookie";
 import { ref , onMounted } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet.js';
@@ -339,13 +339,10 @@ function parseTimestamp(timetamp){
 export function downloadFrame(frame_index) {
   const deviceHub = viewportData['device-hub']
   const lidarOrCameraDevice = deviceHub?.filter(it => it.type === 'lidar' || it.type === 'camera')?.map(it => it.id)
-  const devices = currentSelectedSensor.filter(it => lidarOrCameraDevice.includes(it))
+  const devices = currentSelectedSensor.filter(it => lidarOrCameraDevice.includes(it))?.toString()
   const dataset = getQueryString('dataset')
-  downloadFrames({
-    dataset,
-    devices,
-    frame_index
-  })
+  const url = `http://loggertrash/replay/download_frames?dataset=${dataset}&devices=${devices}&frame_index=${frame_index}`
+  window.open(url, '_blank')
 }
 
 export { ws , pcdWs , camWs , encodeWs , isData };

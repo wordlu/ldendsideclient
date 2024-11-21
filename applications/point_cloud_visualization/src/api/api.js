@@ -93,12 +93,3 @@ export function func_create_scenes(data) {
     data
   })
 }
-
-export function downloadFrames(data) {
-  let url = `http://loggertrash/replay/download_frames`
-  return request({
-    url: url,
-    method:'POST',
-    data
-  })
-}
