@@ -31,7 +31,7 @@
       width="800"
       :before-close="handleCheckTagsClose"
     >
-      <el-table :data="taggingsTableData" height="360">
+      <el-table :data="taggingsTableData" height="360" empty-text="- 暂无数据 -" >
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
         <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
         <el-table-column label="开始时间" width="160" show-overflow-tooltip>
