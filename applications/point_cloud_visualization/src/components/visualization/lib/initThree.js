@@ -10,6 +10,8 @@ let geometry_draco; // draco 图形对象
 let vertices = new Float32Array()//创建图形的顶点对象
 let attribue = new THREE.BufferAttribute(vertices, 3)//创建属性对象
 
+let loadedFont = null; // 用于存储已加载的字体
+
 //创建一个三维场景
 const scene = new THREE.Scene()
 //创建辅助坐标轴
@@ -19,9 +21,11 @@ scene.add(axesHelper)
 const loader = new FontLoader();
 const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
   // ./src/components/visualization/lib/helvetiker_regular.typeface.json
-  loader.load('http://loggertrash/pointcloud/helvetiker_regular.typeface.json', function (font) {
+  const url = window.location.origin.indexOf('localhost') !== -1 ? './src/components/visualization/lib/helvetiker_regular.typeface.json' : '/pointcloud/helvetiker_regular.typeface.json';
+  loader.load(url, function (font) {
+      loadedFont = font;
       const geometry = new TextGeometry(text, {
-          font: font,
+          font: loadedFont,
           size: 0.5,
           height: 0.01,
           curveSegments: 12,
@@ -137,20 +141,47 @@ export const renderODBox = (data,odAllGroup,frame) => {
     // 应用四元数到 Mesh 和 LineSegments
     mesh.quaternion.copy(quaternion);
     line.quaternion.copy(quaternion);
+
+     // 创建 3D 文字
+     const textGeometry = new TextGeometry(item.type || 'Label', {
+      font: loadedFont,
+      size: 0.5,
+      height: 0.01,
+      curveSegments: 12,
+      bevelEnabled: false,
+    });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+    textMesh.position.set(item.position_x, item.position_y + item.dimensions_y / 2 + 0.1, item.position_z);
+    textMesh.quaternion.copy(quaternion); // 让文字跟随旋转
+
+    const euler = new THREE.Euler();
+    euler.setFromQuaternion(new THREE.Quaternion(item.orientation_x, item.orientation_y, item.orientation_z, item.orientation_w));
+    const headingAngle = euler.y * (180 / Math.PI);  
+
+    // 创建航向角箭头
+    const arrowLength = 3;
+    const direction = new THREE.Vector3(Math.cos(euler.y), 0, Math.sin(euler.y));
+    const arrowHelper = new THREE.ArrowHelper(direction, mesh.position, arrowLength, 0xffffff);
+    // scene.add(arrowHelper);
+
+     // 创建航向角文字标签
+    //  const textGeometry1 = new TextGeometry(`Heading: ${headingAngle.toFixed(2)}°`, {
+    //   font: loadedFont,
+    //   size: 0.5,
+    //   height: 0.01,
+    //   curveSegments: 12,
+    //   bevelEnabled: false,
+    // });
+    // const textMaterial1 = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // const arrowTextMesh = new THREE.Mesh(textGeometry1, textMaterial1);
+
+    // arrowTextMesh.position.set(item.position_x, item.position_y + item.dimensions_y / 2 + 0.8, item.position_z);
+    // arrowTextMesh.quaternion.copy(mesh.quaternion);
+
     // 把网格模型添加到场景中
-    group.push({mesh:mesh,line:line})
-
-    // // 计算包围盒
-    // const boundingBox = new THREE.Box3().setFromObject(mesh);
-    // // 获取包围盒尺寸
-    // const size = boundingBox.getSize(new THREE.Vector3());
-    // const boxWidth = size.x;  // X 轴上的长度
-    // const boxHeight = size.y; // Y 轴上的高度
-    // const boxDepth = size.z;  // Z 轴上的长度
-
-    // console.log(`Box3 计算的宽度：${boxWidth}`);
-    // console.log(`Box3 计算的高度：${boxHeight}`);
-    // console.log(`Box3 计算的深度：${boxDepth}`);
+    group.push({mesh: mesh,line: line,text: textMesh, arrowHelper:arrowHelper })
   })
   odAllGroup.list[frame] = group
   return odAllGroup;

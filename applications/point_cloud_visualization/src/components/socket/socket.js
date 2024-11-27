@@ -148,6 +148,9 @@ export const connectWebSocket = (ip, type) => {
               odAllGroup[`allGroup_${0}_${index}`] = new THREE.Group();
               odAllGroup[`allGroup_${0}_${index}`].add(item.mesh);
               odAllGroup[`allGroup_${0}_${index}`].add(item.line);
+              odAllGroup[`allGroup_${0}_${index}`].add(item.text);
+              odAllGroup[`allGroup_${0}_${index}`].add(item.arrowHelper);
+              // odAllGroup[`allGroup_${0}_${index}`].add(item.arrowTextMesh);
               group.add(odAllGroup[`allGroup_${0}_${index}`]);
             })
           }
