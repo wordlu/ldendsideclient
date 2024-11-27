@@ -134,6 +134,14 @@ export const connectWebSocket = (ip, type) => {
         if (odAllGroup.list[0]) {
           odAllGroup.list[0].forEach((item,index)=>{
             group.remove(odAllGroup[`allGroup_${0}_${index}`]);
+            // 释放资源
+            item.mesh?.geometry.dispose();
+            item.mesh?.material.dispose();
+            item.line?.geometry.dispose();
+            item.line?.material.dispose();
+            item.text?.material.map.dispose(); // 释放纹理资源
+            item.text?.material.dispose();
+            item.arrowHelper?.dispose && item.arrowHelper.dispose();
             delete odAllGroup[`allGroup_${0}_${index}`];
           })
         }
@@ -148,7 +156,7 @@ export const connectWebSocket = (ip, type) => {
               odAllGroup[`allGroup_${0}_${index}`] = new THREE.Group();
               odAllGroup[`allGroup_${0}_${index}`].add(item.mesh);
               odAllGroup[`allGroup_${0}_${index}`].add(item.line);
-              odAllGroup[`allGroup_${0}_${index}`].add(item.text);
+              odAllGroup[`allGroup_${0}_${index}`].add(item.textSprite);
               odAllGroup[`allGroup_${0}_${index}`].add(item.arrowHelper);
               // odAllGroup[`allGroup_${0}_${index}`].add(item.arrowTextMesh);
               group.add(odAllGroup[`allGroup_${0}_${index}`]);
