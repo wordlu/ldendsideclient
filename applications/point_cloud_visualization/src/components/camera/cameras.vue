@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, defineProps } from 'vue';
 import { dataSetStore } from '../../pinia/dataSet';
 const dataSet = dataSetStore();
 const activeCamInfo = ref(dataSet.activeCamInfo);
@@ -8,10 +8,21 @@ const loading = ref(false);
 const imgOnError = (e) => {
   showPic.value = false
 }
+const props = defineProps({
+  timeoutLoading: Boolean
+});
+
+watch(()=>props.timeoutLoading,(newVal)=>{
+  if (newVal) {
+    loading.value = false
+  }
+})
 
 watch(()=>dataSet.currentCamera,(newVal)=>{
-  loading.value = true
-  showPic.value = true
+  if (newVal) {
+    loading.value = true
+    showPic.value = true
+  }
 },{deep:true})
 
 watch(()=>dataSet.activeCamInfo,(newVal)=>{

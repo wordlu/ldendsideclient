@@ -10,7 +10,7 @@
         <div class="container">
           <threeDView  v-if="viewportData" />
         </div>
-        <cameras />
+        <cameras :timeoutLoading="timeoutLoading" />
         <toolBarVue />
       </div>
     </div>
@@ -23,18 +23,20 @@ import videoBarVue from "./components/videoBar.vue";
 import threeDView from "../../components/visualization/threeDView.vue";
 import cameras from "../../components/camera/cameras.vue";
 import { connectWebSocketArray } from "../../components/socket/socket";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import { dataSetStore } from "../../pinia/dataSet";
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
+import { ElMessage } from 'element-plus'
 
 const dataSet = dataSetStore();
 const route = useRoute();
 const routeQuery = ref(route.query);
 const pageLoading = ref(dataSet.pageLoading);
-
+const timer = ref(null); 
 const viewportData = ref<any>(null);
+const timeoutLoading = ref(false);
 
 function print(val) {
   document.getElementById("activeCamImg").style.width =
@@ -44,10 +46,31 @@ function print(val) {
 const x = ref(document.documentElement.clientWidth - 408);
 const y = ref(document.documentElement.clientHeight - 620);
 
+
+function startTimeout() {
+  timer.value = setTimeout(() => {
+    pageLoading.value = false; // 去掉 loading 状态
+    timeoutLoading.value = true;
+    ElMessage({
+      message: '设备启动异常，请检查设备连接！',
+      type: 'error',
+      duration: 20000,
+      showClose: true,
+    })
+  },  5 * 60 * 1000);
+}
+
+
 watch(
   () => dataSet.pageLoading,
   (newVal, oldVal) => {
     pageLoading.value = newVal;
+    if (dataSet.pageLoading && !timer.value) {
+      startTimeout();
+    } else if (!dataSet.pageLoading && timer.value) {
+      clearTimeout(timer.value);
+      timer.value = null;
+    }
   },
   { immediate: true, deep: true }
 );
@@ -58,7 +81,16 @@ onMounted(async () => {
   gostore.sync(usingViewport.data)
   viewportData.value = gostore.findAll('viewports')[0]
   connectWebSocketArray(routeQuery.value.portarray, routeQuery.value.allports, viewportData.value);
+  if (dataSet.pageLoading && !timer.value) {
+    startTimeout();
+  }
 })
+
+onBeforeUnmount(() => {
+  if (timer.value) {
+    clearTimeout(timer.value);
+  }
+});
 
 </script>
 

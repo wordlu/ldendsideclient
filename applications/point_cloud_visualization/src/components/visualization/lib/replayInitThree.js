@@ -4,6 +4,7 @@ import DracoDecoderModule from './draco_decoder'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { setSceneGround } from './caliInitThree';
+import { dataSetStore } from './../../../pinia/dataSet';
 
 let camera,controls;
 let geometry = new THREE.BufferGeometry()//创建图形对象
@@ -85,6 +86,18 @@ export const setCameraPosition = (view) => {
   }
 }
 
+export const setPointSize = (size) => {
+  // 遍历所有点云对象，调整它们的材质大小
+  for (let key in renderObject) {
+    if (renderObject[key].material) {
+      renderObject[key].material.size = size; // 修改点大小
+      renderObject[key].material.needsUpdate = true; // 确保材质更新
+    }
+  }
+  // 重新渲染场景
+  renderer.render(scene, camera);
+}
+
 export const setControls = (camera) => {
   controls = new OrbitControls(camera, renderer.domElement)
   controls.addEventListener('change',()=>{
@@ -114,7 +127,8 @@ export const setPointCloud = (lidarDevices, initDisplays) => {
   }
   lidarDevices.forEach((item,index)=>{
     const colorvalue = initDisplays[item].color || getRandomHexColor()
-    const sizevalue = initDisplays[item].size || 0.001
+    const sizevalue = initDisplays[item].size || 0.01
+    dataSetStore.pointSizeInit = sizevalue
     renderObject[item] = {
       geometry: new THREE.BufferGeometry(),
       material:  new THREE.PointsMaterial({

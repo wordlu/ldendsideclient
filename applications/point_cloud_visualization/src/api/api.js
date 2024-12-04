@@ -93,4 +93,3 @@ export function func_create_scenes(data) {
     data
   })
 }
-

@@ -32,6 +32,7 @@
     <div class="list">
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
+          empty-text="- 暂无数据 -"
           :data="data" style="width: 100%">
           <el-table-column label="" width="80">
             <template #default="scope">

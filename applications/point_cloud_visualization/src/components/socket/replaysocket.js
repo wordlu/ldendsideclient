@@ -336,4 +336,13 @@ function parseTimestamp(timetamp){
   return parseFloat(timetampStr.substring(0,10)+'.'+timetampStr.substring(10,13))
 }
 
+export function downloadFrame(frame_index) {
+  const deviceHub = viewportData['device-hub']
+  const lidarOrCameraDevice = deviceHub?.filter(it => it.type === 'lidar' || it.type === 'camera')?.map(it => it.id)
+  const devices = currentSelectedSensor.filter(it => lidarOrCameraDevice.includes(it))?.toString()
+  const dataset = getQueryString('dataset')
+  const url = `http://loggertrash/replay/download_frames?dataset=${dataset}&devices=${devices}&frame_index=${frame_index}`
+  window.open(url, '_blank')
+}
+
 export { ws , pcdWs , camWs , encodeWs , isData };

@@ -2,6 +2,7 @@
   <div class="tag_table">
     <el-table
       :data="tableData"
+      empty-text="- 暂无数据 -"
       stripe
       style="width: 100%;height: calc(100% - 70px);overflow: auto;">
       <el-table-column

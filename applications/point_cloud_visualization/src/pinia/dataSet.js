@@ -25,6 +25,7 @@ export const dataSetStore = defineStore('dataSet', {
       currentCamera:null,
       loading:true,
       pageLoading: false,
+      pointSizeInit: 0
     }
   },
   getters: { 

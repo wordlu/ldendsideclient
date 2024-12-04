@@ -30,7 +30,7 @@
     </div>
     <div class="list">
       <div class="list-panel">
-        <el-table ref="multipleTableRef" 
+        <el-table ref="multipleTableRef" empty-text="- 暂无数据 -" 
           :data="data" style="width: 100%">
           <el-table-column property="name" label="设备驱动类型" />
           <el-table-column property="slot" label="设备名称" />
