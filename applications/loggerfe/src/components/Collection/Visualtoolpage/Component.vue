@@ -2,11 +2,11 @@
   <div class="index-page" >
     <!-- :element-loading-text="loadingtext"
     v-loading="pageLoading" > -->
-    <el-breadcrumb :separator-icon="ArrowRight">
+    <el-breadcrumb :separator-icon="ArrowRight" v-show="!realtime">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
     </el-breadcrumb>
-    <div class="panel">
+    <div class="panel" v-show="!realtime">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备初始化</div>
@@ -27,7 +27,7 @@
           :allports="allports"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
-        <sensorConfigs
+        <sensorConfigs v-show="!realtime" 
           ref="sensorConfigsRef" 
           :viewportId="viewportId"
           :testDevice="testDevice"
@@ -55,6 +55,7 @@ import { useRouter, useRoute } from 'vue-router';
 // 获取当前路由对象
 const router = useRouter();
 const route = useRoute()
+const realtime = ref(true)
 // 创建响应式变量
 const message = ref(null); // 用于存储 SSE 消息
 const error = ref(null);   // 用于存储错误信息
@@ -300,6 +301,9 @@ const gotologsanalyze = () => {
 }
 
 onMounted(() => {
+  if (route.query?.type === 'realtime') {
+    realtime.value = true
+  }
   queryCurrentDrivers()
   // 建立长连接
   eventSource =new EventSource(
