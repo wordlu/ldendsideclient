@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Indexpage from '../components/Collection/Indexpage/Component.vue'
+import Visualtoolpage from '../components/Collection/Visualtoolpage/Component.vue'
 import Detailspage from '../components/Collection/Detailspage/Component.vue'
 import CaliPage from '../components/Collection/caliPage/Component.vue'
 import configsPage from '../components/Collection/configsPage/Component.vue'
@@ -16,6 +17,10 @@ const router = createRouter({
         {
           path: 'root/index',
           component: Indexpage
+        },
+        {
+          path: 'root/visualtool',
+          component: Visualtoolpage
         },
         {
           path: 'datasetdetail/:id',

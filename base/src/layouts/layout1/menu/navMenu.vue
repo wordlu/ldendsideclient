@@ -104,7 +104,7 @@ export default {
       this.isCollapse = !this.isCollapse;
     },
     async getAllMenu () {
-      if (this.$route.path === "/loggerfe/root/index") {
+      if (this.$route.path === "/loggerfe/root/index" || this.$route.path === "/loggerfe/root/visualtool") {
         this.subMenu = []
       } else if(this.$route.query && this.$route.query.logger && this.$route.query.logger === 'trash') {
         this.subMenu = [
