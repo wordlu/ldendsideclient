@@ -3,13 +3,14 @@
     <div class="iframe-item">
       <div class="select-item">
         <el-select
+          @change="handleSelect1Change"
           v-model="value1"
           placeholder="请选择"
           size="small"
           style="width: 240px"
         >
           <el-option
-            v-for="item in options"
+            v-for="item in options1"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -22,12 +23,13 @@
       <div class="select-item">
         <el-select
           v-model="value2"
+          @change="handleSelect2Change"
           placeholder="请选择"
           size="small"
           style="width: 240px"
         >
           <el-option
-            v-for="item in options"
+            v-for="item in options2"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -39,7 +41,7 @@
   </div>
 </template>
  <script setup lang="ts">
-import { ref, defineEmits, defineProps, watch, toRef } from 'vue'
+import { ref, defineEmits, defineProps, watch, toRef, emit } from 'vue'
 import { findAll } from '@/api/jsonApi'
 import gostore from '@/services/governance-store'
 
@@ -50,6 +52,13 @@ const props = defineProps({
   viewports: Array
 });
 
+const options1 = ref([])
+const options2 = ref([])
+const options = ref([])
+const value1 = ref('')
+const value2 = ref('')
+
+const emit = defineEmits(['select']);
 const getString = (arr: any) => {
   if(!arr) return ''
   return arr.toString()
@@ -63,13 +72,18 @@ const getlidarDevice = (viewports: any) => {
       label: item.name
     }
   })
+  options1.value = options.value
+  options2.value = options.value
 }
 
-const options = ref([])
-
-const value1 = ref('')
-const value2 = ref('')
-
+const handleSelect1Change = (value: string) => {
+  options2.value = options.value.filter((item: any) => item.value !== value)
+  emit('selectDevice', 'select1', value)
+}
+const handleSelect2Change = (value: string) => {
+  options1.value = options.value.filter((item: any) => item.value !== value)
+  emit('selectDevice', 'select2', value)
+}
 
 watch(() => props.viewports, (newVal) => {
   getlidarDevice(newVal)

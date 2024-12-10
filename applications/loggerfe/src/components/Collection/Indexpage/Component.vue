@@ -10,7 +10,7 @@
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备初始化</div>
-          <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
+          <el-switch v-model="testDevice" :disabled="!startupDisabled" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
         <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
@@ -30,7 +30,9 @@
           :viewports="viewports"
           :allports="allports"
           :cloudpointparams="cloudpointparams"
-          :currentSelectedSensor="currentSelectedSensor"  />
+          :currentSelectedSensor="currentSelectedSensor" 
+          @selectDevice="selectDevice"
+        />
         <sensorConfigs
           ref="sensorConfigsRef" 
           :viewports="viewports"
@@ -60,7 +62,7 @@
 
 <script setup lang="ts">
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
-import { ref, computed, onMounted, onBeforeUnmount, onUnmounted  } from 'vue';
+import { ref, computed, reactive, onMounted, onBeforeUnmount, onUnmounted  } from 'vue';
 import { addItem, findAll, findItem, deleteItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
@@ -70,6 +72,12 @@ import gostore from '@/services/governance-store'
 import { MoreFilled } from "@element-plus/icons-vue"
 import { useRouter, useRoute } from 'vue-router';
 
+interface Option {
+  key: number
+  label: string
+  data: object
+}
+
 // 获取当前路由对象
 const router = useRouter();
 const route = useRoute()
@@ -78,11 +86,20 @@ const message = ref(null); // 用于存储 SSE 消息
 const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
 const dialogVisible = ref(false)
+// 状态管理
+const state = reactive({
+  select1: '', // 第一个下拉框的值
+  select2: '', // 第二个下拉框的值
+});
 
-interface Option {
-  key: number
-  label: string
-  data: object
+// 按钮状态：当两个下拉框都有值时启用
+const startupDisabled = computed(() => state.select1 && state.select2);
+
+// 监听选择事件
+const selectDevice = (key, value) => {
+  if (value) {
+    state[key] = value; // 更新对应的下拉值
+  }
 }
 
 const cloudpointparams = ref({
