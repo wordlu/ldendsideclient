@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { dataSetStore } from '@/pinia/dataSet.js';
-import { setCameraPosition } from '../../../components/visualization/lib/initThree'
+import { setCameraPosition, setPointSize } from '../../../components/visualization/lib/initThree'
 import { watch, ref } from 'vue';
 
 const dataSet = dataSetStore();
 const cameraDevices = ref(dataSet.cameraDevices)
+// const num = ref(dataSet.pointSizeInit)
+const num = ref(0.04)
 
 watch(()=>dataSet.cameraDevices,(newVal)=>{
   cameraDevices.value = newVal
@@ -16,6 +18,10 @@ const viewChange = (view: string) => {
 
 const setCamera = (camera: any) => {
   dataSet.currentCamera = camera
+}
+
+const handleChange = (value: number) => {
+  setPointSize(value)
 }
 </script>
 
@@ -40,6 +46,10 @@ const setCamera = (camera: any) => {
       <el-button circle @click="viewChange('yz')"
         >YZ</el-button
       >
+    </div>
+    <div class="view-btns">
+      <div style="margin-right: 10px;">点云大小：</div>
+      <el-input-number size="small" v-model="num" :step="0.01" :min="0.01" :max="10" @change="handleChange" />
     </div>
   </div>
 </template>
