@@ -5,6 +5,7 @@
         <el-select
           @change="handleSelect1Change"
           v-model="value1"
+          :disabled="testDevice"
           placeholder="请选择"
           size="small"
           style="width: 240px"
@@ -17,12 +18,14 @@
           />
         </el-select>
       </div>
-      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+      <!-- <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe> -->
+      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+portarray1+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
     </div>
     <div class="iframe-item">
       <div class="select-item">
         <el-select
           v-model="value2"
+          :disabled="testDevice"
           @change="handleSelect2Change"
           placeholder="请选择"
           size="small"
@@ -36,7 +39,8 @@
           />
         </el-select>
       </div>
-      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+      <!-- <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe> -->
+      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+portarray2+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
     </div>
   </div>
 </template>
@@ -49,7 +53,9 @@ const props = defineProps({
   currentSelectedSensor: Array,
   allports: Array,
   cloudpointparams: Object,
-  viewports: Array
+  viewports: Array,
+  runningDevice: Array,
+  testDevice: Boolean
 });
 
 const options1 = ref([])
@@ -57,7 +63,9 @@ const options2 = ref([])
 const options = ref([])
 const value1 = ref('')
 const value2 = ref('')
-
+const portarray1 = ref('')
+const portarray2 = ref('')
+const viewportsdata = ref({})
 const emit = defineEmits(['select']);
 const getString = (arr: any) => {
   if(!arr) return ''
@@ -65,6 +73,7 @@ const getString = (arr: any) => {
 }
 
 const getlidarDevice = (viewports: any) => {
+  viewportsdata.value = viewports[0] ? viewports[0] : {}
   const lidardevice = viewports[0] ? viewports[0]['device-hub'].filter((item: any) => item.type === 'lidar') : []
   options.value = lidardevice.map((item: any) => {
     return {
@@ -87,8 +96,19 @@ const handleSelect2Change = (value: string) => {
 
 watch(() => props.viewports, (newVal) => {
   getlidarDevice(newVal)
-},{immediate: true})
+},{ deep: true })
 
+watch(() => props.runningDevice, (newVal) => {
+  if (newVal.length < 2) return;
+  value1.value = newVal[0]['deviceKey']
+  value2.value = newVal[1]['deviceKey']
+  options1.value = options.value.filter((item: any) => item.value !== value2.value)
+  options2.value = options.value.filter((item: any) => item.value !== value1.value)
+  const data1 = viewportsdata.value.devices.filter(it => it.id.indexOf(value1.value) > -1)
+  const data2 = viewportsdata.value.devices.filter(it => it.id.indexOf(value2.value) > -1)
+  portarray1.value = getString(data1.map((item: any) => item['display-port']))
+  portarray2.value = getString(data2.map((item: any) => item['display-port']))
+},{ deep: true })
 
 </script>
 

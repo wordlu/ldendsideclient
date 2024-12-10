@@ -251,6 +251,7 @@ const getCurrentDrivers = (datavalue) => {
     //   gostore.reset()
     //   gostore.sync(res.data)
     //   const datavalue = gostore.findAll('viewports')
+      if(datavalue.length < 1) return;
       name.value = datavalue[0].name
       const devicehub = datavalue[0]['device-hub']
       const device = datavalue[0]['devices']

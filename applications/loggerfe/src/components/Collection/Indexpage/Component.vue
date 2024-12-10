@@ -27,8 +27,10 @@
       class="visible">
       <div class="point">
         <BasicScene 
+          :testDevice="testDevice"
           :viewports="viewports"
           :allports="allports"
+          :runningDevice="runningDevice"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor" 
           @selectDevice="selectDevice"
@@ -86,6 +88,7 @@ const message = ref(null); // 用于存储 SSE 消息
 const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
 const dialogVisible = ref(false)
+const runningDevice = ref([])
 // 状态管理
 const state = reactive({
   select1: '', // 第一个下拉框的值
@@ -313,18 +316,24 @@ const getCurrentStatus = (viewportId: string) => {
       testDevice.value = res.data.isluanching || false
       startCollect.value = res.data.isrecording || false
       switchLoading.value = false
-      if(testDevice.value && !startCollect.value) {
-        // 设备调试初始化中但未采集，自动勾选全部设备
-        if (sensorConfigsRef.value) {
-          sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
-        }
-      } else if (testDevice.value && startCollect.value) {
-        // 设备采集中，勾选状态为采集中的设备
-        const isrecordingNodes = res.data.details.filter((item: any) => item.isrecording)
-        if (sensorConfigsRef.value) {
-          sensorConfigsRef.value.selectSomeNodes(isrecordingNodes); // 调用子组件的方法
-        }
+      const data = res.data.details.filter((item: any) => item.isrunning)
+      if (data.length > 1) {
+        runningDevice.value = data
+        state.select1 = data[0]['deviceKey']
+        state.select2 = data[1]['deviceKey']
       }
+      // if(testDevice.value && !startCollect.value) {
+      //   // 设备调试初始化中但未采集，自动勾选全部设备
+      //   if (sensorConfigsRef.value) {
+      //     sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+      //   }
+      // } else if (testDevice.value && startCollect.value) {
+      //   // 设备采集中，勾选状态为采集中的设备
+      //   const isrecordingNodes = res.data.details.filter((item: any) => item.isrecording)
+      //   if (sensorConfigsRef.value) {
+      //     sensorConfigsRef.value.selectSomeNodes(isrecordingNodes); // 调用子组件的方法
+      //   }
+      // }
 
     }).catch((err: any) => {
       console.log(err, 'err')
