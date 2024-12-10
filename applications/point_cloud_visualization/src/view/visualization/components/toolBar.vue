@@ -5,9 +5,7 @@ import { watch, ref } from 'vue';
 
 const dataSet = dataSetStore();
 const cameraDevices = ref(dataSet.cameraDevices)
-// const num = ref(dataSet.pointSizeInit)
-const num = ref(0.04)
-
+const num = ref(dataSet.pointSizeInit)
 watch(()=>dataSet.cameraDevices,(newVal)=>{
   cameraDevices.value = newVal
 },{deep:true})
