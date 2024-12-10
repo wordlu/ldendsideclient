@@ -12,11 +12,14 @@
           <div style="margin-right: 4px;">设备初始化</div>
           <el-switch v-model="testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
-        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+        <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
-        </div>
+        </div> -->
       </div>
+      <el-button type="primary" size="small" @click="dialogVisible = true">
+        摄像头数据
+      </el-button>
     </div>
     <div
       v-loading="showLoading"
@@ -24,11 +27,13 @@
       class="visible">
       <div class="point">
         <BasicScene 
+          :viewports="viewports"
           :allports="allports"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs
           ref="sensorConfigsRef" 
+          :viewports="viewports"
           :viewportId="viewportId"
           :testDevice="testDevice"
           :startCollect="startCollect"
@@ -37,6 +42,19 @@
           @setAllTreeKeys="setAllTreeKeys" />
       </div>
     </div>
+    <el-dialog
+      v-model="dialogVisible"
+      title="摄像头数据"
+      draggable
+      :modal="false"
+      :close-on-click-modal="false"
+      width="400"
+      :before-close="handleClose"
+    >
+     <div>
+      <iframe class="iframe" src="http://localhost:5173/pointcloud/realvisualization" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+     </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -59,6 +77,7 @@ const route = useRoute()
 const message = ref(null); // 用于存储 SSE 消息
 const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
+const dialogVisible = ref(false)
 
 interface Option {
   key: number
@@ -84,7 +103,7 @@ const sensorConfigsRef = ref(null);
 const isAsideExpanded = ref(true);
 const isAsideExpanded1 = ref(true);
 const viewportId = ref('')
-
+const viewports = ref([])
 const selectedLeafNodes = ref([]);
 
 
@@ -255,8 +274,12 @@ const getCurrentPorts = () => {
 //获取设备树
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then(async (res: any) => {
-      viewportId.value = res.data.data[0].id
+    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then(async (res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('viewports')
+      viewports.value = datavalue
+      viewportId.value = datavalue[0].id
       await getCurrentStatus(viewportId.value)
     }).catch((err: any) => {
       console.log(err, 'err')
@@ -352,12 +375,21 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-
+.iframe {
+  width: 100%;
+  height: 250px;
+  border: none;
+}
 .index-page {
   height: 100%;
   display: flex;
   flex-direction: column;
   padding: 0 20px;
+
+  .panel {
+    display: flex;
+    align-items: center;
+  }
 
   .point {
     display: flex;
@@ -392,6 +424,9 @@ onUnmounted(() => {
 </style>
 
 <style lang="scss">
+.el-dialog__header {
+  display: flex;
+}
 .event-notification {
   .el-notification__content {
     text-align: left;

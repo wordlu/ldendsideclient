@@ -14,7 +14,7 @@
 export default {
   data() {
     return {
-      host_name: '',
+      "a.yaml/host_name": '',
     };
   },
   mounted() {

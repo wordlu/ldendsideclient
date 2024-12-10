@@ -41,7 +41,6 @@
           ref="treeRef"
           style="width: 360px"
           :data="treedata"
-          show-checkbox
           default-expand-all
           node-key="id"
           highlight-current
@@ -80,6 +79,7 @@ const props = defineProps({
   viewportId: String,
   testDevice: Boolean,
   startCollect: Boolean,
+  viewports: Array,
 });
 
 const renderTreeCheckbox = (isStartCollect: boolean) => {
@@ -108,7 +108,7 @@ const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 const handleCheckChange = async(data, checked, indeterminate) => {
   //获取叶子节点信息并传递给父级组件
   const checkedNodes = treeRef.value.getCheckedNodes();
-  console.log(checkedNodes)
+  console.log(checkedNodes)   
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
   emit('update:leafNodes', leafNodes.map(node => ({ 
     id: node.id, 
@@ -185,16 +185,16 @@ const renderContent = (h, { node, data }) => {
         src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
         style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
       }),
-      h(
-        'span',
-        { title: '重启设备' },
-        [
-          h(ElIcon, {
-            style: 'margin-left: 18px;color:#ff7900;font-size:16px;cursor:pointer;',
-            onClick: () => handleTreeReconnectClick(node, data)
-          }, { default: () => h(Refresh) })
-        ]
-      ),
+      // h(
+      //   'span',
+      //   { title: '重启设备' },
+      //   [
+      //     h(ElIcon, {
+      //       style: 'margin-left: 18px;color:#ff7900;font-size:16px;cursor:pointer;',
+      //       onClick: () => handleTreeReconnectClick(node, data)
+      //     }, { default: () => h(Refresh) })
+      //   ]
+      // ),
     ]);
   } else {
     return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
@@ -245,12 +245,12 @@ const handleTreeReconnectClick = (node, data) => {
 const treedata = ref([])
 const sensorData = ref([])
 const name = ref('')
-const queryCurrentDrivers = () => {
+const getCurrentDrivers = (datavalue) => {
   try {
-    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      const datavalue = gostore.findAll('viewports')
+    // findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
+    //   gostore.reset()
+    //   gostore.sync(res.data)
+    //   const datavalue = gostore.findAll('viewports')
       name.value = datavalue[0].name
       const devicehub = datavalue[0]['device-hub']
       const device = datavalue[0]['devices']
@@ -262,9 +262,9 @@ const queryCurrentDrivers = () => {
         }
       })
       treedata.value = totree(devicehubdata)
-    }).catch((err: any) => {
-      console.log(err, 'err')
-    })
+    // }).catch((err: any) => {
+    //   console.log(err, 'err')
+    // })
   } catch (error) {
     console.error(error)
   }
@@ -319,7 +319,7 @@ const changeColorProp = (value: string) => {
 }
 
 onMounted(() => {
-  queryCurrentDrivers()
+  // queryCurrentDrivers()
 });
 
 defineExpose({
@@ -330,6 +330,10 @@ defineExpose({
 
 watch(() => props.startCollect, (newVal) => {
   renderTreeCheckbox(newVal)
+},{immediate: true})
+
+watch(() => props.viewports, (newVal) => {
+  getCurrentDrivers(newVal)
 },{immediate: true})
 
 </script>
@@ -417,7 +421,7 @@ watch(() => props.startCollect, (newVal) => {
     }
 
     .status-title {
-      margin-left: 75px;
+      margin-left: 52px;
 
       .status-title-item {
         font-size: 12px;

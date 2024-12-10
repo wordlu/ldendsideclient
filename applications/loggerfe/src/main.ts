@@ -28,7 +28,6 @@ if (!(window as any).__POWERED_BY_QIANKUN__) {
   render({});
 }
 
-
 export async function bootstrap(props:any) {
   console.log('[vue] vue app bootstraped');
 }
