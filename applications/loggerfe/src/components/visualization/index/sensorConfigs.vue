@@ -1,5 +1,5 @@
 <template>
-  <div class="display-panel disable-selector">
+  <div class="display-panel disable-selector" style="display: flex;flex-direction: column;flex: 1;">
     <div class="grid-content ml">
      <div class="title-area">
       <div class="title">
@@ -50,6 +50,9 @@
           @check-change="handleCheckChange"
         />
       </div>
+    </div>
+    <div style="flex: 1;padding: 10px;">
+      <iframe src="/monitor/d/WqBw1Ef4k1/device-alert111?orgId=1&refresh=5s&kiosk&theme=light" frameborder="0" style="border: none;height: 100%;width: 100%"></iframe>
     </div>
   </div>
 </template>
