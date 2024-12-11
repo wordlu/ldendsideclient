@@ -25,12 +25,27 @@ const createLabelSprite = (text, position, rotation = new THREE.Vector3(0, 0, 0)
   const context = canvas.getContext('2d');
 
   // 设置 canvas 尺寸和样式
-  canvas.width = 400;  // 调整宽度以适应文字内容
-  canvas.height = 80;  // 高度较小即可
-  context.font = '80px Arial';  // 设置字体样式
+  const fontSize = 40;  // 动态调整文字大小
+  context.font = `${fontSize}px Arial`;
+  // context.font = '80px Arial';  // 设置字体样式
   context.fillStyle = 'white';   // 文字颜色
   context.textAlign = 'center';  // 水平居中对齐
   context.textBaseline = 'middle';  // 垂直居中对齐
+  context.clearRect(0, 0, canvas.width, canvas.height);  // 清空画布
+
+  // 测量文字宽度
+  const textWidth = context.measureText(text).width;
+  const padding = 20;  // 增加一定的边距避免文字被裁剪
+
+  // 动态设置 canvas 尺寸
+  canvas.width = textWidth + padding;
+  canvas.height = fontSize + padding;
+
+  // 重新设置字体样式，确保文字绘制不会失效
+  context.font = `${fontSize}px Arial`;
+  context.fillStyle = 'white';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
   context.clearRect(0, 0, canvas.width, canvas.height);  // 清空画布
 
   // 在 canvas 上绘制文字
@@ -44,8 +59,8 @@ const createLabelSprite = (text, position, rotation = new THREE.Vector3(0, 0, 0)
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(material);
 
-  // 调整精灵大小
-  sprite.scale.set(2, 0.5, 1);  // 根据需要调整比例
+  const scaleFactor = 0.01;  // 调整比例因子来控制精灵大小
+  sprite.scale.set(canvas.width * scaleFactor, canvas.height * scaleFactor, 1);
 
   // 设置精灵的位置和旋转
   sprite.position.copy(position);
@@ -166,23 +181,18 @@ export const renderODBox = (data,odAllGroup,frame) => {
     // 应用四元数到 Mesh 和 LineSegments
     mesh.quaternion.copy(quaternion);
     line.quaternion.copy(quaternion);
-
-     // 创建 3D 文字
-    //  const textGeometry = new TextGeometry(item.type || 'Label', {
-    //   font: loadedFont,
-    //   size: 0.5,
-    //   height: 0.01,
-    //   curveSegments: 12,
-    //   bevelEnabled: false,
-    // });
-    // const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    // const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-    // textMesh.position.set(item.position_x, item.position_y + item.dimensions_y / 2 + 0.1, item.position_z);
-    // textMesh.quaternion.copy(quaternion); // 让文字跟随旋转
-
+    function calculateSpeed() {
+      if (item.velocity_x !== 0 || item.velocity_y !== 0) {
+        const vx = item.velocity_x
+        const vy = item.velocity_y
+        return Math.sqrt(vx * vx + vy * vy) 
+      } 
+      return 0;
+    }
+    const speed = calculateSpeed()
+    const text = `${item.type}: ${speed ? speed.toFixed(2) : '0' }m/s`
     const textSprite = createLabelSprite(
-      item.type || 'box',
+      text,
       new THREE.Vector3(item.position_x, item.position_y + item.dimensions_y / 2 + 0.2, item.position_z),
       quaternion,
       true
@@ -193,24 +203,17 @@ export const renderODBox = (data,odAllGroup,frame) => {
     const headingAngle = euler.y * (180 / Math.PI);  
 
     // 创建航向角箭头
-    const arrowLength = 3;
+    const arrowLength = 2;
     const direction = new THREE.Vector3(Math.cos(euler.y), 0, Math.sin(euler.y));
     const arrowHelper = new THREE.ArrowHelper(direction, mesh.position, arrowLength, 0xffffff);
-    // scene.add(arrowHelper);
-
-     // 创建航向角文字标签
-    //  const textGeometry1 = new TextGeometry(`Heading: ${headingAngle.toFixed(2)}°`, {
-    //   font: loadedFont,
-    //   size: 0.5,
-    //   height: 0.01,
-    //   curveSegments: 12,
-    //   bevelEnabled: false,
-    // });
-    // const textMaterial1 = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    // const arrowTextMesh = new THREE.Mesh(textGeometry1, textMaterial1);
-
-    // arrowTextMesh.position.set(item.position_x, item.position_y + item.dimensions_y / 2 + 0.8, item.position_z);
-    // arrowTextMesh.quaternion.copy(mesh.quaternion);
+   
+    // // 创建航向角箭头:调整后未测试版本航向角
+    // const arrowLength = item.dimensions_y * 0.5 + 1;
+    // const arrowDirection = new THREE.Vector3(1, 0, 0);
+    // const arrowHelper = new THREE.ArrowHelper(arrowDirection, mesh.position.clone(), arrowLength, 0xffffff);
+    // arrowHelper.setDirection(new THREE.Vector3(1, 0, 0).applyQuaternion(quaternion));
+    // // 调整箭头的长度
+    // arrowHelper.setLength(arrowLength, 0.2 * arrowLength, 0.1 * arrowLength);
 
     // 把网格模型添加到场景中
     group.push({mesh: mesh,line: line,textSprite: textSprite, arrowHelper:arrowHelper })
