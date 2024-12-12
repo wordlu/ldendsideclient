@@ -10,7 +10,7 @@
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备初始化</div>
-          <el-switch v-model="testDevice" :disabled="!startupDisabled" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
+          <el-switch v-model="testDevice" :disabled="!startupDisabled && !testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
         <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
@@ -183,8 +183,8 @@ const startupDevice = () => {
   // }
   const device1 = basicSceneRef.value?.value1
   const device2 = basicSceneRef.value?.value2
-  const cameras = viewports.value[0]['device-hub'].filter((item) => item.type === 'camera').map(it => it.id)
-  const ods = viewports.value[0]['device-hub'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+  const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
+  const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
   const devicesArr = [...cameras, ...ods, device1, device2]
   if (!device1 || !device2) {
     ElMessage({

@@ -74,11 +74,11 @@ const getString = (arr: any) => {
 
 const getlidarDevice = (viewports: any) => {
   viewportsdata.value = viewports[0] ? viewports[0] : {}
-  const lidardevice = viewports[0] ? viewports[0]['device-hub'].filter((item: any) => item.type === 'lidar') : []
+  const lidardevice = viewports[0] ? viewports[0]['devices'].filter((item: any) => item.type === 'lidar') : []
   options.value = lidardevice.map((item: any) => {
     return {
       value: item.id,
-      label: item.name
+      label: item.slot
     }
   })
   options1.value = options.value
