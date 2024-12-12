@@ -115,6 +115,9 @@ watch(() => props.runningDevice, (newVal) => {
   
 },{ deep: true })
 
+defineExpose({
+  value1,value2
+})
 </script>
 
 <style lang="scss" scoped>

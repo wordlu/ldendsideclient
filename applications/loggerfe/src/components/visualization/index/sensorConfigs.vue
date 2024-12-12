@@ -111,7 +111,6 @@ const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys']);
 const handleCheckChange = async(data, checked, indeterminate) => {
   //获取叶子节点信息并传递给父级组件
   const checkedNodes = treeRef.value.getCheckedNodes();
-  console.log(checkedNodes)   
   const leafNodes = checkedNodes.filter(node => !node.children || node.children.length === 0);
   emit('update:leafNodes', leafNodes.map(node => ({ 
     id: node.id, 

@@ -27,6 +27,7 @@
       class="visible">
       <div class="point">
         <BasicScene 
+          ref="basicSceneRef"
           :testDevice="testDevice"
           :viewports="viewports"
           :allports="allports"
@@ -89,6 +90,7 @@ const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
 const dialogVisible = ref(false)
 const runningDevice = ref([])
+const basicSceneRef = ref()
 // 状态管理
 const state = reactive({
   select1: '', // 第一个下拉框的值
@@ -175,16 +177,28 @@ const handleLeafNodes = (leafNodes) => {
 const directive = ref('')
 // 开始调试
 const startupDevice = () => {
-  getCurrentPorts()
-  if (sensorConfigsRef.value) {
-    sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+  // getCurrentPorts()
+  // if (sensorConfigsRef.value) {
+  //   sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
+  // }
+  const device1 = basicSceneRef.value?.value1
+  const device2 = basicSceneRef.value?.value2
+  const cameras = viewports.value[0]['device-hub'].filter((item) => item.type === 'camera').map(it => it.id)
+  const ods = viewports.value[0]['device-hub'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+  const devicesArr = [...cameras, ...ods, device1, device2]
+  if (!device1 || !device2) {
+    ElMessage({
+      message: "请先选择设备",
+      type: 'error',
+    })
+    return;
   }
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
         "command": "startup",
-        "devices": [],
+        "devices": devicesArr,
         "viewport": viewportId.value
       }
     }
