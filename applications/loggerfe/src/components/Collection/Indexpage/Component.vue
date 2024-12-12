@@ -53,11 +53,11 @@
       draggable
       :modal="false"
       :close-on-click-modal="false"
-      width="400"
+      width="357"
       :before-close="handleClose"
     >
      <div>
-      <iframe class="iframe" src="http://localhost:5173/pointcloud/realvisualization" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+      <iframe class="iframe" :src="'/pointcloud/realvisualization?showCameras=1&allports='+JSON.stringify(allports)+'&portarray='+allCameraPorts.toString()+'&cloudpointparams='+JSON.stringify(cloudpointparams)+'&fresh='+Math.random()" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
      </div>
     </el-dialog>
   </div>
@@ -91,6 +91,7 @@ let eventSource = null;    // 存储 EventSource 对象
 const dialogVisible = ref(false)
 const runningDevice = ref([])
 const basicSceneRef = ref()
+const allCameraPorts = ref([])
 // 状态管理
 const state = reactive({
   select1: '', // 第一个下拉框的值
@@ -184,6 +185,7 @@ const startupDevice = () => {
   const device1 = basicSceneRef.value?.value1
   const device2 = basicSceneRef.value?.value2
   const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
+  allCameraPorts.value = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it['display-port'])
   const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
   const devicesArr = [...cameras, ...ods, device1, device2]
   if (!device1 || !device2) {
@@ -313,6 +315,7 @@ const queryCurrentDrivers = () => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
       viewports.value = datavalue
+      allCameraPorts.value = datavalue[0].devices.filter((item: any) => item.type === 'camera').map((it: any) => it['display-port'])
       viewportId.value = datavalue[0].id
       await getCurrentStatus(viewportId.value)
     }).catch((err: any) => {
@@ -330,25 +333,12 @@ const getCurrentStatus = (viewportId: string) => {
       testDevice.value = res.data.isluanching || false
       startCollect.value = res.data.isrecording || false
       switchLoading.value = false
-      const data = res.data.details.filter((item: any) => item.isrunning)
+      const data = res.data.details.filter((item: any) => (item.deviceKey.indexOf('lidar') > -1 && item.deviceKey.indexOf('lidarod') === -1) && item.isrunning)
       if (data.length > 1) {
         runningDevice.value = data
         state.select1 = data[0]['deviceKey']
         state.select2 = data[1]['deviceKey']
       }
-      // if(testDevice.value && !startCollect.value) {
-      //   // 设备调试初始化中但未采集，自动勾选全部设备
-      //   if (sensorConfigsRef.value) {
-      //     sensorConfigsRef.value.selectAllNodes(); // 调用子组件的方法
-      //   }
-      // } else if (testDevice.value && startCollect.value) {
-      //   // 设备采集中，勾选状态为采集中的设备
-      //   const isrecordingNodes = res.data.details.filter((item: any) => item.isrecording)
-      //   if (sensorConfigsRef.value) {
-      //     sensorConfigsRef.value.selectSomeNodes(isrecordingNodes); // 调用子组件的方法
-      //   }
-      // }
-
     }).catch((err: any) => {
       console.log(err, 'err')
     })
