@@ -194,6 +194,15 @@ const shutdownDevice = async () => {
 }
 // 开始采集
 const recordOnDevice = () => {
+  if (!testDevice.value) {
+    ElMessage({
+      message: "请先初始化设备",
+      type: 'error',
+    })
+    switchLoading.value = false
+    startCollect.value = false
+    return;
+  }
   getCurrentPorts()
   const params = {
     "data": {
