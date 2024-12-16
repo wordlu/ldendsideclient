@@ -92,16 +92,25 @@ const handleSelect2Change = (value: string) => {
   emit('selectDevice', 'select2', value)
 }
 
+const updateOptionsAndPortArray = (value: string, type: string) => {
+  const data = viewportsdata.value.devices.filter(it => it.id.indexOf(value) > -1)
+  const portArrayValue = getString(data.map((item: any) => item['display-port']))
+  const optionsValue = options.value.filter((item: any) => item.value !== value)
+  if (type === 'value1') {
+    portarray1.value = portArrayValue
+    options2.value = optionsValue
+  } else {
+    portarray2.value = portArrayValue
+    options1.value = optionsValue
+  }
+}
+
 watch(() => value1.value, (newVal) => {
-  options2.value = options.value.filter((item: any) => item.value !== value1.value)
-  const data1 = viewportsdata.value.devices.filter(it => it.id.indexOf(value1.value) > -1)
-  portarray1.value = getString(data1.map((item: any) => item['display-port']))
+  updateOptionsAndPortArray(newVal, 'value1')
 },{ deep: true })
 
 watch(() => value2.value, (newVal) => {
-  options1.value = options.value.filter((item: any) => item.value !== value2.value)
-  const data2 = viewportsdata.value.devices.filter(it => it.id.indexOf(value2.value) > -1)
-  portarray2.value = getString(data2.map((item: any) => item['display-port']))
+  updateOptionsAndPortArray(newVal, 'value2')
 },{ deep: true })
 
 watch(() => props.viewports, (newVal) => {
