@@ -18,32 +18,46 @@ const scene = new THREE.Scene()
 const axesHelper = new THREE.AxesHelper(5)
 scene.add(axesHelper)
 //添加坐标轴文字
-const loader = new FontLoader();
-const createLabel = (text, position, rotation = new THREE.Vector3(0, 0, 0)) => {
-  // ./src/components/visualization/lib/helvetiker_regular.typeface.json
-  loader.load('http://loggertrash/pointcloud/helvetiker_regular.typeface.json', function (font) {
-      const geometry = new TextGeometry(text, {
-          font: font,
-          size: 0.5,
-          height: 0.01,
-          curveSegments: 12,
-          bevelEnabled: false,
-      });
+const createLabelSprite = (text, position, rotation = new THREE.Vector3(0, 0, 0), group) => {
+  // 创建 canvas 并获取其上下文
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
 
-      const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.copy(position);
-      // 应用旋转
-      mesh.rotation.set(rotation.x, rotation.y, rotation.z);
-      scene.add(mesh);
-  });
+  // 设置 canvas 尺寸和样式
+  canvas.width = 400;  // 调整宽度以适应文字内容
+  canvas.height = 80;  // 高度较小即可
+  context.font = '80px Arial';  // 设置字体样式
+  context.fillStyle = 'white';   // 文字颜色
+  context.textAlign = 'center';  // 水平居中对齐
+  context.textBaseline = 'middle';  // 垂直居中对齐
+  context.clearRect(0, 0, canvas.width, canvas.height);  // 清空画布
+
+  // 在 canvas 上绘制文字
+  context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  // 创建纹理并使用 canvas 作为源
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  // 创建精灵材质，使用纹理作为材质的 map
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(material);
+
+  // 调整精灵大小
+  sprite.scale.set(2, 0.5, 1);  // 根据需要调整比例
+
+  // 设置精灵的位置和旋转
+  sprite.position.copy(position);
+  sprite.rotation.set(rotation.x, rotation.y, rotation.z);
+
+  if (group) return sprite;
+  // 将精灵添加到场景中
+  scene.add(sprite);
 };
-
-// 添加 XYZ 文字标识
-createLabel('X', new THREE.Vector3(5, 0, 0));  // X轴标识
-createLabel('Y', new THREE.Vector3(0, 5, 0));  // Y轴标识
-createLabel('Z', new THREE.Vector3(-0.3, -0.3, 5), new THREE.Vector3(Math.PI / 2, 0, 0));  // Z轴标识
-
+// 添加 XYZ 文字精灵
+createLabelSprite('X', new THREE.Vector3(5, 0, 0));  // X轴标识
+createLabelSprite('Y', new THREE.Vector3(0, 5, 0));  // Y轴标识
+createLabelSprite('Z', new THREE.Vector3(0, 0, 5));  // Z轴标识
 
 // 渲染动画
 const animate = () => {

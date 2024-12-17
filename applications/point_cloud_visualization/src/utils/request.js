@@ -3,8 +3,8 @@ import jsCookie from "js-cookie"
 
 const request = axios.create({
 	timeout: 3600000,
-	baseURL:`http://loggertrash/api`,
-	// baseURL:'/api'
+	baseURL:`http://loggertrash/api`, // for logger
+	// baseURL:'/api' // for dms
 })
 
 request.interceptors.request.use( config => {

@@ -17,8 +17,8 @@ function getQueryString(name) {
   return null;
 }
 // 数据回显
-// const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
-const podUrl = ref(`ws://loggertrash/replay/`);
+const podUrl = ref(`ws://${window.parent.location.hostname}/replay/`);
+// const podUrl = ref(`ws://loggertrash/replay/`);
 let dataSet;
 let ws;
 let pcdWs;
@@ -341,7 +341,8 @@ export function downloadFrame(frame_index) {
   const lidarOrCameraDevice = deviceHub?.filter(it => it.type === 'lidar' || it.type === 'camera')?.map(it => it.id)
   const devices = currentSelectedSensor.filter(it => lidarOrCameraDevice.includes(it))?.toString()
   const dataset = getQueryString('dataset')
-  const url = `http://loggertrash/replay/download_frames?dataset=${dataset}&devices=${devices}&frame_index=${frame_index}`
+  // const url = `http://loggertrash/replay/download_frames?dataset=${dataset}&devices=${devices}&frame_index=${frame_index}`
+  const url = `http://${window.parent.location.hostname}/replay/download_frames?dataset=${dataset}&devices=${devices}&frame_index=${frame_index}`
   window.open(url, '_blank')
 }
 
