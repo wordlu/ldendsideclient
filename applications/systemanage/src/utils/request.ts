@@ -5,7 +5,9 @@ const request = axios.create({
   headers: {
     'Content-Type':'application/vnd.api+json'
   },
-	baseURL:`${window.server.mecPrefix}/api/logger`,
+	// baseURL:`${window.server.mecPrefix}/api/logger`,
+	// baseURL:`${window.server.mecPrefix}/api`,
+	baseURL:`/api`,
 	timeout: 3600000,
 })
 

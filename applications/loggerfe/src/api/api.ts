@@ -5,6 +5,25 @@ declare global {
   interface Window { server: any; }
 }
 
+export function funcKpiTasksPost(data:any) {
+  return request({
+    url: `/kpi/kpi_tasks`,
+    method: 'post',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    },
+    data
+  })
+}
+
+export function funcKpiAssetsGet(query) {
+  return request({
+    url: `/kpi/kpi_assets/${query.id}`,
+    method: 'get',
+    params: {}
+  })
+}
+
 export function funcGovernanceTask(data:any) {
   return request({
     url: `http://dms${window.server.domain}/api/func-governance-task`,

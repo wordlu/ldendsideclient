@@ -90,7 +90,7 @@ const queryDeviceDrivers = (page: number) => {
       limit: step.value,
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('/models/device-drivers', params).then((res: any) => {
+    findAll('/logger/models/device-drivers', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       data.value = gostore.findAll('device-drivers')

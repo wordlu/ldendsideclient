@@ -15,12 +15,12 @@ module.exports = defineConfig({
     },
     open: true,
     proxy: {
-      '/api': {
-        target: 'http://ca.dms.10.86.46.254.nip.io',
-        ws: true,
-        changeOrigin: true,
-      },
+    '/api': {
+      target: 'http://loggertrash',
+      ws: true,
+      changeOrigin: true,
     },
+  },  
     client:{
       overlay:false
     }

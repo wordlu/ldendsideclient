@@ -54,7 +54,7 @@ const driversdata = ref<Row[]>([])
 
 const queryDeviceDrivers = (page: number) => {
   try {
-    findAll('/models/device-drivers', {'filter[type]': route.query.type}).then((res: any) => {
+    findAll('/logger/models/device-drivers', {'filter[type]': route.query.type}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       driversdata.value = gostore.findAll('device-drivers')
@@ -136,7 +136,7 @@ const onSubmit = async () => {
       }
           
     }
-    addItem('/models/devices', params).then((res) => {
+    addItem('/logger/models/devices', params).then((res) => {
       console.log(res)
       ElMessage({
         message: "保存配置成功",

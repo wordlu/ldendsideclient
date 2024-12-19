@@ -27,27 +27,11 @@
     </div>
     <div class="list">
       <div class="list-panel">
-        <el-table 
-          @selection-change="handleSelectionChange"
+        <el-table
           ref="multipleTableRef" empty-text="- 暂无数据 -"
           :data="data" style="width: 100%">
-          <el-table-column type="selection" width="55" />
-          <el-table-column property="name" label="数据集名称" width="200" show-overflow-tooltip />
-          <!-- <el-table-column property="alias" label="数据集别名" width="200" show-overflow-tooltip /> -->
-          <el-table-column label="数据集别名" width="200">
-            <template #default="scope">
-              <span v-show="scope.$index !== editIndex" @click="handleEdit(scope.row)">{{ scope.row.alias }}</span>
-              <el-input
-                v-show="scope.$index === editIndex"
-                v-model="scope.row.alias"
-                @blur="handleSave(scope.row)"
-                @keyup.enter="handleSave(scope.row)"
-              ></el-input>
-            </template>
-          </el-table-column>
-          <el-table-column property="size" label="数据集规模" align="center" >
-            <template #default="scope">{{ getSize(scope.row.size) }}</template>
-          </el-table-column>
+          <el-table-column property="id" label="报告ID" show-overflow-tooltip />
+          <el-table-column property="alias" label="报告包含数据集" show-overflow-tooltip />
           <el-table-column property="prefix" label="存储位置"/>
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
@@ -67,8 +51,6 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
-                    <el-dropdown-item command="计算泊车kpi" :icon="MoreFilled">计算泊车kpi</el-dropdown-item>
-                    <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -96,8 +78,6 @@ const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
 const activeRow = ref<Row>({})
-const multipleTableRef = ref<InstanceType<typeof ElTable>>()
-const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
 const editIndex = ref(-1)
@@ -115,21 +95,12 @@ const handleSave = (row) => {
         }
       }
     }
-    patchItem('/models/datasets', params).then((res) => {
+    patchItem('/logger/models/datasets', params).then((res) => {
       console.log(res)
       queryDatasets(current.value)
     }).catch(err => {
       console.error(err)
     })
-}
-
-const createReport = (row) => {
-  console.log(multipleSelection.value)
-}
-
-const handleSelectionChange = (val) => {
-  multipleSelection.value = val;
-  console.log(multipleSelection.value)
 }
 const getSize = (size: number) => {
   if (size >= 0) {
@@ -170,7 +141,7 @@ const queryDatasets = (page: number, type) => {
       'filter[name][fuzzy-match]': search.value,
       'filter[alias][fuzzy-match]': searchAlias.value,
     }
-    findAll('/models/datasets', params).then((res: any) => {
+    findAll('/logger/models/datasets', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('datasets')
@@ -203,7 +174,7 @@ const changeAlias = () => {
 const viewportId = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportId.value = res.data.data[0].id
     }).catch((err: any) => {
       console.log(err, 'err')
@@ -215,36 +186,7 @@ const queryCurrentDrivers = () => {
 
 const handleCommand = async (command, row) => {
   if(command == '数据详情'){
-    if (row.size <= 0) {
-      ElMessage({
-        message: "当前数据集无法查看数据详情！",
-        type: 'warning',
-      })
-      return;
-    }
-    const currentStatus = await findItem('viewport_status', viewportId.value)
-    if (currentStatus.data.isluanching) {
-      ElMessage({
-        message: "有正在运行的设备，请关闭设备后再查看数据详情！",
-        type: 'warning',
-      })
-      return;
-    }
-    window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
-  }
-  else if(command == '计算泊车kpi'){
-
-  }
-  else if(command == '删除'){  
-    ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
-      confirmButtonText: '确认',
-      customClass:"delete-confirm-box",
-      callback: (action: Action) => {
-        if (action === 'confirm') {
-          onDelete(row.id)
-        }
-      },
-    })
+    window.history.pushState(null, '', `/systemanage/reportdetails/${row.id}`)
   }
 }
 
@@ -256,7 +198,7 @@ const onDelete = (id) => {
         type: 'datasets'
       }
     }
-  deleteItem('/models/datasets', params).then(res => {
+  deleteItem('/logger/models/datasets', params).then(res => {
     ElMessage({
       message: "删除成功",
       type: 'success',

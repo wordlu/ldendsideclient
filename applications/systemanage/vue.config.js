@@ -5,7 +5,7 @@ const port = process.env.port || process.env.npm_config_port || 9081 // dev port
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  lintOnSave: false,
+  // lintOnSave: false,
   publicPath: `/apps/systemanage`,
   lintOnSave:false,
   devServer:{
@@ -14,13 +14,28 @@ module.exports = defineConfig({
       'Access-Control-Allow-Origin': '*',
     },
     open: true,
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://loggertrash',
+    //     ws: true,
+    //     pathRewrite: { '^/api': '/api' },
+    //     changeOrigin: true,
+    //   },
+    // },
     proxy: {
-      '/api': {
-        target: 'http://ca.dms.10.86.46.254.nip.io',
-        ws: true,
-        changeOrigin: true,
+    '/api': {
+      target: 'http://loggertrash',
+      ws: true,
+      changeOrigin: true,
+      onProxyReq: (proxyReq, req, res) => {
+        console.log(`Proxying request: ${req.method} ${req.url} -> ${req.url}`);
+      },
+      onProxyRes: (proxyRes, req, res) => {
+        console.log(`Response status: ${proxyRes.statusCode} for ${req.url}`);
       },
     },
+  },
+
     client:{
       overlay:false
     }

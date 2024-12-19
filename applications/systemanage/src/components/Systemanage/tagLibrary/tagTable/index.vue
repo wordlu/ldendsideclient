@@ -134,7 +134,7 @@ export default {
     //   })
     // },
     getList(){
-      findAll('/models/tags',this.params).then((res)=>{
+      findAll('/logger/models/tags',this.params).then((res)=>{
         gostore.reset()
         gostore.sync(res.data)
         this.tableData = gostore.findAll('tags')

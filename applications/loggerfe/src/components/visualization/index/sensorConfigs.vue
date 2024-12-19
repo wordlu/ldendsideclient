@@ -225,7 +225,7 @@ const handleTreeReconnectClick = (node, data) => {
             }
           }
         }
-        addItem('/models/actions', params).then((res: any) => {
+        addItem('/logger/models/actions', params).then((res: any) => {
           ElMessage({
             message: "设备正在重启中 ",
             type: 'success',
@@ -247,7 +247,7 @@ const sensorData = ref([])
 const name = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')

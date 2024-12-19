@@ -314,7 +314,7 @@ const onDelete = () => {
         type: 'devices'
       }
     }
-  deleteItem('/models/devices', params).then(res => {
+  deleteItem('/logger/models/devices', params).then(res => {
     ElMessage({
       message: "删除成功",
       type: 'success',
@@ -388,7 +388,7 @@ const onSubmit = async () => {
       }
           
     }
-    patchItem('/models/devices', params).then((res) => {
+    patchItem('/logger/models/devices', params).then((res) => {
       console.log(res)
       ElMessage({
         message: "保存配置成功",
@@ -429,7 +429,7 @@ const driversdata = ref<Row[]>([])
 const driversdataOptions = ref<Row[]>([])
 const queryDeviceDrivers = (page: number) => {
   try {
-    findAll('/models/device-drivers', {}).then((res: any) => {
+    findAll('/logger/models/device-drivers', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       driversdata.value = gostore.findAll('device-drivers')
@@ -454,7 +454,7 @@ const getSensoronfigs = (nodedata) => {
   driversdataOptions.value = driversdata.value.filter(it => it.type === nodedata.type)
   currentDeviceName.value = nodedata.label
   try {
-    findAll('/models/devices', {'filter[slot]': nodedata.label}).then((res: any) => {
+    findAll('/logger/models/devices', {'filter[slot]': nodedata.label}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')
@@ -505,7 +505,7 @@ const currentViewport = ref(null)
 const viewport_bg = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true, include: 'devices',}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true, include: 'devices',}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -595,7 +595,7 @@ const showPopup = (sensor) => {
 const deployDevices = ref([])
 const getAllDevices = async() => {
   try {
-    await findAll('/models/devices').then((res: any) => {
+    await findAll('/logger/models/devices').then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')

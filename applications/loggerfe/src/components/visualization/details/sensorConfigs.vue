@@ -1,9 +1,7 @@
 <template>
   <div class="display-panel disable-selector">
     <div class="grid-content ml">
-      <!-- <el-input v-model="search" class="search-bar" placeholder="搜索传感器名称" :prefix-icon="Search" style="margin-bottom: 20px;"/> -->
      <div class="title">配置信息</div>
-
       <div class="tree-area">
         <el-tree
           ref="treeRef"
@@ -17,6 +15,14 @@
           :props="defaultProps"
           @check-change="handleCheckChange"
         />
+      </div>
+      <div class="kpi-image">
+        <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
+          <el-tab-pane label="User" name="first">User</el-tab-pane>
+          <el-tab-pane label="Config" name="second">Config</el-tab-pane>
+          <el-tab-pane label="Role" name="third">Role</el-tab-pane>
+          <el-tab-pane label="Task" name="fourth">Task</el-tab-pane>
+        </el-tabs>
       </div>
     </div>
   </div>
@@ -35,6 +41,7 @@ import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compil
 import Vue from 'vue/dist/vue.esm-bundler.js';
 import { Search } from "@element-plus/icons-vue"
 import { useRoute } from 'vue-router';
+import { funcKpiAssetsGet } from '@/api/api'
 
 // 获取当前路由对象
 const route = useRoute();
@@ -48,7 +55,11 @@ interface Tree {
 const props = defineProps({
   deviceids: Array
 });
+const activeName = ref('first')
 
+const handleClick = (tab: TabsPaneContext, event: Event) => {
+  console.log(tab, event)
+}
 const form = reactive({})
 const activeNameTab = ref('second')
 const treeRef = ref<InstanceType<typeof ElTree>>()
@@ -98,7 +109,7 @@ const defaultProps = {
 const treedata = ref([])
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {include: 'devices', 'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
@@ -156,8 +167,17 @@ const totree = (data) => {
   return tree;
 }
 
+const assets = ref([])
+const queryKpiAssets = () => {
+  funcKpiAssetsGet({id: route.params.id}).then((res: any) => {
+    assets.value = res.data
+    console.log(assets.value, 'assets')
+  })
+}
+
 onMounted(() => {
   queryCurrentDrivers()
+  queryKpiAssets()
 });
 
 const changePointSize = (value: number) => {

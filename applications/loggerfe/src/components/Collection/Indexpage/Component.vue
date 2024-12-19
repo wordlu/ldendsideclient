@@ -150,7 +150,7 @@ const startupDevice = () => {
       }
     }
   }
-  addItem('/models/actions', params).then((res: any) => {
+  addItem('/logger/models/actions', params).then((res: any) => {
     switchLoading.value = false
   }).catch((err: any) => {
     switchLoading.value = false
@@ -179,7 +179,7 @@ const shutdownDevice = async () => {
       }
     }
   }
-  addItem('/models/actions', params).then((res: any) => {
+  addItem('/logger/models/actions', params).then((res: any) => {
     switchLoading.value = false
   }).catch((err: any) => {
     switchLoading.value = false
@@ -214,7 +214,7 @@ const recordOnDevice = () => {
       }
     }
   }
-  addItem('/models/actions', params).then((res: any) => {
+  addItem('/loggeractions', params).then((res: any) => {
     switchLoading.value = false
   }).catch((err: any) => {
     console.error(err, 'err')
@@ -264,7 +264,7 @@ const getCurrentPorts = () => {
 //获取设备树
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then(async (res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then(async (res: any) => {
       viewportId.value = res.data.data[0].id
       await getCurrentStatus(viewportId.value)
     }).catch((err: any) => {

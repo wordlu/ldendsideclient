@@ -86,7 +86,7 @@ const queryDevice = (page: number) => {
       sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('/models/devices', params).then((res: any) => {
+    findAll('/logger/models/devices', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       data.value = gostore.findAll('devices')

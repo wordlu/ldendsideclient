@@ -93,7 +93,7 @@ const viewportId = ref('')
 
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')

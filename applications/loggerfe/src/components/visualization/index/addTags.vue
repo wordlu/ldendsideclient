@@ -103,7 +103,7 @@ const checkTags = () => {
 
 const getTaggings = (lidarname: string) => {
   try {
-    findAll('/models/taggings', {}).then((res: any) => {
+    findAll('/logger/models/taggings', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('taggings')
@@ -121,7 +121,7 @@ const getTaggings = (lidarname: string) => {
 const tagData = ref([])
 const getTags = (lidarname: string) => {
   try {
-    findAll('/models/tags', {}).then((res: any) => {
+    findAll('/logger/models/tags', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('tags')
@@ -157,7 +157,7 @@ const handleSelectTag = (tagData: any) => {
       }
     }
   }
-  addItem('/models/taggings', params).then((res: any) => {
+  addItem('/logger/models/taggings', params).then((res: any) => {
     ElMessage({
       message: "打标签成功",
       type: 'success',
@@ -180,7 +180,7 @@ const handleCommand = (command, row) => {
         type: 'taggings'
       }
     }
-    deleteItem('/models/taggings', params).then(res => {
+    deleteItem('/logger/models/taggings', params).then(res => {
       ElMessage({
         message: "删除成功",
         type: 'success',

@@ -206,7 +206,7 @@ const checkTags = () => {
 
 const getTaggings = (lidarname: string) => {
   try {
-    findAll("/models/taggings", { "filter[dataset]": route.params.id })
+    findAll("/logger/models/taggings", { "filter[dataset]": route.params.id })
       .then((res: any) => {
         gostore.reset();
         gostore.sync(res.data);
@@ -236,7 +236,7 @@ const getCurrentPorts = () => {
 const tagData = ref([]);
 const getTags = (lidarname: string) => {
   try {
-    findAll("/models/tags", {})
+    findAll("/logger/models/tags", {})
       .then((res: any) => {
         gostore.reset();
         gostore.sync(res.data);
@@ -263,7 +263,7 @@ const deviceids = ref([]);
 const datasetprefix = ref("");
 const getDatasetDetails = () => {
   try {
-    findItem("/models/datasets", route.params.id)
+    findItem("/logger/models/datasets", route.params.id)
       .then((res: any) => {
         gostore.reset();
         datasetData.value = gostore.sync(res.data);
@@ -300,7 +300,7 @@ const handleSelectTag = (tagData: any) => {
       },
     },
   };
-  addItem("/models/taggings", params)
+  addItem("/logger/models/taggings", params)
     .then((res: any) => {
       ElMessage({
         message: "打标签成功",
@@ -325,7 +325,7 @@ const handleCommand = (command, row) => {
         type: "taggings",
       },
     };
-    deleteItem("/models/taggings", params)
+    deleteItem("/logger/models/taggings", params)
       .then((res) => {
         ElMessage({
           message: "删除成功",

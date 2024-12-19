@@ -1,11 +1,13 @@
 import axios from 'axios'
 import jsCookie from "js-cookie"
+import { BaseURL } from './../../../../../ld-dms/applications/calibrator_v3_fe/src/api_v1/camera_source';
 
 const request = axios.create({
   headers: {
     'Content-Type':'application/vnd.api+json'
   },
-	baseURL:`${window.server.mecPrefix}/api/logger`,
+	// baseURL:`${window.server.mecPrefix}/api/logger`,
+  baseURL: `/api`,
 	timeout: 3600000,
 })
 

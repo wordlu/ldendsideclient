@@ -96,7 +96,7 @@ const queryDeviceDrivers = (page: number) => {
       limit: step.value,
       'filter[name][fuzzy-match]': search.value
     }
-    findAll('/models/viewport-templates', params).then((res: any) => {
+    findAll('/logger/models/viewport-templates', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       data.value = gostore.findAll('viewport-templates')
@@ -113,7 +113,7 @@ const queryDeviceDrivers = (page: number) => {
 
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')

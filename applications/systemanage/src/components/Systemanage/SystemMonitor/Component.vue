@@ -40,7 +40,7 @@ const options = ref([])
 // const treedata = ref([])
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/devices', {}).then((res: any) => {
+    findAll('/logger/models/devices', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('devices')

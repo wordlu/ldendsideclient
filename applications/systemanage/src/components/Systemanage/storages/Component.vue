@@ -88,6 +88,7 @@
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
 import { findAll, deleteItem, findItem, patchItem } from '@/api/jsonApi'
+import { funcKpiTasksPost, funcKpiTasksGet } from '@/api/api'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
 interface Row {}
@@ -119,7 +120,7 @@ const handleSave = (row) => {
         }
       }
     }
-    patchItem('/models/datasets', params).then((res) => {
+    patchItem('/logger/models/datasets', params).then((res) => {
       console.log(res)
       queryDatasets(current.value)
     }).catch(err => {
@@ -174,7 +175,7 @@ const queryDatasets = (page: number, type) => {
       'filter[name][fuzzy-match]': search.value,
       'filter[alias][fuzzy-match]': searchAlias.value,
     }
-    findAll('/models/datasets', params).then((res: any) => {
+    findAll('/logger/models/datasets', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('datasets')
@@ -207,7 +208,7 @@ const changeAlias = () => {
 const viewportId = ref('')
 const queryCurrentDrivers = () => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    findAll('/logger/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportId.value = res.data.data[0].id
     }).catch((err: any) => {
       console.log(err, 'err')
@@ -237,7 +238,7 @@ const handleCommand = async (command, row) => {
     window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
   }
   else if(command == '计算泊车kpi'){
-
+    createKpi(row)
   }
   else if(command == '删除'){  
     ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
@@ -252,6 +253,17 @@ const handleCommand = async (command, row) => {
   }
 }
 
+const createKpi = (row) => {
+  funcKpiTasksPost({"dataset":row.id}).then(res => {
+    ElMessage({
+      message: "计算中,请稍后查看数据详情",
+      type: 'success',
+    })
+  }).catch(err => {
+    console.err(err)
+  })
+}
+
 
 const onDelete = (id) => {
   const params = {
@@ -260,7 +272,7 @@ const onDelete = (id) => {
         type: 'datasets'
       }
     }
-  deleteItem('/models/datasets', params).then(res => {
+  deleteItem('/logger/models/datasets', params).then(res => {
     ElMessage({
       message: "删除成功",
       type: 'success',
