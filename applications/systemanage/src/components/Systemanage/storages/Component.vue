@@ -88,7 +88,7 @@
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
 import { findAll, deleteItem, findItem, patchItem } from '@/api/jsonApi'
-import { funcKpiTasksPost, funcKpiTasksGet } from '@/api/api'
+import { funcKpiTasksPost, funcKpiReportTasks } from '@/api/api'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
 interface Row {}
@@ -128,8 +128,28 @@ const handleSave = (row) => {
     })
 }
 
-const createReport = (row) => {
+const createReport = () => {
   console.log(multipleSelection.value)
+  if (multipleSelection.value.length === 0) {
+    ElMessage({
+      message: '请选择数据集',
+      type: 'warning',
+    })
+    return
+  }
+  const ids = multipleSelection.value.map((item) => item.id)
+  const params = {
+    "datasets": ids
+  }
+  funcKpiReportTasks(params).then((res) => {
+    console.log(res)
+    ElMessage({
+      message: '生成报告成功',
+      type: 'success',
+    })
+  }).catch(err => {
+    console.error(err)
+  })
 }
 
 const handleSelectionChange = (val) => {

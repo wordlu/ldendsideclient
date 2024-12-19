@@ -16,11 +16,15 @@ export function funcKpiTasksPost(data:any) {
   })
 }
 
-export function funcKpiTasksGet(query) {
+
+export function funcKpiReportTasks(data:any) {
   return request({
-    url: `/kpi/kpi_tasks`,
-    method: 'get',
-    params: {}
+    url: `/kpi/report_tasks`,
+    method: 'post',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    },
+    data
   })
 }
 
