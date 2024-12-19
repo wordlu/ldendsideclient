@@ -10,10 +10,14 @@
           <div class="info-detail">
             <b class="title">数据集<span class="count">({{ count }})</span></b>
           </div>
+          <div class="info-btn-group">
+            <el-button @click="createReport"  type="primary" class="info-btn">生成报告</el-button>
+          </div>
         </div>
       </div>
       <div class="mid-panel">
         <el-input v-model="search" class="search-bar" placeholder="搜索数据集名称" @change="change" @input="change" :prefix-icon="Search" />
+        <el-input v-model="searchAlias" class="search-bar" placeholder="搜索数据集别名" @change="changeAlias" @input="changeAlias" :prefix-icon="Search" />
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -27,15 +31,33 @@
     </div>
     <div class="list">
       <div class="list-panel">
-        <el-table ref="multipleTableRef" empty-text="- 暂无数据 -"
+        <el-table 
+          @selection-change="handleSelectionChange"
+          ref="multipleTableRef" empty-text="- 暂无数据 -"
           :data="data" style="width: 100%">
+          <el-table-column type="selection" width="55" />
           <el-table-column property="name" label="数据集名称" width="200" show-overflow-tooltip />
+          <!-- <el-table-column property="alias" label="数据集别名" width="200" show-overflow-tooltip /> -->
+          <el-table-column label="数据集别名" width="200">
+            <template #default="scope">
+              <span v-show="scope.$index !== editIndex" @click="handleEdit(scope.row)">{{ scope.row.alias }}</span>
+              <el-input
+                v-show="scope.$index === editIndex"
+                v-model="scope.row.alias"
+                @blur="handleSave(scope.row)"
+                @keyup.enter="handleSave(scope.row)"
+              ></el-input>
+            </template>
+          </el-table-column>
           <el-table-column property="size" label="数据集规模" align="center" >
             <template #default="scope">{{ getSize(scope.row.size) }}</template>
           </el-table-column>
           <el-table-column property="prefix" label="存储位置"/>
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
+          </el-table-column>
+          <el-table-column label="状态">
+            <template #default="scope">{{ formatStatus(scope.row.kpistatus) }}</template>
           </el-table-column>
           <el-table-column
             property="name"
@@ -49,7 +71,7 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
-                    <!-- <el-dropdown-item command="导出" :icon="MoreFilled">导出</el-dropdown-item> -->
+                    <el-dropdown-item command="计算泊车kpi" :icon="MoreFilled">计算泊车kpi</el-dropdown-item>
                     <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
@@ -65,7 +87,7 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold, MoreFilled } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll, deleteItem, findItem } from '@/api/jsonApi'
+import { findAll, deleteItem, findItem, patchItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
 interface Row {}
@@ -73,15 +95,46 @@ interface Row {}
 const count = ref(0)
 const step = ref(10)
 const search = ref('')
+const searchAlias = ref('')
 const current = ref(0)
 const currentmax = ref(0)
 const data = ref<Row[]>([])
 const activeRow = ref<Row>({})
-
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
 
+const editIndex = ref(-1)
+const handleEdit = (row) => {
+  editIndex.value = data.value.indexOf(row)
+}
+const handleSave = (row) => {
+  editIndex.value = -1
+  const params = {
+      data: {
+        type: 'datasets',
+        id: row.id,
+        attributes: {
+          "alias": row.alias,
+        }
+      }
+    }
+    patchItem('/models/datasets', params).then((res) => {
+      console.log(res)
+      queryDatasets(current.value)
+    }).catch(err => {
+      console.error(err)
+    })
+}
+
+const createReport = (row) => {
+  console.log(multipleSelection.value)
+}
+
+const handleSelectionChange = (val) => {
+  multipleSelection.value = val;
+  console.log(multipleSelection.value)
+}
 const getSize = (size: number) => {
   if (size >= 0) {
     if (size < 1024) {
@@ -112,18 +165,25 @@ onMounted(() => {
   queryCurrentDrivers()
 })
 
-const queryDatasets = (page: number) => {
+const queryDatasets = (page: number, type) => {
   try {
     const params = {
       offset: step.value * page,
       limit: step.value,
       sort: '-created',
-      'filter[name][fuzzy-match]': search.value
+      'filter[name][fuzzy-match]': search.value,
+      'filter[alias][fuzzy-match]': searchAlias.value,
     }
     findAll('/models/datasets', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      data.value = gostore.findAll('datasets')
+      const datavalue = gostore.findAll('datasets')
+      data.value = datavalue.map((item: any) => {
+        if (!item.alias || !item.alias.trim()) {
+          item.alias = '-'
+        }
+        return item
+      })
       count.value = res.data.meta.count
       current.value = page
       currentmax.value = Math.ceil(count.value / step.value)
@@ -138,6 +198,10 @@ const queryDatasets = (page: number) => {
 
 const change = () => {
   queryDatasets(0)
+}
+
+const changeAlias = () => {
+  queryDatasets(0, 'alias')
 }
 
 const viewportId = ref('')
@@ -171,7 +235,11 @@ const handleCommand = async (command, row) => {
       return;
     }
     window.history.pushState(null, '', `/loggerfe/datasetdetail/${row.id}`)
-  }else if(command == '删除'){  
+  }
+  else if(command == '计算泊车kpi'){
+
+  }
+  else if(command == '删除'){  
     ElMessageBox.alert('确认删除当前数据集吗？', '确认删除', {
       confirmButtonText: '确认',
       customClass:"delete-confirm-box",
@@ -213,6 +281,16 @@ const onDelete = (id) => {
 
 const handleClick = (e) =>{
   activeRow.value = e
+}
+
+const formatStatus = (status) => {
+  const arr = {
+    'NoStatus': '无',
+    'Running': '运行中',
+    'Success': '成功',
+    'Failed': '失败',
+  }
+  return arr[status] || '--'
 }
 
 const formatter = (thistime: any, fmt: string) => {

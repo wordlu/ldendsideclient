@@ -44,3 +44,15 @@ export function deleteItem(module:string,params:any) {
     }
   })
 }
+
+
+export function patchItem(module:string,params:any) {
+  return request({
+    url: `${module}/${params.data.id}`,
+    method: 'patch',
+    headers: {
+      'Content-Type':'application/vnd.api+json'
+    },
+    data:params
+  })
+}

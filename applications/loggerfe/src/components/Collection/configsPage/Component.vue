@@ -13,13 +13,16 @@
           <div class="info-detail">
             <b class="title">{{ name }}</b>
           </div>
+          <div class="info-btn-group">
+            <el-button @click="handleFileUploadClick"  type="primary" class="info-btn">上传打点文件</el-button>
+          </div>
         </div>
       </div>
     </div>
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -114,6 +117,36 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="dialogFileVisible"
+      title="上传打点文件"
+      width="500"
+      :before-close="handleFileClose"
+    >
+      <el-upload
+        ref="uploadFileRef"
+        class="upload-demo"
+        :auto-upload="false"
+        :action="uploadFileUrl"
+        :limit="1"
+        method="PATCH"
+        accept=".txt"
+        :on-success="uploadFileSuccess"
+        :on-error="errorFileMessage"
+        :on-exceed="handleFileExceed"
+      >
+        <template #trigger>
+          <el-button type="primary">上传打点文件</el-button>
+        </template>
+      </el-upload>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleFileClose">取消</el-button>
+          <el-button type="primary" @click="submitFileUpload">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
   
 </template>
@@ -155,6 +188,9 @@ const search = ref('')
 const dialogVisible = ref(false)
 const uploadUrl = ref('')
 const uploadRef = ref<UploadInstance>()
+const dialogFileVisible = ref(false)
+const uploadFileUrl = ref('')
+const uploadFileRef = ref<UploadInstance>()
 
 const submitUpload = () => {
   uploadRef.value!.submit()
@@ -180,6 +216,33 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   const file = files[0] as UploadRawFile
   file.uid = genFileId()
   uploadRef.value!.handleStart(file)
+}
+
+
+const submitFileUpload = () => {
+  uploadFileRef.value!.submit()
+}
+
+const handleFileClose = () => {
+  uploadFileRef.value!.clearFiles()
+  dialogFileVisible.value = false
+}
+
+const errorFileMessage = (response) => {
+  ElMessage.error('上传文件失败'+ (response.message ? `:${response.message}!` : '!'))
+};
+
+const uploadFileSuccess = (response, file, fileList) => {
+  ElMessage.success('上传成功')
+  uploadFileRef.value!.clearFiles()
+  dialogFileVisible.value = false
+};
+
+const handleFileExceed: UploadProps['onExceed'] = (files) => {
+  uploadFileRef.value!.clearFiles()
+  const file = files[0] as UploadRawFile
+  file.uid = genFileId()
+  uploadFileRef.value!.handleStart(file)
 }
 
 watch(()=>selectedNode.value, (newVal) => {
@@ -208,6 +271,10 @@ const renderContent = (h, { node, data }) => {
 
 const handleTreeUploadClick = (node: Node, data: Tree) => {
   dialogVisible.value = true
+}
+
+const handleFileUploadClick = (node: Node, data: Tree) => {
+  dialogFileVisible.value = true
 }
 
 // 文件上传函数
@@ -393,7 +460,7 @@ const getSensoronfigs = (nodedata) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
-        uploadUrl.value = `http://loggertrash/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
+        uploadUrl.value = `/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
         currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
         setFormData(datavalue[0])
@@ -443,6 +510,7 @@ const queryCurrentDrivers = () => {
       gostore.sync(res.data)
       const datavalue = gostore.findAll('viewports')
       currentViewport.value = datavalue[0]
+      uploadFileUrl.value = `/api/logger/models/viewports/${currentViewport.value.id}/upload_paring`
       viewport_bg.value = datavalue[0]['image-path']
       baseStyle.value = datavalue[0].type === "场端" ? {
         height: '689px',
