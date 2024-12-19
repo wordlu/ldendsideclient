@@ -161,6 +161,11 @@ export default {
                 policy: "pagesystemanagestorages",
               },
               {
+                index: '/systemanage/reports',
+                title: '报告管理',
+                policy: "pagesystemanagereports",
+              },
+              {
                 index: '/systemanage/sysmanage',
                 title: '系统环境',
                 policy: "pagesystemanagesysmanage",

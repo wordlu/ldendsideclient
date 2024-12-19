@@ -5,6 +5,7 @@ import StatusMonitorPage from '../components/Systemanage/StatusMonitor/Component
 import LogsAnalyzePage from '../components/Systemanage/LogsAnalyze/Component.vue'
 import SystemanageDevicesPage from '../components/Systemanage/devices/Component.vue'
 import storagesPage from '../components/Systemanage/storages/Component.vue'
+import reportsPage from '../components/Systemanage/reports/Component.vue'
 import SystemanageDevicesDrivesPage from '../components/Systemanage/devicesdrives/Component.vue'
 import tagLibListPage from '../components/Systemanage/tagLibrary/taglist.vue'
 import collectiontemplatesPage from '../components/Systemanage/collectiontemplates/Component.vue'
@@ -33,6 +34,10 @@ const router = createRouter({
         {
           path: 'storages',
           component: storagesPage
+        },
+        {
+          path: 'reports',
+          component: reportsPage
         },
         {
           path: 'tags',
