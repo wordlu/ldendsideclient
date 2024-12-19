@@ -13,6 +13,12 @@
         </div>
       </div>
     </div>
+    <div class="images">
+      <div v-for="(image,index) in assets" :key="image.title+index" class="image">
+        <div style="margin-top: 20px;">{{ index+1 }}. {{ image.output_path }}</div>
+        <img style="height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/report_assets/${route.params.id}?file=${image.output_path}`" alt="">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -22,7 +28,20 @@ import gostore from '@/services/governance-store'
 import { findAll, deleteItem, findItem, patchItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
+import { useRoute } from 'vue-router';
+import { funcReportAssetsGet } from '@/api/api'
 
+const route = useRoute();
+const assets = ref([])
+
+const getReportAssets = async () => {
+  funcReportAssetsGet({id: route.params.id}).then((res: any) => {
+    assets.value = res.data
+  })
+}
+onMounted(() => {
+  getReportAssets()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -61,6 +80,11 @@ import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
       }
       
     }
+  }
+
+  .images {
+    overflow: auto;
+    height: calc(100vh - 210px);
   }
 }
 </style>

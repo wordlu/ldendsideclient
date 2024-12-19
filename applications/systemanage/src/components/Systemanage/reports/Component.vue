@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="mid-panel">
-        <el-input v-model="search" class="search-bar" placeholder="搜索报告名称" @change="change" @input="change" :prefix-icon="Search" />
+        <!-- <el-input v-model="search" class="search-bar" placeholder="搜索报告名称" @change="change" @input="change" :prefix-icon="Search" /> -->
         <div class="mid-group">
           <div class="ver-mid">
             <el-button type="text" :disabled="current + 1 >= currentmax" :icon="ArrowRightBold" @click="nextPage" />
@@ -31,18 +31,18 @@
           ref="multipleTableRef" empty-text="- 暂无数据 -"
           :data="data" style="width: 100%">
           <el-table-column property="id" label="报告ID" show-overflow-tooltip />
-          <el-table-column property="alias" label="报告包含数据集" show-overflow-tooltip />
+          <el-table-column property="datasets" label="报告包含数据集" show-overflow-tooltip />
           <el-table-column property="prefix" label="存储位置"/>
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
           </el-table-column>
           <el-table-column label="状态">
-            <template #default="scope">{{ formatStatus(scope.row.kpistatus) }}</template>
+            <template #default="scope">{{ formatStatus(scope.row.status) }}</template>
           </el-table-column>
           <el-table-column
             property="name"
             label="操作"
-            width="50">
+            width="60">
             <template #default="scope">
               <el-dropdown @command="(val) => handleCommand(val, scope.row)">
                 <span class="el-dropdown-link">
@@ -88,14 +88,14 @@ const handleSave = (row) => {
   editIndex.value = -1
   const params = {
       data: {
-        type: 'datasets',
+        type: 'reports',
         id: row.id,
         attributes: {
           "alias": row.alias,
         }
       }
     }
-    patchItem('/logger/models/datasets', params).then((res) => {
+    patchItem('/logger/models/reports', params).then((res) => {
       console.log(res)
       queryDatasets(current.value)
     }).catch(err => {
@@ -141,10 +141,10 @@ const queryDatasets = (page: number, type) => {
       'filter[name][fuzzy-match]': search.value,
       'filter[alias][fuzzy-match]': searchAlias.value,
     }
-    findAll('/logger/models/datasets', params).then((res: any) => {
+    findAll('/logger/models/reports', params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
-      const datavalue = gostore.findAll('datasets')
+      const datavalue = gostore.findAll('reports')
       data.value = datavalue.map((item: any) => {
         if (!item.alias || !item.alias.trim()) {
           item.alias = '-'
@@ -190,32 +190,6 @@ const handleCommand = async (command, row) => {
   }
 }
 
-
-const onDelete = (id) => {
-  const params = {
-      data: {
-        id: id,
-        type: 'datasets'
-      }
-    }
-  deleteItem('/logger/models/datasets', params).then(res => {
-    ElMessage({
-      message: "删除成功",
-      type: 'success',
-    })
-    queryDatasets(0)
-  }).catch(err => {
-    const {response:{data:{errors}}} = err
-    let msg =  "删除失败"
-    if(errors && errors[0]) {
-      msg = errors[0]['detail']
-    }
-    ElMessage({
-      message: msg,
-      type: 'error',
-    })
-  })
-}
 
 const handleClick = (e) =>{
   activeRow.value = e

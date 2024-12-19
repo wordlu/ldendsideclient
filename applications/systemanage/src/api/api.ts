@@ -16,6 +16,14 @@ export function funcKpiTasksPost(data:any) {
   })
 }
 
+export function funcReportAssetsGet(query) {
+  return request({
+    url: `/kpi/report_assets/${query.id}`,
+    method: 'get',
+    params: {}
+  })
+}
+
 
 export function funcKpiReportTasks(data:any) {
   return request({
