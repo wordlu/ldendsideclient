@@ -1,5 +1,7 @@
 <template>
-  <div class="container">
+  <div class="container"
+    :element-loading-text="loadingtext"
+    v-loading="pageLoading">
     <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>存储管理</el-breadcrumb-item>
@@ -90,8 +92,10 @@ import gostore from '@/services/governance-store'
 import { findAll, deleteItem, findItem, patchItem } from '@/api/jsonApi'
 import { funcKpiTasksPost, funcKpiReportTasks } from '@/api/api'
 import { ref, onMounted } from "vue"
+import { useRouter } from 'vue-router';
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
 interface Row {}
+const router = useRouter()
 
 const count = ref(0)
 const step = ref(10)
@@ -104,7 +108,8 @@ const activeRow = ref<Row>({})
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
-
+const loadingtext = ref('生成报告中...')
+const pageLoading = ref(false)
 const editIndex = ref(-1)
 const handleEdit = (row) => {
   editIndex.value = data.value.indexOf(row)
@@ -141,13 +146,23 @@ const createReport = () => {
   const params = {
     "datasets": ids
   }
+  pageLoading.value = true
   funcKpiReportTasks(params).then((res) => {
+    pageLoading.value = false
     console.log(res)
     ElMessage({
-      message: '生成报告成功',
+      message: '生成报告成功，即将跳转查看...',
       type: 'success',
     })
+    setTimeout(() => {
+      router.push({ path: '/systemanage/reports' })
+    }, 1000)
   }).catch(err => {
+    pageLoading.value = false
+    ElMessage({
+      message: '生成报告失败',
+      type: 'error',
+    })
     console.error(err)
   })
 }

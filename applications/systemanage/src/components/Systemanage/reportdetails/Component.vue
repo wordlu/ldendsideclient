@@ -15,7 +15,7 @@
     </div>
     <div class="images">
       <div v-for="(image,index) in assets" :key="image.title+index" class="image">
-        <div style="margin-top: 20px;">{{ index+1 }}. {{ image.output_path }}</div>
+        <div class="title">{{ index+1 }}. {{ image.output_path }}</div>
         <img style="height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/report_assets/${route.params.id}?file=${image.output_path}`" alt="">
       </div>
     </div>
@@ -85,6 +85,15 @@ onMounted(() => {
   .images {
     overflow: auto;
     height: calc(100vh - 210px);
+
+    .image {
+      margin-top: 20px;
+
+      .title {
+        text-align: left;
+        font-size: 16px;
+      }
+    }
   }
 }
 </style>

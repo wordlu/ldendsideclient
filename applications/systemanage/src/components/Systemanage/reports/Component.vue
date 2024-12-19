@@ -50,7 +50,7 @@
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
+                    <el-dropdown-item command="报告详情" :icon="MoreFilled">报告详情</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -185,7 +185,7 @@ const queryCurrentDrivers = () => {
 }
 
 const handleCommand = async (command, row) => {
-  if(command == '数据详情'){
+  if(command == '报告详情'){
     window.history.pushState(null, '', `/systemanage/reportdetails/${row.id}`)
   }
 }
