@@ -18,10 +18,10 @@
       </div>
       <div class="kpi-image">
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane label="User" name="first">User</el-tab-pane>
-          <el-tab-pane label="Config" name="second">Config</el-tab-pane>
-          <el-tab-pane label="Role" name="third">Role</el-tab-pane>
-          <el-tab-pane label="Task" name="fourth">Task</el-tab-pane>
+          <el-tab-pane v-for="(item,index) in assets" :key="item.title+index" :label="item.title" :name="item.title">
+            {{ item.output_path }}
+            <img style="width: 400px;height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/kpi_assets/${route.params.id}?file=${item.output_path}`" alt="">
+          </el-tab-pane>
         </el-tabs>
       </div>
     </div>
@@ -55,13 +55,12 @@ interface Tree {
 const props = defineProps({
   deviceids: Array
 });
-const activeName = ref('first')
+const activeName = ref('')
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
-  console.log(tab, event)
+  activeName.value = tab.props.name
 }
 const form = reactive({})
-const activeNameTab = ref('second')
 const treeRef = ref<InstanceType<typeof ElTree>>()
 const emit = defineEmits(['update:leafNodes', 'setAllTreeKeys', 'setDevicesHub']);
 
@@ -171,7 +170,9 @@ const assets = ref([])
 const queryKpiAssets = () => {
   funcKpiAssetsGet({id: route.params.id}).then((res: any) => {
     assets.value = res.data
-    console.log(assets.value, 'assets')
+    if (assets.value.length > 0) {
+      activeName.value = assets.value[0].title
+    }
   })
 }
 

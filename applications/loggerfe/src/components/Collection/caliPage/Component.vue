@@ -29,7 +29,7 @@ const cloudpointparams = ref({
 const calibrationTemplateName = ref('')
 const queryCalibrationTemplateId = (page: number) => {
   try {
-    findItem(`/sys/calibration-templates`, route.params.calitemplateid).then((res: any) => {
+    findItem(`/logger/sys/calibration-templates`, route.params.calitemplateid).then((res: any) => {
       gostore.reset()
       const data = gostore.sync(res.data)
       calibrationTemplateName.value = data.name

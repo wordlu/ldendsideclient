@@ -94,7 +94,7 @@ const queryCurrentDrivers = () => {
 
 const querySystemInfos = (id: any) => {
   try {
-    findAll('/sys/system-infos', {'filter[viewport]': id}).then((res: any) => {
+    findAll('/logger/sys/system-infos', {'filter[viewport]': id}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('system-infos')
@@ -115,7 +115,7 @@ const querySystemInfos = (id: any) => {
 
 // const queryEnvs = () => {
 //   try {
-//     findAll('/sys/envs', {}).then((res: any) => {
+//     findAll('/logger/sys/envs', {}).then((res: any) => {
 //       gostore.reset()
 //       gostore.sync(res.data)
 //       const datavalue = gostore.findAll('envs')
@@ -130,7 +130,7 @@ const querySystemInfos = (id: any) => {
 
 const queryNetworkInterfaces = () => {
   try {
-    findAll('/sys/network-interfaces', {}).then((res: any) => {
+    findAll('/logger/sys/network-interfaces', {}).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       const datavalue = gostore.findAll('network-interfaces')

@@ -117,7 +117,7 @@ const queryCalibrationTemplates = (page: number) => {
       // sort: '-created',
       'filter[name][fuzzy-match]': search.value
     }
-    findAll(`/sys/calibration-templates`, params).then((res: any) => {
+    findAll(`/logger/sys/calibration-templates`, params).then((res: any) => {
       gostore.reset()
       gostore.sync(res.data)
       data.value = gostore.findAll('calibration-templates')

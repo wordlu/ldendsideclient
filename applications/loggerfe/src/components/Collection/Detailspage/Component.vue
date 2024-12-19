@@ -192,7 +192,7 @@ const checkTags = () => {
 // const calibrationTemplates = ref([])
 // const queryCalibrationTemplates = (page: number) => {
 //   try {
-//     findAll(`/sys/calibration-templates`).then((res: any) => {
+//     findAll(`/logger/sys/calibration-templates`).then((res: any) => {
 //       gostore.reset()
 //       gostore.sync(res.data)
 //       calibrationTemplates.value = gostore.findAll('calibration-templates')
