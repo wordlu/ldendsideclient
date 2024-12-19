@@ -96,7 +96,7 @@ const testDeviceChange = async (val) => {
   if (val) {
     startupDevice()
   } else {
-    const currentStatus = await findItem('/viewport_status', viewportId.value)
+    const currentStatus = await findItem('/logger/viewport_status', viewportId.value)
     // 若为采集中，不可关闭
     if (currentStatus.data.isrecording) {
       ElMessage({
@@ -214,7 +214,7 @@ const recordOnDevice = () => {
       }
     }
   }
-  addItem('/loggeractions', params).then((res: any) => {
+  addItem('/logger/models/actions', params).then((res: any) => {
     switchLoading.value = false
   }).catch((err: any) => {
     console.error(err, 'err')
@@ -240,7 +240,7 @@ const recordOffDevice = () => {
       }
     }
   }
-  addItem('/models/actions', params).then((res: any) => {
+  addItem('/logger/models/actions', params).then((res: any) => {
     switchLoading.value = false
   }).catch((err: any) => {
     switchLoading.value = false
@@ -278,7 +278,7 @@ const queryCurrentDrivers = () => {
 // 获取设备调试、采集状态
 const getCurrentStatus = (viewportId: string) => {
   try {
-    findItem('/viewport_status', viewportId).then((res: any) => {
+    findItem('/logger/viewport_status', viewportId).then((res: any) => {
       testDevice.value = res.data.isluanching || false
       startCollect.value = res.data.isrecording || false
       switchLoading.value = false
