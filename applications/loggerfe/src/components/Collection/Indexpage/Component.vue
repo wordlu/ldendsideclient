@@ -187,7 +187,7 @@ const startupDevice = () => {
   const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
   allCameraPorts.value = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it['display-port'])
   const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
-  const devicesArr = [...cameras, ...ods, device1, device2]
+  const devicesArr = [device1, device2, ...cameras, ...ods, ]
   if (!device1 || !device2) {
     ElMessage({
       message: "请先选择设备",
@@ -326,11 +326,27 @@ const queryCurrentDrivers = () => {
   }
 }
 
+// 通过action接口获取正在运行的设备
+const getLuanchingDevices = () => {
+  findItem('/models/actions', {
+    'sort': '-created',
+    'page[limit]': 1,
+    'filter[command]':'startup'
+  }).then((res: any) => {
+    console.log(res)
+  }).catch((err: any) => {
+    console.log(err, 'err')
+  })
+}
+
 // 获取设备调试、采集状态
 const getCurrentStatus = (viewportId: string) => {
   try {
     findItem('/viewport_status', viewportId).then((res: any) => {
       testDevice.value = res.data.isluanching || false
+      if (testDevice.value) {
+        getLuanchingDevices()
+      }
       startCollect.value = res.data.isrecording || false
       switchLoading.value = false
       const data = res.data.details.filter((item: any) => (item.deviceKey.indexOf('lidar') > -1 && item.deviceKey.indexOf('lidarod') === -1) && item.isrunning)
