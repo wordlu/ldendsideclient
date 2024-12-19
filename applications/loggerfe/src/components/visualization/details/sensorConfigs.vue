@@ -18,9 +18,12 @@
       </div>
       <div class="kpi-image">
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
+          <el-tab-pane v-show="csvdata" :label="csvdataval.title" :name="csvdataval.title">
+            <div style="white-space: pre-wrap;word-break: break-all;">{{ csvdata }}</div>
+          </el-tab-pane>
           <el-tab-pane v-for="(item,index) in assets" :key="item.title+index" :label="item.title" :name="item.title">
             {{ item.output_path }}
-            <img style="width: 400px;height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/kpi_assets/${route.params.id}?file=${item.output_path}`" alt="">
+            <img style="width: 360px;height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/kpi_assets/${route.params.id}?file=${item.output_path}`" alt="">
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -56,7 +59,7 @@ const props = defineProps({
   deviceids: Array
 });
 const activeName = ref('')
-
+const csvdata = ref('')
 const handleClick = (tab: TabsPaneContext, event: Event) => {
   activeName.value = tab.props.name
 }
@@ -167,18 +170,28 @@ const totree = (data) => {
 }
 
 const assets = ref([])
+const csvdataval = ref('')
 const queryKpiAssets = () => {
   funcKpiAssetsGet({id: route.params.id}).then((res: any) => {
-    assets.value = res.data
-    if (assets.value.length > 0) {
+    assets.value = res.data.filter(it => it.output_path.indexOf('.png') > -1)
+    csvdataval.value = res.data.find(it => it.output_path.indexOf('.csv') > -1)
+    if (csvdataval.value) {
+      activeName.value = csvdataval.value.title
+      getCsvData()
+    } else if (assets.value.length > 0) {
       activeName.value = assets.value[0].title
     }
   })
 }
-
+const getCsvData = () => {
+  findAll(`/kpi/kpi_assets/${route.params.id}?file=${csvdataval.value.output_path}`).then((res: any) => {
+    csvdata.value = res.data
+  })
+}
 onMounted(() => {
   queryCurrentDrivers()
   queryKpiAssets()
+
 });
 
 const changePointSize = (value: number) => {
