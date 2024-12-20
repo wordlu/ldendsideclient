@@ -73,7 +73,7 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="数据详情" :icon="MoreFilled">数据详情</el-dropdown-item>
-                    <el-dropdown-item command="计算泊车kpi" :icon="MoreFilled">计算泊车kpi</el-dropdown-item>
+                    <el-dropdown-item v-if="scope.row.kpistatus !== 'Success'" command="计算泊车kpi" :icon="MoreFilled">计算泊车kpi</el-dropdown-item>
                     <el-dropdown-item command="删除" :icon="MoreFilled">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>

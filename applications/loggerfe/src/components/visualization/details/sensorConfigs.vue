@@ -18,8 +18,8 @@
       </div>
       <div class="kpi-image">
         <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane v-show="csvdata" :label="csvdataval.title" :name="csvdataval.title">
-            <div style="white-space: pre-wrap;word-break: break-all;">{{ csvdata }}</div>
+          <el-tab-pane v-show="csvdataval" :label="csvdataval.title" :name="csvdataval.title">
+            <div style="white-space: pre-wrap;word-break: break-all;text-align: left;">{{ csvdata }}</div>
           </el-tab-pane>
           <el-tab-pane v-for="(item,index) in assets" :key="item.title+index" :label="item.title" :name="item.title">
             {{ item.output_path }}
