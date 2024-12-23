@@ -13,12 +13,13 @@
         </div>
       </div>
     </div>
-    <div class="images">
+    <iframe class="iframe-style" width="100%" :src="`/api/kpi/reports/${route.params.id}/ParkingTestingReport.html`" frameborder="0"></iframe>
+    <!-- <div class="images">
       <div v-for="(image,index) in assets" :key="image.title+index" class="image">
         <div class="title">{{ index+1 }}. {{ image.output_path }}</div>
         <img style="height: auto;margin-top: 10px;" :src="`http://loggertrash/api/kpi/report_assets/${route.params.id}?file=${image.output_path}`" alt="">
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -34,13 +35,13 @@ import { funcReportAssetsGet } from '@/api/api'
 const route = useRoute();
 const assets = ref([])
 
-const getReportAssets = async () => {
-  funcReportAssetsGet({id: route.params.id}).then((res: any) => {
-    assets.value = res.data
-  })
-}
+// const getReportAssets = async () => {
+//   funcReportAssetsGet({id: route.params.id}).then((res: any) => {
+//     assets.value = res.data
+//   })
+// }
 onMounted(() => {
-  getReportAssets()
+  // getReportAssets()
 })
 </script>
 
@@ -50,6 +51,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   margin: 0 30px;
+
+  .iframe-style {
+    border: none;
+    height: calc(100vh - 210px);
+  }
 
   .panel {
     margin-top: 15px;
