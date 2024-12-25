@@ -328,12 +328,18 @@ const queryCurrentDrivers = () => {
 
 // 通过action接口获取正在运行的设备
 const getLuanchingDevices = () => {
-  findItem('/models/actions', {
+  findAll('/models/actions', {
     'sort': '-created',
     'page[limit]': 1,
     'filter[command]':'startup'
   }).then((res: any) => {
-    console.log(res)
+    gostore.reset()
+    gostore.sync(res.data)
+    const actions = gostore.findAll('actions')
+    const devices = actions[0] ? actions[0].devices : []
+    if (devices && devices.length > 2) {
+      runningDevice.value = [{"deviceKey": devices[0]}, {"deviceKey": devices[1]}]
+    }
   }).catch((err: any) => {
     console.log(err, 'err')
   })
