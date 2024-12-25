@@ -9,7 +9,7 @@
     <div class="panel">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
-          <div style="margin-right: 4px;">设备初始化</div>
+          <div style="margin-right: 4px;color: #606266;font-weight: 600;">设备初始化</div>
           <el-switch v-model="testDevice" :disabled="!startupDisabled && !testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
         <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
@@ -17,9 +17,20 @@
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div> -->
       </div>
+
+      <el-form :model="form" label-width="auto" style="max-width: 600px;margin-left: 10px;margin-right: 20px;">
+        <el-form-item label="算法" style="margin-bottom: 0;">
+          <el-select size="small" v-model="form.algo" placeholder="请选择算法">
+            <el-option label="算法1" value="shanghai" />
+            <el-option label="Zone two" value="beijing" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
       <el-button type="primary" size="small" @click="dialogVisible = true">
         摄像头数据
       </el-button>
+
     </div>
     <div
       v-loading="showLoading"
@@ -80,6 +91,10 @@ interface Option {
   label: string
   data: object
 }
+
+const form = reactive({
+  algo: '',
+})
 
 // 获取当前路由对象
 const router = useRouter();
