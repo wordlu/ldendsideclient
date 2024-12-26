@@ -3,6 +3,7 @@
     <div class="iframe-item">
       <div class="select-item">
         <el-select
+          clearable
           @change="handleSelect1Change"
           v-model="value1"
           :disabled="testDevice"
@@ -24,6 +25,7 @@
     <div class="iframe-item">
       <div class="select-item">
         <el-select
+          clearable
           v-model="value2"
           :disabled="testDevice"
           @change="handleSelect2Change"
