@@ -278,6 +278,7 @@ const getRemoteFormData = () => {
   if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
     const formData = remoteComponentRef.value.getFormData();
     Object.keys(form).forEach((key) => {
+      if(key === 'type') return;
       delete form[key];
     });
     Object.assign(form, formData);
