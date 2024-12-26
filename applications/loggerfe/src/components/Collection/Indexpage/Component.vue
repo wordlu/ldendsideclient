@@ -18,14 +18,14 @@
         </div> -->
       </div>
 
-      <el-form :model="form" label-width="auto" style="max-width: 600px;margin-left: 10px;margin-right: 20px;">
+      <!-- <el-form :model="form" label-width="auto" style="max-width: 600px;margin-left: 10px;margin-right: 20px;">
         <el-form-item label="算法" style="margin-bottom: 0;">
           <el-select size="small" v-model="form.algo" placeholder="请选择算法">
             <el-option label="算法1" value="shanghai" />
             <el-option label="Zone two" value="beijing" />
           </el-select>
         </el-form-item>
-      </el-form>
+      </el-form> -->
       
       <el-button type="primary" size="small" @click="dialogVisible = true">
         摄像头数据
@@ -48,6 +48,7 @@
           @selectDevice="selectDevice"
         />
         <sensorConfigs
+          style="display: none;"
           ref="sensorConfigsRef" 
           :viewports="viewports"
           :viewportId="viewportId"
@@ -91,7 +92,7 @@ interface Option {
   label: string
   data: object
 }
-
+const showTree = ref(false)
 const form = reactive({
   algo: '',
 })
@@ -114,13 +115,13 @@ const state = reactive({
 });
 
 // 按钮状态：当两个下拉框都有值时启用
-const startupDisabled = computed(() => state.select1 && state.select2);
+const startupDisabled = computed(() => state.select1 !== '' && state.select2 !== '');
 
 // 监听选择事件
 const selectDevice = (key, value) => {
-  if (value) {
+  // if (value) {
     state[key] = value; // 更新对应的下拉值
-  }
+  // }
 }
 
 const cloudpointparams = ref({
@@ -354,6 +355,8 @@ const getLuanchingDevices = () => {
     const devices = actions[0] ? actions[0].devices : []
     if (devices && devices.length > 2) {
       runningDevice.value = [{"deviceKey": devices[0]}, {"deviceKey": devices[1]}]
+      state.select1 = devices[0]
+      state.select2 = devices[1]
     }
   }).catch((err: any) => {
     console.log(err, 'err')

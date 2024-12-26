@@ -19,8 +19,10 @@
           />
         </el-select>
       </div>
-      <!-- <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe> -->
-      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray1 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray1 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
+      <div class="event-area">
+        <iframe :src="getUrl1" height="100%" allowfullscreen ameborder="0"></iframe>
+      </div>
     </div>
     <div class="iframe-item">
       <div class="select-item">
@@ -41,8 +43,10 @@
           />
         </el-select>
       </div>
-      <!-- <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe> -->
-      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray2 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray2 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
+      <div class="event-area">
+        <iframe :src="getUrl2" height="100%" allowfullscreen ameborder="0"></iframe>
+      </div>
     </div>
   </div>
 </template>
@@ -69,9 +73,22 @@ const portarray1 = ref('')
 const portarray2 = ref('')
 const viewportsdata = ref({})
 const emit = defineEmits(['select']);
+const getUrl1 = ref('')
+const getUrl2 = ref('')
 const getString = (arr: any) => {
   if(!arr) return ''
   return arr.toString()
+}
+
+const getUrl = (value: string) => {
+  if (!value) return '';
+  const arr = [
+    "/monitor/d/WqBw1Ef4k1/device-at128?orgId=1&refresh=1s&kiosk&theme=light",
+    "/monitor/d/WqBw1Ef4k2/device-lightic?orgId=1&refresh=1s&kiosk&theme=light",
+    "/monitor/d/WqBw1Ef4k3/device-aeva?orgId=1&refresh=1s&kiosk&theme=light"
+  ]
+  const index = arr.find((item: any) => item.indexOf(value) > -1) || ''
+  return index;
 }
 
 const getlidarDevice = (viewports: any) => {
@@ -88,9 +105,11 @@ const getlidarDevice = (viewports: any) => {
 }
 
 const handleSelect1Change = (value: string) => {
+  getUrl1.value = getUrl(value)
   emit('selectDevice', 'select1', value)
 }
 const handleSelect2Change = (value: string) => {
+  getUrl2.value = getUrl(value)
   emit('selectDevice', 'select2', value)
 }
 
@@ -123,7 +142,8 @@ watch(() => props.runningDevice, (newVal) => {
   if (newVal.length < 2) return;
   value1.value = newVal[0]['deviceKey']
   value2.value = newVal[1]['deviceKey']
-  
+  getUrl1.value = getUrl(value1.value)
+  getUrl2.value = getUrl(value2.value)
 },{ deep: true })
 
 defineExpose({
@@ -144,6 +164,8 @@ defineExpose({
     margin: 0 2px;
     border-radius: 4px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 
     .select-item {
       margin-bottom: 18px;
@@ -155,8 +177,13 @@ defineExpose({
     flex: 1;
     border: 0;
     width: 100%;
-    height: 100%;
-    border-radius: 4px;
+    // height: 100%;
+    // border-radius: 4px;
+  }
+
+  .event-area {
+    height: 140px;
+    background: #000;
   }
 }
 </style>

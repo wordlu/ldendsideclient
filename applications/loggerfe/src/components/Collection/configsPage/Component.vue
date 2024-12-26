@@ -41,8 +41,8 @@
               :highlight-current="false"
               @node-click="handleNodeClick"
               :props="defaultProps"
-              :render-content="renderContent"
             >
+            <!-- :render-content="renderContent" -->
               <template #default="{ node, data }">
                 <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
                   {{ data.label }}
@@ -187,24 +187,24 @@ watch(()=>selectedNode.value, (newVal) => {
 })
 
 // 自定义树节点的渲染内容
-const renderContent = (h, { node, data }) => {
-  if (!data.children && data.devicedata) {
-    return h('div',{
-        style: 'display:flex;align-items:center;',
-      },
-      [
-      h('div', {
-        style: 'margin-right: 16px;min-width:90px;text-align:left;',
-      },node.label), // 节点标签
-      h('div', { 
-        style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
-        onClick: () => handleTreeUploadClick(node, data)
-      }, '导入标定文件'),  // 重新连接
-    ]);
-  } else {
-    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
-  }
-};
+// const renderContent = (h, { node, data }) => {
+//   if (!data.children && data.devicedata) {
+//     return h('div',{
+//         style: 'display:flex;align-items:center;',
+//       },
+//       [
+//       h('div', {
+//         style: 'margin-right: 16px;min-width:90px;text-align:left;',
+//       },node.label), // 节点标签
+//       h('div', { 
+//         style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
+//         onClick: () => handleTreeUploadClick(node, data)
+//       }, '导入标定文件'),  // 重新连接
+//     ]);
+//   } else {
+//     return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
+//   }
+// };
 
 const handleTreeUploadClick = (node: Node, data: Tree) => {
   dialogVisible.value = true
