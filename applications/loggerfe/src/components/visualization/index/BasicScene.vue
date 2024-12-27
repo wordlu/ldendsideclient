@@ -86,6 +86,7 @@ const getUrl = (value: string) => {
     "/monitor/d/WqBw1Ef4k1/device-at128?orgId=1&refresh=1s&kiosk&theme=light",
     "/monitor/d/WqBw1Ef4k2/device-lightic?orgId=1&refresh=1s&kiosk&theme=light",
     "/monitor/d/WqBw1Ef4k3/device-aeva?orgId=1&refresh=1s&kiosk&theme=light"
+    // "/monitor/d/WqBw1Ef4k4/device-aeva4?orgId=1&refresh=1s&kiosk&theme=light"
   ]
   const index = arr.find((item: any) => item.indexOf(value) > -1) || ''
   return index;
@@ -182,7 +183,7 @@ defineExpose({
   }
 
   .event-area {
-    height: 140px;
+    height: 220px;
     background: #000;
   }
 }

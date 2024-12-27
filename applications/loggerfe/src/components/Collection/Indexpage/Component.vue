@@ -394,52 +394,52 @@ const gotologsanalyze = () => {
 
 onMounted(() => {
   queryCurrentDrivers()
-  // 建立长连接
-  eventSource =new EventSource(
-    `${window.server.mecPrefix}/api/logger/events/alert`,
-    { withCredentials: true }
-  )
+  // // 建立长连接
+  // eventSource =new EventSource(
+  //   `${window.server.mecPrefix}/api/logger/events/alert`,
+  //   { withCredentials: true }
+  // )
 
-  // 监听服务器发送的消息
-  eventSource.onmessage = (event) => {
-    message.value = JSON.parse(event.data); // 更新最新消息
-    const title = message.value?.alerts[0]?.labels?.alertname
-    const content = message.value?.commonAnnotations?.summary
-    const severity = message.value?.alerts[0]?.labels?.severity
-    const state = message.value?.alerts[0]?.labels?.state
+  // // 监听服务器发送的消息
+  // eventSource.onmessage = (event) => {
+  //   message.value = JSON.parse(event.data); // 更新最新消息
+  //   const title = message.value?.alerts[0]?.labels?.alertname
+  //   const content = message.value?.commonAnnotations?.summary
+  //   const severity = message.value?.alerts[0]?.labels?.severity
+  //   const state = message.value?.alerts[0]?.labels?.state
 
-    if (state === '0') {
-      // pageLoading.value = false
-      ElNotification({
-        title: '收到一条新事件',
-        type: severity !== '2' ? 'warning' : 'error',
-        message: content,
-        customClass: 'event-notification',
-        duration: 8000,
-        position: 'bottom-right',
-        onClick() {
-          gotologsanalyze();
-        },
-      })
-    } else if (state == '1') {
-      // pageLoading.value = false
-      // 接收成功和失败的消息
-    }
+  //   if (state === '0') {
+  //     // pageLoading.value = false
+  //     ElNotification({
+  //       title: '收到一条新事件',
+  //       type: severity !== '2' ? 'warning' : 'error',
+  //       message: content,
+  //       customClass: 'event-notification',
+  //       duration: 8000,
+  //       position: 'bottom-right',
+  //       onClick() {
+  //         gotologsanalyze();
+  //       },
+  //     })
+  //   } else if (state == '1') {
+  //     // pageLoading.value = false
+  //     // 接收成功和失败的消息
+  //   }
     
-  };
+  // };
 
-  // 监听错误事件
-  eventSource.onerror = () => {
-    error.value = '连接失败或服务器错误';
-    eventSource.close(); // 关闭连接
-  };
+  // // 监听错误事件
+  // eventSource.onerror = () => {
+  //   error.value = '连接失败或服务器错误';
+  //   eventSource.close(); // 关闭连接
+  // };
 })
 
 onUnmounted(() => {
   // 在组件卸载时关闭 SSE 连接
-  if (eventSource) {
-    eventSource.close();
-  }
+  // if (eventSource) {
+  //   eventSource.close();
+  // }
 });
 
 </script>
