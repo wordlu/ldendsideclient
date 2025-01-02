@@ -270,7 +270,8 @@ const getTags = (lidarname: string) => {
 }
 
 const handleSelectTag = (tagData: any) => {
-  const currentTime = new Date().toISOString()
+  // const currentTime = new Date().toISOString()
+  const currentTime = new Date().getTime()
   const params = {
     "data": {
       "type": "taggings",
@@ -447,6 +448,8 @@ const recordOnDevice = () => {
   }
   addItem('/models/actions', params).then((res: any) => {
     switchLoading.value = false
+    const extraRes = res.data.data?.attributes ? res.data.data.attributes['extra-res'] : {}
+    datasetId.value = extraRes?.dataset
   }).catch((err: any) => {
     console.error(err, 'err')
     switchLoading.value = false
@@ -473,6 +476,7 @@ const recordOffDevice = () => {
   }
   addItem('/models/actions', params).then((res: any) => {
     switchLoading.value = false
+    datasetId.value = ''
   }).catch((err: any) => {
     switchLoading.value = false
     const errmsg = err?.response?.data?.errors[0]?.detail
@@ -506,12 +510,34 @@ const queryCurrentDrivers = () => {
   }
 }
 
+
+// 通过action接口获取正在采集的设备
+const datasetId = ref('')
+const getLuanchingDevices = () => {
+  findAll('/models/actions', {
+    'sort': '-created',
+    'page[limit]': 1,
+    'filter[command]':'recordOn'
+  }).then((res: any) => {
+    gostore.reset()
+    gostore.sync(res.data)
+    const actions = gostore.findAll('actions')
+    datasetId.value = actions[0] ? actions[0]['extra-res']?.dataset : ''
+  }).catch((err: any) => {
+    console.log(err, 'err')
+  })
+}
+
+
 // 获取设备调试、采集状态
 const getCurrentStatus = (viewportId: string) => {
   try {
     findItem('/viewport_status', viewportId).then((res: any) => {
       testDevice.value = res.data.isluanching || false
       startCollect.value = res.data.isrecording || false
+      if (startCollect.value) {
+        getLuanchingDevices()
+      }
       switchLoading.value = false
       if(testDevice.value && !startCollect.value) {
         // 设备调试初始化中但未采集，自动勾选全部设备

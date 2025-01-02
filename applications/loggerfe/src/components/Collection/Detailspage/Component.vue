@@ -7,7 +7,7 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
         <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
         <!-- <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
           标定
