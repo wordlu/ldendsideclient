@@ -7,8 +7,8 @@
     </el-breadcrumb>
     <div class="panel">
       <div class="title-panel">
-        <!-- <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button> -->
-        <!-- <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button> -->
+        <el-button  class="info-btn" @click="addTaskTags">添加作业标签</el-button>
+        <el-button  class="info-btn" @click="checkTags">查看已打标签</el-button>
         <!-- <el-dropdown split-button type="primary" @click="handleClick" class="cali-btn">
           标定
           <template #dropdown>
@@ -45,7 +45,7 @@
         </div>
       </div>
     </div>
-    <!-- <el-dialog v-model="dialogVisible" title="添加作业标签" width="680" :before-close="handleClose">
+    <el-dialog v-model="dialogVisible" title="添加作业标签" width="680" :before-close="handleClose">
       <el-transfer class="tags-transfer" v-model="transferDataValue" :titles="['全部标签', '作业标签']"
         filter-placeholder="搜索标签名称" :data="transferData" />
       <template #footer>
@@ -90,7 +90,7 @@
           <el-button @click="checkTagsDialogVisible = false">取消</el-button>
         </div>
       </template>
-    </el-dialog> -->
+    </el-dialog>
   </div>
 </template>
 
