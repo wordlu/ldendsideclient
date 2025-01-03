@@ -70,17 +70,17 @@
     >
       <el-table :data="taggingsTableData" height="360">
         <el-table-column prop="tagname" label="标签名称"  show-overflow-tooltip/>
-        <el-table-column prop="tagcategory" label="标签分类"  width="150" show-overflow-tooltip/>
-        <el-table-column label="开始时间" width="160" show-overflow-tooltip>
+        <el-table-column prop="tagcategory" label="标签分类"  show-overflow-tooltip/>
+        <el-table-column label="开始时间" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss") }}</template>
         </el-table-column>
-        <el-table-column label="结束时间" width="160" show-overflow-tooltip>
+        <el-table-column label="结束时间" show-overflow-tooltip>
           <template #default="scope">{{ formatter(scope.row.endtime, "yyyy-MM-dd hh:mm:ss") }}</template>
         </el-table-column>
         <el-table-column
           property="name"
           label="操作"
-          width="50">
+          width="80">
           <template #default="scope">
             <el-dropdown @command="(val) => handleCommand(val, scope.row)">
               <span class="el-dropdown-link">
@@ -109,6 +109,7 @@
 import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification } from 'element-plus';
 import { ref, computed, onMounted, onBeforeUnmount, onUnmounted  } from 'vue';
 import { addItem, findAll, findItem, deleteItem } from '@/api/jsonApi'
+import { deleteTagging } from '@/api/api'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
 import DisplayPanel from '@/components/visualization/index/DisplayPanel.vue'
@@ -223,17 +224,21 @@ const confirmAddTags = () => {
 }
 
 const checkTags = () => {
-  getTaggings()
+  if (!datasetId.value) {
+    ElMessage({
+      message: "请先开始采集",
+      type: 'error',
+    })
+    return;
+  }
+  getTaggings(datasetId.value)
   checkTagsDialogVisible.value = true
 }
 
-const getTaggings = (lidarname: string) => {
+const getTaggings = () => {
   try {
-    findAll('/models/taggings', {}).then((res: any) => {
-      gostore.reset()
-      gostore.sync(res.data)
-      const datavalue = gostore.findAll('taggings')
-      taggingsTableData.value = datavalue
+    findAll(`${window.server.mecPrefix}/api/tagging/${datasetId.value}`, {}).then((res: any) => {
+      taggingsTableData.value = res.data
     }).catch((err: any) => {
       console.error(err, 'err')
     })
@@ -270,23 +275,25 @@ const getTags = (lidarname: string) => {
 }
 
 const handleSelectTag = (tagData: any) => {
+  if (!datasetId.value) {
+    ElMessage({
+      message: "请先开始采集",
+      type: 'error',
+    })
+    return;
+  }
   // const currentTime = new Date().toISOString()
   const currentTime = new Date().getTime()
   const params = {
-    "data": {
-      "type": "taggings",
-      "attributes": {
-        "tagid": tagData.id,
-        "tagname": tagData.name,
-        "tagtype": tagData.type,
-        "tagcategory": tagData.category,
-        "starttime": currentTime,
-        "endtime": currentTime,
-        "triggertime": currentTime,
-      }
-    }
+    "tagid": tagData.id,
+    "tagname": tagData.name,
+    "tagtype": tagData.type,
+    "tagcategory": tagData.category,
+    "starttime": currentTime,
+    "endtime": currentTime,
+    "triggertime": currentTime
   }
-  addItem('/models/taggings', params).then((res: any) => {
+  addItem(`${window.server.mecPrefix}/api/tagging/${datasetId.value}`, params).then((res: any) => {
     ElMessage({
       message: "打标签成功",
       type: 'success',
@@ -302,13 +309,7 @@ const handleSelectTag = (tagData: any) => {
 
 const handleCommand = (command, row) => {
   if(command == '删除'){  
-    const params = {
-      data: {
-        id: row.id,
-        type: 'taggings'
-      }
-    }
-    deleteItem('/models/taggings', params).then(res => {
+    deleteTagging({path:`${window.server.mecPrefix}/api/tagging/${datasetId.value}/${row.id}`}).then(res => {
       ElMessage({
         message: "删除成功",
         type: 'success',
@@ -335,23 +336,19 @@ const handleClick = (e) =>{
   console.log(e)
 }
 
-
-const formatter = (thistime: any, fmt: string) => {
-  if (!thistime) return '--'
-  const isUTC = thistime.indexOf('Z') > -1 ? 'UTC' : ''
-  // const isUTC = ""
+const formatter = (thistime, fmt) => {
   let $this = new Date(thistime)
   let o = {
-    'M+': $this[`get${isUTC}Month`]() + 1,
-    'd+': $this[`get${isUTC}Date`](),
-    'h+': $this[`get${isUTC}Hours`](),
-    'm+': $this[`get${isUTC}Minutes`](),
-    's+': $this[`get${isUTC}Seconds`](),
-    'q+': Math.floor(($this[`get${isUTC}Month`]() + 3) / 3),
-    'S': $this[`get${isUTC}Milliseconds`]()
+    'M+': $this.getMonth() + 1,
+    'd+': $this.getDate(),
+    'h+': $this.getHours(),
+    'm+': $this.getMinutes(),
+    's+': $this.getSeconds(),
+    'q+': Math.floor(($this.getMonth() + 3) / 3),
+    'S': $this.getMilliseconds()
   }
   if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(RegExp.$1, ($this[`get${isUTC}FullYear`]() + '').substr(4 - RegExp.$1.length))
+    fmt = fmt.replace(RegExp.$1, ($this.getFullYear() + '').substr(4 - RegExp.$1.length))
   }
   for (var k in o) {
     if (new RegExp('(' + k + ')').test(fmt)) {

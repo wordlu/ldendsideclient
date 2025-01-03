@@ -15,10 +15,23 @@ module.exports = defineConfig({
     },
     open: true,
     proxy: {
-      '/api': {
-        target: 'http://ca.dms.10.86.46.254.nip.io',
-        ws: true,
+      '/api/tagging': {
+        target: 'http://10.86.24.100:8000',
         changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path,
+        // onProxyReq: (proxyReq, req, res) => {
+        //   console.log(`[Proxy Request] ${req.method} ${req.originalUrl} -> ${proxyReq.protocol}//${proxyReq.host}${proxyReq.path}`);
+        // },
+        // onProxyRes: (proxyRes, req, res) => {
+        //   console.log(`[Proxy Response] Status: ${proxyRes.statusCode} for ${req.originalUrl}`);
+        // },
+      },
+      '/api': {
+        target: 'http://loggertrash',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       },
     },
     client:{

@@ -31,3 +31,10 @@ export function getMdData(query) {
     params: {}
   })
 }
+
+export function deleteTagging(query) {
+  return request({
+    url: `${query.path}`,
+    method: 'delete',
+  })
+}
