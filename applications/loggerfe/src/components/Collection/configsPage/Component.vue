@@ -11,7 +11,7 @@
       <div class="title-panel">
         <div class="info">
           <div class="info-detail">
-            <b class="title">{{ name }}</b>
+            <b class="title">Cariad 演示</b>
           </div>
         </div>
       </div>
@@ -41,8 +41,8 @@
               :highlight-current="false"
               @node-click="handleNodeClick"
               :props="defaultProps"
-              :render-content="renderContent"
             >
+            <!-- :render-content="renderContent" -->
               <template #default="{ node, data }">
                 <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
                   {{ data.label }}
