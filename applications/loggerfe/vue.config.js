@@ -16,7 +16,7 @@ module.exports = defineConfig({
     open: true,
     proxy: {
       '/api/tagging': {
-        target: 'http://10.86.24.100:8000',
+        target: 'http://loggertrash',
         changeOrigin: true,
         secure: true,
         rewrite: (path) => path,

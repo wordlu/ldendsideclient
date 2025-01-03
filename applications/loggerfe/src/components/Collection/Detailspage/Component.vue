@@ -59,17 +59,17 @@
       <el-table :data="taggingsTableData" height="360">
         <el-table-column prop="tagname" label="标签名称" show-overflow-tooltip />
         <el-table-column prop="tagcategory" label="标签分类" width="150" show-overflow-tooltip />
-        <el-table-column label="开始时间" width="160" show-overflow-tooltip>
+        <el-table-column label="开始时间"  show-overflow-tooltip>
           <template #default="scope">{{
             formatter(scope.row.starttime, "yyyy-MM-dd hh:mm:ss")
           }}</template>
         </el-table-column>
-        <el-table-column label="结束时间" width="160" show-overflow-tooltip>
+        <el-table-column label="结束时间"  show-overflow-tooltip>
           <template #default="scope">{{
             formatter(scope.row.endtime, "yyyy-MM-dd hh:mm:ss")
           }}</template>
         </el-table-column>
-        <el-table-column property="name" label="操作" width="50">
+        <el-table-column property="name" label="操作" width="80">
           <template #default="scope">
             <el-dropdown @command="(val) => handleCommand(val, scope.row)">
               <span class="el-dropdown-link">
@@ -106,6 +106,7 @@ import {
 } from "element-plus";
 import { ref, computed, onMounted } from "vue";
 import { addItem, findAll, deleteItem, findItem } from "@/api/jsonApi";
+import { deleteTagging } from '@/api/api'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from "@/components/visualization/details/BasicScene.vue";
 import DisplayPanel from "@/components/visualization/details/DisplayPanel.vue";
@@ -204,22 +205,17 @@ const checkTags = () => {
 //   }
 // }
 
-const getTaggings = (lidarname: string) => {
+const getTaggings = () => {
   try {
-    findAll("/models/taggings", { "filter[dataset]": route.params.id })
-      .then((res: any) => {
-        gostore.reset();
-        gostore.sync(res.data);
-        const datavalue = gostore.findAll("taggings");
-        taggingsTableData.value = datavalue;
-      })
-      .catch((err: any) => {
-        console.error(err, "err");
-      });
+    findAll(`${window.server.mecPrefix}/api/tagging/${datasetprefix.value}`, {}).then((res: any) => {
+      taggingsTableData.value = res.data
+    }).catch((err: any) => {
+      console.error(err, 'err')
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
 const transferData = ref<Option[]>();
 const transferDataValue = ref([]);
@@ -318,38 +314,26 @@ const handleSelectTag = (tagData: any) => {
 
 // 已打标签的操作列
 const handleCommand = (command, row) => {
-  if (command == "删除") {
-    const params = {
-      data: {
-        id: row.id,
-        type: "taggings",
-      },
-    };
-    deleteItem("/models/taggings", params)
-      .then((res) => {
-        ElMessage({
-          message: "删除成功",
-          type: "success",
-        });
-        getTaggings();
+  if(command == '删除'){  
+    deleteTagging({path:`${window.server.mecPrefix}/api/tagging/${datasetprefix.value}/${row.id}`}).then(res => {
+      ElMessage({
+        message: "删除成功",
+        type: 'success',
       })
-      .catch((err) => {
-        console.error(err, "err");
-        const {
-          response: {
-            data: { errors },
-          },
-        } = err;
-        let msg = "删除失败";
-        if (errors && errors[0]) {
-          const errmsg = errors[0]["detail"];
-          msg = errmsg
-        }
-        ElMessage({
-          message: msg,
-          type: "error",
-        });
-      });
+      getTaggings()
+    }).catch(err => {
+      console.error(err, 'err')
+      const {response:{data:{errors}}} = err
+      let msg =  "删除失败"
+      if(errors && errors[0]) {
+        const errmsg = errors[0]['detail']
+        msg =  t(`algorithm['${errmsg}']`)
+      }
+      ElMessage({
+        message: msg,
+        type: 'error',
+      })
+    })
   }
 };
 
@@ -358,36 +342,27 @@ const handleClick = (e) => {
   console.log(e);
 };
 
-const formatter = (thistime: any, fmt: string) => {
-  if (!thistime) return "--";
-  const isUTC = thistime.indexOf("Z") > -1 ? "UTC" : "";
-  // const isUTC = ""
-  let $this = new Date(thistime);
+const formatter = (thistime, fmt) => {
+  let $this = new Date(thistime)
   let o = {
-    "M+": $this[`get${isUTC}Month`]() + 1,
-    "d+": $this[`get${isUTC}Date`](),
-    "h+": $this[`get${isUTC}Hours`](),
-    "m+": $this[`get${isUTC}Minutes`](),
-    "s+": $this[`get${isUTC}Seconds`](),
-    "q+": Math.floor(($this[`get${isUTC}Month`]() + 3) / 3),
-    S: $this[`get${isUTC}Milliseconds`](),
-  };
+    'M+': $this.getMonth() + 1,
+    'd+': $this.getDate(),
+    'h+': $this.getHours(),
+    'm+': $this.getMinutes(),
+    's+': $this.getSeconds(),
+    'q+': Math.floor(($this.getMonth() + 3) / 3),
+    'S': $this.getMilliseconds()
+  }
   if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(
-      RegExp.$1,
-      ($this[`get${isUTC}FullYear`]() + "").substr(4 - RegExp.$1.length)
-    );
+    fmt = fmt.replace(RegExp.$1, ($this.getFullYear() + '').substr(4 - RegExp.$1.length))
   }
   for (var k in o) {
-    if (new RegExp("(" + k + ")").test(fmt)) {
-      fmt = fmt.replace(
-        RegExp.$1,
-        RegExp.$1.length === 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
-      );
+    if (new RegExp('(' + k + ')').test(fmt)) {
+      fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length)))
     }
   }
-  return fmt;
-};
+  return fmt
+}
 
 onMounted(() => {
   // queryCalibrationTemplates()
