@@ -16,7 +16,6 @@
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
-        <el-button class="info-btn" @click="addTaskTags">添加作业标签</el-button>
         <el-button class="info-btn" @click="checkTags">查看已打标签</el-button>
       </div>
     </div>
@@ -29,6 +28,7 @@
           :allports="allports"
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
+        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag" @addTaskTags="addTaskTags"/>
         <sensorConfigs
           ref="sensorConfigsRef" 
           :viewportId="viewportId"
@@ -37,7 +37,6 @@
           @changeProps="changeProps"
           @update:leafNodes="handleLeafNodes" 
           @setAllTreeKeys="setAllTreeKeys" />
-        <tagConfigs :tagData="tagDataProp" @selectTag="handleSelectTag"/>
       </div>
     </div>
     <el-dialog

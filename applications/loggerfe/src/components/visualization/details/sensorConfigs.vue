@@ -222,7 +222,7 @@ defineExpose({
 
 .display-panel {
   // background: rgba(255, 255, 255, 1);
-  width: 400px;
+  width: 300px;
   min-width: 20rem;
   max-width: 30rem;
   height: 100%;

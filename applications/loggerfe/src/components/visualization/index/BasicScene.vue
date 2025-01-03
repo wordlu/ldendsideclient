@@ -27,4 +27,7 @@ const getString = (arr: any) => {
   position: relative;
   flex: 1;
 }
+iframe {
+  border: none;
+}
 </style>

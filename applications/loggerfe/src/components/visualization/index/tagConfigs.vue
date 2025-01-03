@@ -1,8 +1,10 @@
 <template>
   <div class="tags-area-content">
     <!-- <el-input v-model="search" class="search-bar" placeholder="搜索标签名称" :prefix-icon="Search" clearable /> -->
-     <div class="title">作业标签</div>
-    <div class="tags-area" v-if="props.tagData.length > 0">
+    <div class="title">
+      <el-button class="add-btn" size="small" @click="addTaskTags">添加作业标签</el-button>
+    </div>
+    <div class="tags-area">
       <div class="tags-list">
         <div v-for="tagvalue in tagData" :key="tagvalue.id" class="tag-item" @click="handleClick(tagvalue)">
           <div class="table-icon">
@@ -17,9 +19,9 @@
         </div>
       </div>
     </div>
-    <div class="empty" v-else>
+    <!-- <div class="empty" v-else>
       <el-empty description="请先选择作业标签" />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -36,6 +38,10 @@ const handleClick = (tagvalue) => {
   emit('selectTag', tagvalue);
 };
 
+const addTaskTags = () => {
+  emit('addTaskTags');
+}
+
 const props = defineProps({
   tagData: Array
 });
@@ -44,14 +50,18 @@ const props = defineProps({
 
 <style scoped lang="scss">
 .tags-area-content {
-  min-width: 300px;
-
+  min-width: 177px;
+  background: #000;
   .title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #5A5E72;
+    // font-size: 18px;
+    // font-weight: 600;
+    // color: #5A5E72;
+    // margin-bottom: 10px;
+    // text-align: left;
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
     margin-bottom: 10px;
-    text-align: left;
   }
 
   .search-bar {
@@ -62,16 +72,16 @@ const props = defineProps({
 }
 
 .tags-area {
-  height: calc(100vh - 180px);
+  height: calc(100vh - 260px);
   overflow: auto;
 }
 
 .tags-list {
-  width: 300px;
+  width: 160px;
   height: auto;
   overflow: hidden;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-gap: 4px;
   // padding: 0 6px;
 
@@ -85,8 +95,8 @@ const props = defineProps({
     align-items: center;
 
     .tag-name {
-      color: #5A5E72;
-      width: 80px;
+      color: #fff;
+      width: 60px;
       text-align: center;
       font-size: 12px;
       font-weight: 500;
@@ -96,6 +106,7 @@ const props = defineProps({
       white-space: nowrap;
     }
     .icon-item {
+      height: auto;
       border-radius: 8px;
       cursor:pointer;
       margin-bottom: 4px;
@@ -103,8 +114,8 @@ const props = defineProps({
         border-radius:  10px;
         padding-left: 3px;
         padding-right: 3px;
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -115,8 +126,8 @@ const props = defineProps({
     }
 
     .icon-img {
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
     }
   }
 }
