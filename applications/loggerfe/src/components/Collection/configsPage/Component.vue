@@ -19,7 +19,7 @@
     <el-row class="config-content">
       <el-col :span="8" style="height: 100%;">
         <div class="grid-content bg-black" ref="parent">
-          <img ref="backgroundImage" :src="`http://loggertrash/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
+          <img ref="backgroundImage" :src="`/dms-static/viewports/${viewport_bg}`" alt="Background Image" :style="[baseStyle]">
           <canvas 
             style="position: absolute;"
             ref="sensorCanvas" 
@@ -393,7 +393,7 @@ const getSensoronfigs = (nodedata) => {
       const datavalue = gostore.findAll('devices')
       if(datavalue.length > 0) {
         currentDevice.value = datavalue[0]
-        uploadUrl.value = `http://loggertrash/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
+        uploadUrl.value = `/api/logger/models/devices/${currentDevice.value.id}/upload_calibration`
         currentDriver.value = driversdata.value.find(it => it.id === currentDevice.value.driver)
         setConfigValue.value = false
         setFormData(datavalue[0])
