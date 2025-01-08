@@ -40,9 +40,9 @@
               node-key="id"
               :highlight-current="false"
               @node-click="handleNodeClick"
+              :render-content="renderContent"
               :props="defaultProps"
             >
-            <!-- :render-content="renderContent" -->
               <template #default="{ node, data }">
                 <span :class="{ 'highlight': isLeaf(data, node) && selectedNode === node }">
                   {{ data.label }}
@@ -188,7 +188,7 @@ watch(()=>selectedNode.value, (newVal) => {
 
 // 自定义树节点的渲染内容
 const renderContent = (h, { node, data }) => {
-  if (!data.children && data.devicedata) {
+  if (!data.children && data.devicedata && data.devicedata.type !== 'perception') {
     return h('div',{
         style: 'display:flex;align-items:center;',
       },
