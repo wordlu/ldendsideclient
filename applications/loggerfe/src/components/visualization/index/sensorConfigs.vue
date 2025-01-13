@@ -180,7 +180,7 @@ const renderContent = (h, { node, data }) => {
       [
       h('div', {
         style: 'margin-right: 16px;min-width:90px;text-align:left;',
-      },node.label), // 节点标签
+      }, showNodeLabel(node.label)), // 节点标签
       h('iframe', {
         src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
         style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
@@ -197,9 +197,21 @@ const renderContent = (h, { node, data }) => {
       ),
     ]);
   } else {
-    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, showNodeLabel(node.label)); // 非叶子节点只显示标签
   }
 };
+
+const showNodeLabel = (label) => {
+  const data = {
+    "lidar": "Lidar",
+    "camera": "Camera",
+    "perception": "Perception",
+    "at128": "AT128",
+    "vision1": "Vision1",
+    "at128od": "AT128od",
+  }
+  return data[label] || label
+}
 
 const handleTreeReconnectClick = (node, data) => {
   if (!props.testDevice) {

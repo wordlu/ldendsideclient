@@ -33,7 +33,10 @@
           <el-table-column property="size" label="数据集规模" align="center" >
             <template #default="scope">{{ getSize(scope.row.size) }}</template>
           </el-table-column>
-          <el-table-column property="prefix" label="存储位置"/>
+          <el-table-column property="size" label="存储位置" align="center" >
+            <template #default="scope">{{ showPrefix(scope.row.prefix) }}</template>
+          </el-table-column>
+          <!-- <el-table-column property="prefix" label="存储位置"/> -->
           <el-table-column label="创建时间">
             <template #default="scope">{{ formatter(scope.row.created, "yyyy-MM-dd hh:mm:ss") }}</template>
           </el-table-column>
@@ -81,6 +84,13 @@ const activeRow = ref<Row>({})
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<Row[]>([])
 const isDeleteBtnDisabled = ref<boolean>(true)
+
+const showPrefix = (prefix: string) => {
+  if (prefix.indexOf('changcheng') > -1) {
+    return 'cc'+prefix.split('changcheng')[1]
+  }
+  return prefix
+}
 
 const getSize = (size: number) => {
   if (size >= 0) {

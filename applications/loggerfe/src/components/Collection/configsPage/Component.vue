@@ -195,16 +195,28 @@ const renderContent = (h, { node, data }) => {
       [
       h('div', {
         style: 'margin-right: 16px;min-width:90px;text-align:left;',
-      },node.label), // 节点标签
+      }, showNodeLabel(node.label)), // 节点标签
       h('div', { 
         style: 'margin-left: 30px; color:#FF7900;font-size:12px;border:1px solid #ff7900;padding: 2px 4px;',
         onClick: () => handleTreeUploadClick(node, data)
       }, '导入标定文件'),  // 重新连接
     ]);
   } else {
-    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, showNodeLabel(node.label)); // 非叶子节点只显示标签
   }
 };
+
+const showNodeLabel = (label) => {
+  const data = {
+    "lidar": "Lidar",
+    "camera": "Camera",
+    "perception": "Perception",
+    "at128": "AT128",
+    "vision1": "Vision1",
+    "at128od": "AT128od",
+  }
+  return data[label] || label
+}
 
 const handleTreeUploadClick = (node: Node, data: Tree) => {
   dialogVisible.value = true

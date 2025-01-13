@@ -15,6 +15,7 @@
           highlight-current
           @node-click="handleNodeClick"
           :props="defaultProps"
+          :render-content="renderContent"
           @check-change="handleCheckChange"
         />
       </div>
@@ -154,6 +155,34 @@ const totree = (data) => {
   });
   selectAllNodes()
   return tree;
+}
+
+// 自定义树节点的渲染内容
+const renderContent = (h, { node, data }) => {
+  if (!data.children && data.devicedata && data.devicedata.type !== 'perception') {
+    return h('div',{
+        style: 'display:flex;align-items:center;',
+      },
+      [
+      h('div', {
+        style: 'margin-right: 16px;min-width:90px;text-align:left;',
+      }, showNodeLabel(node.label)), // 节点标签
+    ]);
+  } else {
+    return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, showNodeLabel(node.label)); // 非叶子节点只显示标签
+  }
+};
+
+const showNodeLabel = (label) => {
+  const data = {
+    "lidar": "Lidar",
+    "camera": "Camera",
+    "perception": "Perception",
+    "at128": "AT128",
+    "vision1": "Vision1",
+    "at128od": "AT128od",
+  }
+  return data[label] || label
 }
 
 onMounted(() => {

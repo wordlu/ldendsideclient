@@ -33,7 +33,10 @@
         <el-table ref="multipleTableRef" empty-text="- 暂无数据 -" 
           :data="data" style="width: 100%">
           <el-table-column property="name" label="设备驱动类型" />
-          <el-table-column property="slot" label="设备名称" />
+          <!-- <el-table-column property="slot" label="设备名称" /> -->
+          <el-table-column label="设备名称">
+            <template #default="scope">{{ showNodeLabel(scope.row.slot) }}</template>
+          </el-table-column>
           <el-table-column property="brand" label="品牌"/>
           <el-table-column property="model" label="型号"/>
         </el-table>
@@ -76,6 +79,18 @@ onMounted(() => {
 
 const trigger = () => {
   window.history.pushState(null, '', `/loggerfe/root/configs`)
+}
+
+const showNodeLabel = (label) => {
+  const data = {
+    "lidar": "Lidar",
+    "camera": "Camera",
+    "perception": "Perception",
+    "at128": "AT128",
+    "vision1": "Vision1",
+    "at128od": "AT128od",
+  }
+  return data[label] || label
 }
 
 const queryDevice = (page: number) => {
