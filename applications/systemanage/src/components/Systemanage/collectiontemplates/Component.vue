@@ -33,6 +33,7 @@
       <div class="list-panel">
         <el-table ref="multipleTableRef" 
           empty-text="- 暂无数据 -"
+          @rowClick="changeViewport"
           :data="data" style="width: 100%">
           <el-table-column label="" width="80">
             <template #default="scope">
@@ -55,9 +56,9 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll } from '@/api/jsonApi'
+import { findAll, patchItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
-import { ElTable } from 'element-plus'
+import { ElTable, ElMessageBox, ElMessage } from 'element-plus'
 
 interface Row {}
 
@@ -87,6 +88,49 @@ onMounted(() => {
 
 const trigger = () => {
   // window.history.pushState(null, '', `/loggerfe/configs`)
+}
+
+const changeViewport = (row) => {
+  if (currentdata.value.includes(row.id)) return;
+  ElMessageBox.confirm(
+    '确认切换视角？',
+    'Warning',
+    {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning',
+      title: '',
+      customClass: 'change-viewport'
+    }
+  )
+  .then(() => {
+    changeViewportApi(row.id)
+  })
+  .catch(() => {
+    console.log('取消切换视角')
+  })
+}
+
+const changeViewportApi = (id) => {
+  const params = {
+    data: {
+      type: 'viewports',
+      id: id,
+      attributes: {
+        "using": true
+      }
+    }
+  }
+  patchItem('/models/viewports', params).then((res: any) => {
+    ElMessage({
+      type: 'success',
+      message: '切换视角成功',
+    })
+    queryCurrentDrivers()
+  })
+  .catch((err) => {
+    console.log(err)
+  })
 }
 
 const queryDeviceDrivers = (page: number) => {
@@ -158,7 +202,13 @@ const formatter = (thistime: any, fmt: string) => {
 queryCurrentDrivers()
 </script>
 
+<style>
+.change-viewport {
+  height: auto;
+}
+</style>
 <style lang="scss" scoped>
+
 .ver-mid {
   display: flex;
   flex-direction: column;
