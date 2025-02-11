@@ -56,7 +56,7 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll, patchItem } from '@/api/jsonApi'
+import { findAll, patchItem, findItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessageBox, ElMessage } from 'element-plus'
 
@@ -90,8 +90,16 @@ const trigger = () => {
   // window.history.pushState(null, '', `/loggerfe/configs`)
 }
 
-const changeViewport = (row) => {
+const changeViewport = async(row) => {
   if (currentdata.value.includes(row.id)) return;
+  const currentStatus = await findItem('viewport_status', row.id)
+  if (currentStatus.data.isluanching) {
+      ElMessage({
+        message: "有正在运行的设备，请关闭设备后再切换视角！",
+        type: 'warning',
+      })
+      return;
+    }
   ElMessageBox.confirm(
     '确认切换视角？',
     'Warning',
