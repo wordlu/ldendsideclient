@@ -12,10 +12,10 @@
           <div style="margin-right: 4px;color: #606266;font-weight: 600;">设备初始化</div>
           <el-switch v-model="testDevice" :disabled="!startupDisabled && !testDevice" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="testDeviceChange"/>
         </div>
-        <!-- <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
+        <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
-        </div> -->
+        </div>
       </div>
 
       <!-- <el-form :model="form" label-width="auto" style="max-width: 600px;margin-left: 10px;margin-right: 20px;">
