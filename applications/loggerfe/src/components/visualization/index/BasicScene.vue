@@ -137,7 +137,7 @@ watch(() => value2.value, (newVal) => {
 
 watch(() => props.viewports, (newVal) => {
   getlidarDevice(newVal)
-},{ deep: true })
+},{ deep: true, immediate: true})
 
 watch(() => props.runningDevice, (newVal) => {
   if (newVal.length < 2) return;

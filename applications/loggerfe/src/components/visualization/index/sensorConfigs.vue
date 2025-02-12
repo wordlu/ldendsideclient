@@ -1,5 +1,5 @@
 <template>
-  <div class="display-panel disable-selector" style="display: flex;flex-direction: column;flex: 1;">
+  <div class="display-panel disable-selector">
     <div class="grid-content ml">
      <div class="title-area">
       <div class="title">
@@ -408,6 +408,9 @@ watch(() => props.viewports, (newVal) => {
   height: 100%;
   overflow: auto;
   padding-right: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 
   .title-area {
     display: flex;

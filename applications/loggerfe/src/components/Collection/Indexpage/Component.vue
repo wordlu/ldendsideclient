@@ -17,7 +17,7 @@
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
       </div>
-      <el-button type="primary" size="small" @click="dialogVisible = true">
+      <el-button v-if="viewportId == 'changcheng'" type="primary" size="small" @click="dialogVisible = true">
         摄像头数据
       </el-button>
 
@@ -28,6 +28,7 @@
       class="visible">
       <div class="point">
         <BasicScene 
+          v-if="viewportId == 'changcheng'"
           ref="basicSceneRef"
           :testDevice="testDevice"
           :viewports="viewports"
@@ -37,8 +38,13 @@
           :currentSelectedSensor="currentSelectedSensor" 
           @selectDevice="selectDevice"
         />
+        <BasicSceneBase
+          v-if="viewportId !== 'changcheng'"
+          :allports="allports"
+          :cloudpointparams="cloudpointparams"
+          :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs
-          style="display: none;"
+          v-if="viewportId !== 'changcheng'"
           ref="sensorConfigsRef" 
           :viewports="viewports"
           :viewportId="viewportId"
@@ -71,6 +77,7 @@ import { ref, computed, reactive, onMounted, onBeforeUnmount, onUnmounted  } fro
 import { addItem, findAll, findItem, deleteItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
+import BasicSceneBase from '@/components/visualization/index/BasicSceneBase.vue'
 import DisplayPanel from '@/components/visualization/index/DisplayPanel.vue'
 import sensorConfigs from '@/components/visualization/index/sensorConfigs.vue'
 import gostore from '@/services/governance-store'
@@ -93,6 +100,7 @@ let eventSource = null;    // 存储 EventSource 对象
 const dialogVisible = ref(false)
 const runningDevice = ref([])
 const basicSceneRef = ref()
+const basicSceneBaseRef = ref()
 const allCameraPorts = ref([])
 // 状态管理
 const state = reactive({
@@ -260,15 +268,17 @@ const recordOnDevice = () => {
     startCollect.value = false
     return;
   }
-  // getCurrentPorts()
-  const currentSelectedSensorId = state.select1 && state.select2 ? [state.select1, state.select2] : []
-  if (!currentSelectedSensorId.length) {
+  const device1 = basicSceneRef.value?.value1
+  const device2 = basicSceneRef.value?.value2
+  const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
+  allCameraPorts.value = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it['display-port'])
+  const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+  const devicesArr = [device1, device2, ...cameras, ...ods, ]
+  if (!device1 || !device2) {
     ElMessage({
       message: "请先选择设备",
       type: 'error',
     })
-    switchLoading.value = false
-    startCollect.value = false
     return;
   }
   const params = {
@@ -276,7 +286,7 @@ const recordOnDevice = () => {
       "type": "actions",
       "attributes": {
         "command": "recordOn",
-        "devices": currentSelectedSensorId,
+        "devices": devicesArr,
         "viewport": viewportId.value
       }
     }
@@ -473,6 +483,7 @@ onUnmounted(() => {
   .panel {
     display: flex;
     align-items: center;
+    margin-bottom: 20px;
   }
 
   .point {
@@ -489,7 +500,7 @@ onUnmounted(() => {
     background-color: white;
     display: flex;
     flex-direction: row;
-    margin: 20px 0;
+    margin: 0;
     color: #606266;
   }
 
