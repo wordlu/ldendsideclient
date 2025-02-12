@@ -17,16 +17,6 @@
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
       </div>
-
-      <!-- <el-form :model="form" label-width="auto" style="max-width: 600px;margin-left: 10px;margin-right: 20px;">
-        <el-form-item label="算法" style="margin-bottom: 0;">
-          <el-select size="small" v-model="form.algo" placeholder="请选择算法">
-            <el-option label="算法1" value="shanghai" />
-            <el-option label="Zone two" value="beijing" />
-          </el-select>
-        </el-form-item>
-      </el-form> -->
-      
       <el-button type="primary" size="small" @click="dialogVisible = true">
         摄像头数据
       </el-button>
@@ -93,10 +83,6 @@ interface Option {
   data: object
 }
 const showTree = ref(false)
-const form = reactive({
-  algo: '',
-})
-
 // 获取当前路由对象
 const router = useRouter();
 const route = useRoute()
@@ -274,13 +260,23 @@ const recordOnDevice = () => {
     startCollect.value = false
     return;
   }
-  getCurrentPorts()
+  // getCurrentPorts()
+  const currentSelectedSensorId = state.select1 && state.select2 ? [state.select1, state.select2] : []
+  if (!currentSelectedSensorId.length) {
+    ElMessage({
+      message: "请先选择设备",
+      type: 'error',
+    })
+    switchLoading.value = false
+    startCollect.value = false
+    return;
+  }
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
         "command": "recordOn",
-        "devices": currentSelectedSensorId.value,
+        "devices": currentSelectedSensorId,
         "viewport": viewportId.value
       }
     }
@@ -300,13 +296,21 @@ const recordOnDevice = () => {
 }
 // 结束采集
 const recordOffDevice = () => {
-  getCurrentPorts()
+  // getCurrentPorts()
+  const currentSelectedSensorId = state.select1 && state.select2 ? [state.select1, state.select2] : []
+  if (!currentSelectedSensorId.length) {
+    ElMessage({
+      message: "结束采集失败：缺少设备信息",
+      type: 'error',
+    })
+    return;
+  }
   const params = {
     "data": {
       "type": "actions",
       "attributes": {
         "command": "recordOff",
-        "devices": currentSelectedSensorId.value,
+        "devices": currentSelectedSensorId,
         "viewport": viewportId.value
       }
     }

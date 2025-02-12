@@ -92,7 +92,7 @@ const trigger = () => {
 
 const changeViewport = async(row) => {
   if (currentdata.value.includes(row.id)) return;
-  const currentStatus = await findItem('viewport_status', row.id)
+  const currentStatus = await findItem('viewport_status', currentdata.value[0])
   if (currentStatus.data.isluanching) {
       ElMessage({
         message: "有正在运行的设备，请关闭设备后再切换视角！",
