@@ -150,11 +150,11 @@ export default {
                 title: '采集配置',
                 policy: "pageloggerfeconfigs",
               },
-              {
-                index: '/systemanage/devices',
-                title: '设备管理',
-                policy: "pagesystemanagedevices",
-              },
+              // {
+              //   index: '/systemanage/devices',
+              //   title: '设备管理',
+              //   policy: "pagesystemanagedevices",
+              // },
               {
                 index: '/systemanage/storages',
                 title: '存储管理',

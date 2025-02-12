@@ -107,9 +107,9 @@ const prevPage = () => {
   queryDatasets(current.value - 1)
 }
 
-onMounted(() => {
+onMounted(async() => {
+  await queryCurrentDrivers()
   queryDatasets(current.value)
-  queryCurrentDrivers()
 })
 
 const queryDatasets = (page: number) => {
@@ -118,6 +118,7 @@ const queryDatasets = (page: number) => {
       offset: step.value * page,
       limit: step.value,
       sort: '-created',
+      'filter[viewport]': viewportId.value,
       'filter[name][fuzzy-match]': search.value
     }
     findAll('/models/datasets', params).then((res: any) => {
@@ -141,9 +142,9 @@ const change = () => {
 }
 
 const viewportId = ref('')
-const queryCurrentDrivers = () => {
+const queryCurrentDrivers = async() => {
   try {
-    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+    await findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
       viewportId.value = res.data.data[0].id
     }).catch((err: any) => {
       console.log(err, 'err')
