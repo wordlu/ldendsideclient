@@ -2,10 +2,10 @@
   <div class="index-page" >
     <!-- :element-loading-text="loadingtext"
     v-loading="pageLoading" > -->
-    <el-breadcrumb :separator-icon="ArrowRight">
+    <!-- <el-breadcrumb :separator-icon="ArrowRight">
       <el-breadcrumb-item >系统管理</el-breadcrumb-item>
       <el-breadcrumb-item>采集</el-breadcrumb-item>
-    </el-breadcrumb>
+    </el-breadcrumb> -->
     <div class="panel">
       <div class="title-panel">
         <div style="display: flex;align-items: center;font-size: 14px;margin-right: 10px;">
