@@ -360,7 +360,8 @@ const getLuanchingDevices = () => {
   findAll('/models/actions', {
     'sort': '-created',
     'page[limit]': 1,
-    'filter[command]':'startup'
+    'filter[command]':'startup',
+    'filter[viewport]': viewportId.value
   }).then((res: any) => {
     gostore.reset()
     gostore.sync(res.data)
