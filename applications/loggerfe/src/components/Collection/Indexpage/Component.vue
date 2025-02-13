@@ -194,9 +194,10 @@ const startupDevice = () => {
   // }
   const device1 = basicSceneRef.value?.value1
   const device2 = basicSceneRef.value?.value2
-  const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
-  allCameraPorts.value = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it['display-port'])
-  const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+  const viewportDevices = viewports.value[0]['devices']
+  const cameras = viewportDevices.filter((item) => item.type === 'camera').map(it => it.id)
+  allCameraPorts.value = viewportDevices.filter((item) => item.type === 'camera').map(it => it['display-port'])
+  const ods = viewportDevices.filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
   const devicesArr = [device1, device2, ...cameras, ...ods, ]
   if (!device1 || !device2) {
     ElMessage({
@@ -270,9 +271,10 @@ const recordOnDevice = () => {
   }
   const device1 = basicSceneRef.value?.value1
   const device2 = basicSceneRef.value?.value2
-  const cameras = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it.id)
-  allCameraPorts.value = viewports.value[0]['devices'].filter((item) => item.type === 'camera').map(it => it['display-port'])
-  const ods = viewports.value[0]['devices'].filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+  const viewportDevices = viewports.value[0]['devices']
+  const cameras = viewportDevices.filter((item) => item.type === 'camera').map(it => it.id)
+  allCameraPorts.value = viewportDevices.filter((item) => item.type === 'camera').map(it => it['display-port'])
+  const ods = viewportDevices.filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
   const devicesArr = [device1, device2, ...cameras, ...ods, ]
   if (!device1 || !device2) {
     ElMessage({

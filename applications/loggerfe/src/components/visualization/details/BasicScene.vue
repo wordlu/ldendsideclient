@@ -9,7 +9,8 @@ import {  defineProps } from 'vue'
 const props = defineProps({
   currentSelectedSensor: Array,
   datasetprefix: String,
-  isCollapsedConfig: Boolean
+  isCollapsedConfig: Boolean,
+  viewportId: String
 });
 </script>
 
