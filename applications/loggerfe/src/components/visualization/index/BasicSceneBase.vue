@@ -1,6 +1,6 @@
 <template>
   <div id="canvas-box" @click="canvasClick">
-    <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
+    <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+getString(currentSelectedSensor)+'&cloudpointparams='+JSON.stringify(cloudpointparams)" width="100%" height="100%" allowfullscreen ameborder="0"></iframe>
   </div>
 </template>
  <script setup lang="ts">
@@ -18,6 +18,7 @@ const getString = (arr: any) => {
   if(!arr) return ''
   return arr.toString()
 }
+
 </script>
 
 <style lang="scss" scoped>
