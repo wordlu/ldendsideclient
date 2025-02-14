@@ -43,10 +43,12 @@
           :data="treedata"
           default-expand-all
           node-key="id"
+          show-checkbox
           highlight-current
           @node-click="handleNodeClick"
           :props="defaultProps"
           @check-change="handleCheckChange"
+          :render-content="renderContent"
         />
       </div>
     </div>
@@ -186,16 +188,16 @@ const renderContent = (h, { node, data }) => {
         src: `${renderContentUrl}&var-device=${data.devicedata.key}`,
         style: `width: 115px;height:15px;background-color: #fff;border: 2px solid #fff;`,
       }),
-      // h(
-      //   'span',
-      //   { title: '重启设备' },
-      //   [
-      //     h(ElIcon, {
-      //       style: 'margin-left: 18px;color:#ff7900;font-size:16px;cursor:pointer;',
-      //       onClick: () => handleTreeReconnectClick(node, data)
-      //     }, { default: () => h(Refresh) })
-      //   ]
-      // ),
+      h(
+        'span',
+        { title: '重启设备' },
+        [
+          h(ElIcon, {
+            style: 'margin-left: 18px;color:#ff7900;font-size:16px;cursor:pointer;',
+            onClick: () => handleTreeReconnectClick(node, data)
+          }, { default: () => h(Refresh) })
+        ]
+      ),
     ]);
   } else {
     return h('span', {style: 'margin-right: 16px;min-width:90px;text-align:left;'}, node.label); // 非叶子节点只显示标签

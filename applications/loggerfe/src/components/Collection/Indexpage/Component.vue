@@ -44,7 +44,7 @@
           :cloudpointparams="cloudpointparams"
           :currentSelectedSensor="currentSelectedSensor"  />
         <sensorConfigs
-          v-if="viewportId !== 'changcheng'"
+          v-show="viewportId !== 'changcheng'"
           ref="sensorConfigsRef" 
           :viewports="viewports"
           :viewportId="viewportId"
