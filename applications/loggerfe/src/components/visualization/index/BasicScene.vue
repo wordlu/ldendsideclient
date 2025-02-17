@@ -19,7 +19,7 @@
           />
         </el-select>
       </div>
-      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray1 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
+      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray1 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
       <div class="event-area">
         <iframe :src="getUrl1" height="100%" allowfullscreen ameborder="0"></iframe>
       </div>
@@ -43,7 +43,7 @@
           />
         </el-select>
       </div>
-      <iframe :src="'http://localhost:5173/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray2 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
+      <iframe :src="'/pointcloud/realvisualization?allports='+JSON.stringify(allports)+'&portarray='+(testDevice ? portarray2 : '')+'&cloudpointparams='+JSON.stringify(cloudpointparams)" allowfullscreen ameborder="0"></iframe>
       <div class="event-area">
         <iframe :src="getUrl2" height="100%" allowfullscreen ameborder="0"></iframe>
       </div>
