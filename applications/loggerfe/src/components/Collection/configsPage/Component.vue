@@ -278,7 +278,9 @@ const getRemoteFormData = () => {
   if (remoteComponentRef.value && remoteComponentRef.value.getFormData) {
     const formData = remoteComponentRef.value.getFormData();
     Object.keys(form).forEach((key) => {
-      delete form[key];
+      if (key !== 'type') {
+        delete form[key];
+      }
     });
     Object.assign(form, formData);
     console.log('远程组件的表单数据:', formData);
