@@ -37,6 +37,25 @@
           @setAllTreeKeys="setAllTreeKeys" />
       </div>
     </div>
+    <el-dialog 
+      v-model="dialogFormVisible"
+      :show-close="false"
+      :close-on-click-modal="false"
+      modal-class="dialogClassImg"
+      width="40%"
+      >
+        <!-- <img class="img-error" src="https://wimg.588ku.com/gif620/21/09/29/18b12b75f4870fe63be35c4859457079.gif" alt=""> -->
+        <img class="img-error" src="http://loggertrash/icon/default/warning.gif" alt="">
+        <div class="text-error">{{ dialogErrorDesc }}</div>
+        <template #footer>
+          <div class="dialog-footer">
+            <!-- <el-button @click="dialogFormVisible = false">Cancel</el-button> -->
+            <el-button type="primary" @click="closeDialogFormVisible">
+              结束采集并关闭设备
+            </el-button>
+          </div>
+        </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -57,9 +76,10 @@ const router = useRouter();
 const route = useRoute()
 // 创建响应式变量
 const message = ref(null); // 用于存储 SSE 消息
+const messageHigh = ref(null); // 用于存储 SSE cpu负载过高消息
 const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
-
+const dialogFormVisible = ref(false)
 interface Option {
   key: number
   label: string
@@ -308,22 +328,66 @@ const gotologsanalyze = () => {
   window.open(routeUrl, '_blank');
 }
 
+let messageInterval = null;  // 用于存储定时器
+let lastMessageTime = null;  // 记录最后接收到消息的时间
+const dialogErrorDesc = ref('')
+
+const open = (msg) => {
+  if (testDevice.value) {
+    dialogFormVisible.value = true
+    dialogErrorDesc.value = msg
+  }
+}
+
+// 关闭弹窗
+const closeModal = () => {
+  // ElMessageBox.close();  // 关闭弹窗
+  dialogFormVisible.value = false
+  dialogErrorDesc.value = ''
+  clearInterval(messageInterval);  // 清除定时器
+};
+
+const closeDialogFormVisible = () => {
+  closeModal()
+  recordOffDevice()
+  testDevice.value = false
+  
+}
+
 onMounted(() => {
   queryCurrentDrivers()
-  // 建立长连接
-  eventSource =new EventSource(
-    `${window.server.mecPrefix}/api/logger/events/alert`,
+  // 建立普通警告长连接
+  eventSource = new EventSource(
+    `${window.server.mecPrefix}/api/logger/events/alert?channel=high`,
     { withCredentials: true }
   )
+  eventSource.addEventListener('high', (event) => {
+    messageHigh.value = JSON.parse(event.data); // 更新最新消息
+    const desc = `警告: ${messageHigh.value?.commonAnnotations?.description}`
+    open(desc)
+    // 每次收到消息时更新最后接收到消息的时间
+    lastMessageTime = Date.now();
+    
+    // 如果弹窗已经打开，刷新定时器
+    if (messageInterval) {
+      clearInterval(messageInterval);
+    }
+    
+    // 开启定时器，每秒检查一次
+    messageInterval = setInterval(() => {
+      if (Date.now() - lastMessageTime > 5000) {
+        closeModal();
+      }
+    }, 1000);
+  })
 
   // 监听服务器发送的消息
-  eventSource.onmessage = (event) => {
+  eventSource.addEventListener('message', (event) => {
     message.value = JSON.parse(event.data); // 更新最新消息
     const title = message.value?.alerts[0]?.labels?.alertname
     const content = message.value?.commonAnnotations?.summary
     const severity = message.value?.alerts[0]?.labels?.severity
     const state = message.value?.alerts[0]?.labels?.state
-
     if (state === '0') {
       // pageLoading.value = false
       ElNotification({
@@ -341,9 +405,7 @@ onMounted(() => {
       // pageLoading.value = false
       // 接收成功和失败的消息
     }
-    
-  };
-
+  })
   // 监听错误事件
   eventSource.onerror = () => {
     error.value = '连接失败或服务器错误';
@@ -408,6 +470,39 @@ onUnmounted(() => {
     p {
       word-break: break-all;
     }
+  }
+}
+
+.alert-box {
+  .el-button--primary {
+    background: #f56c6c;
+    border: none;
+  }
+}
+.dialogClassImg {
+  .el-dialog {
+    background: #000;
+  }
+  .el-dialog__body {
+    padding: 0;
+    background: #000;
+  }
+  .el-dialog__header {
+    display: none;
+  }
+  .img-error {
+    width: auto;
+    height: 50vh;
+  }
+  .text-error {
+    background: #000;
+    color: #fff;
+    font-size: 18px;
+    text-align: center;
+    margin: 0 0 20px;
+  }
+  .el-dialog__footer {
+    background: #000;
   }
 }
 </style>
