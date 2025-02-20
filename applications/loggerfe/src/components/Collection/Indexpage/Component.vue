@@ -16,6 +16,9 @@
           <div style="margin-right: 4px;">设备采集</div>
           <el-switch v-model="startCollect" :loading="switchLoading"  style="--el-switch-on-color: #13ce66;--el-switch-off-color: #ccc;" @change="startCollectChange"/>
         </div>
+        <div class="dialog-error-desc" v-show="dialogFormVisible">
+          {{dialogErrorDesc}}
+        </div>
       </div>
     </div>
     <div
@@ -37,25 +40,23 @@
           @setAllTreeKeys="setAllTreeKeys" />
       </div>
     </div>
-    <el-dialog 
+    <!-- <el-dialog 
       v-model="dialogFormVisible"
       :show-close="false"
       :close-on-click-modal="false"
       modal-class="dialogClassImg"
       width="40%"
       >
-        <!-- <img class="img-error" src="https://wimg.588ku.com/gif620/21/09/29/18b12b75f4870fe63be35c4859457079.gif" alt=""> -->
         <img class="img-error" src="http://loggertrash/icon/default/warning.gif" alt="">
         <div class="text-error">{{ dialogErrorDesc }}</div>
         <template #footer>
           <div class="dialog-footer">
-            <!-- <el-button @click="dialogFormVisible = false">Cancel</el-button> -->
             <el-button type="primary" @click="closeDialogFormVisible">
-              结束采集并关闭设备
+               关闭
             </el-button>
           </div>
         </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -341,7 +342,6 @@ const open = (msg) => {
 
 // 关闭弹窗
 const closeModal = () => {
-  // ElMessageBox.close();  // 关闭弹窗
   dialogFormVisible.value = false
   dialogErrorDesc.value = ''
   clearInterval(messageInterval);  // 清除定时器
@@ -349,9 +349,8 @@ const closeModal = () => {
 
 const closeDialogFormVisible = () => {
   closeModal()
-  recordOffDevice()
+  shutdownDevice()
   testDevice.value = false
-  
 }
 
 onMounted(() => {
@@ -446,6 +445,13 @@ onUnmounted(() => {
     flex-direction: row;
     margin: 20px 0;
     color: #606266;
+    align-items: center;
+
+    .dialog-error-desc {
+      color: red;
+      font-size: 18px;
+      margin-left: 20px;
+    }
   }
 
   &-top {
