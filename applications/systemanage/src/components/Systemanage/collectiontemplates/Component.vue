@@ -56,7 +56,7 @@
 <script lang="ts" setup>
 import { ArrowRight, Search, ArrowRightBold, ArrowLeftBold } from "@element-plus/icons-vue"
 import gostore from '@/services/governance-store'
-import { findAll, patchItem } from '@/api/jsonApi'
+import { findAll, patchItem, findItem } from '@/api/jsonApi'
 import { ref, onMounted } from "vue"
 import { ElTable, ElMessageBox, ElMessage } from 'element-plus'
 
@@ -90,7 +90,7 @@ const trigger = () => {
   // window.history.pushState(null, '', `/loggerfe/configs`)
 }
 
-const changeViewport = (row) => {
+const changeViewport = async(row) => {
   if (currentdata.value.includes(row.id)) return;
   const currentStatus = await findItem('viewport_status', currentdata.value[0])
   if (currentStatus.data.isluanching) {
