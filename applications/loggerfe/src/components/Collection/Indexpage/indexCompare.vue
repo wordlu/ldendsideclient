@@ -24,6 +24,7 @@
         <BasicScene 
           ref="basicSceneRef"
           :testDevice="testDevice"
+          :viewportId="viewportId"
           :viewports="viewports"
           :allports="allports"
           :runningDevice="runningDevice"
