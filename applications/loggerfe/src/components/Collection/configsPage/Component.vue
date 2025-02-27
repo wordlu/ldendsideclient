@@ -646,7 +646,9 @@ const loadRemoteComponent = async () => {
       setup() {
         const data = scriptExports.data ? scriptExports.data.call(this) : {};
         for (const key in data) {
-          data[key] = form[key];
+          if (form[key]) {
+            data[key] = form[key];
+          }
         }
         const methods = scriptExports.methods || {};
         for (const key in methods) {
