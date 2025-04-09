@@ -14,6 +14,7 @@
       <el-button type="primary" size="small" @click="dialogVisible = true">
         摄像头数据
       </el-button>
+      <el-checkbox :disabled="startCollect" v-model="cameraChecked" style="margin-left: 10px;" >采集摄像头数据</el-checkbox>
 
     </div>
     <div
@@ -93,6 +94,7 @@ const dialogVisible = ref(false)
 const runningDevice = ref([])
 const basicSceneRef = ref()
 const allCameraPorts = ref([])
+const cameraChecked = ref(false)
 // 状态管理
 const state = reactive({
   select1: '', // 第一个下拉框的值
@@ -266,7 +268,10 @@ const recordOnDevice = () => {
   const cameras = viewportDevices.filter((item) => item.type === 'camera').map(it => it.id)
   allCameraPorts.value = viewportDevices.filter((item) => item.type === 'camera').map(it => it['display-port'])
   const ods = viewportDevices.filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
-  const devicesArr = [device1, device2, ...cameras, ...ods, ]
+  const devicesArr = [device1, device2, ...ods, ]
+  if (cameraChecked.value) {
+    devicesArr.push(...cameras)
+  }
   if (!device1 || !device2) {
     ElMessage({
       message: "请先选择设备",
