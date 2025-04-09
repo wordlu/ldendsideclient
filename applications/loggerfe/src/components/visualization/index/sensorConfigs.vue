@@ -9,19 +9,19 @@
             <div style="display: flex;flex-direction: column;">
               <div style="display: flex;align-items: center;">
                 <div style="width: 10px;height: 10px;background-color: #d0d7de; margin-right: 6px;"></div> 
-                <span style="color: black;">未知</span>
-              </div>
-              <div style="display: flex;align-items: center;">
-                <div style="width: 10px;height: 10px;background-color: #28a745; margin-right: 6px;"></div> 
-                <span style="color: black;">成功</span>
+                <span style="color: black;">未就绪</span>
               </div>
               <div style="display: flex;align-items: center;">
                 <div style="width: 10px;height: 10px;background-color: #ffc107; margin-right: 6px;"></div> 
-                <span style="color: black;">警告</span>
+                <span style="color: black;">准备中</span>
+              </div>
+              <div style="display: flex;align-items: center;">
+                <div style="width: 10px;height: 10px;background-color: #28a745; margin-right: 6px;"></div> 
+                <span style="color: black;">正常</span>
               </div>
               <div style="display: flex;align-items: center;">
                 <div style="width: 10px;height: 10px;background-color: #dc3545; margin-right: 6px;"></div> 
-                <span style="color: black;">故障</span>
+                <span style="color: black;">不可用</span>
               </div>
             </div>
           </template>
