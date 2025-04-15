@@ -160,7 +160,24 @@ const testDeviceChange = async (val) => {
 const startCollectChange = (val) => {
   switchLoading.value = true
   if (val) {
-    recordOnDevice()
+    const device1 = basicSceneRef.value?.value1
+    const device2 = basicSceneRef.value?.value2
+    const viewportDevices = props.viewports[0]['devices']
+    const ods = viewportDevices.filter((item) => item.type === 'perception' && (item?.id.indexOf(device1) !== -1 || item?.id.indexOf(device2) !== -1)).map(it => it.id)
+    console.log(ods, '感知节点')   
+    if (ods.length == 0) {
+      ElMessageBox.alert('请先配置感知节点，再进行采集', '提示', {
+        confirmButtonText: '确认',
+        callback: (action: Action) => {
+          // window.history.pushState(null, '', `/loggerfe/root/configs`)
+          console.log(action)   
+          switchLoading.value = false
+          startCollect.value = false
+        },
+      })
+    } else {
+      recordOnDevice()
+    }
   } else {
     recordOffDevice()
   }
