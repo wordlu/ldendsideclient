@@ -105,12 +105,13 @@ const queryCurrentDrivers = () => {
       const devicehub = datavalue[0]['device-hub']
       emit('setDevicesHub', devicehub)
       const device = datavalue[0]['devices']
+      
       const devicehubdata = devicehub.map((item: any) => {
         return {
           ...item,
           devicedata: device.find((it: any) => it.slot === item.id),
         }
-      })
+      }).filter(it => props.deviceids.includes(it.id))
       treedata.value = totree(devicehubdata)
     }).catch((err: any) => {
       console.log(err, 'err')
@@ -222,7 +223,7 @@ defineExpose({
 
 .display-panel {
   // background: rgba(255, 255, 255, 1);
-  width: 400px;
+  width: 300px;
   min-width: 20rem;
   max-width: 30rem;
   height: 100%;

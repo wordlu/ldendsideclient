@@ -14,7 +14,7 @@
         <BasicScene :viewportId="props.viewportId" :datasetprefix="datasetprefix" :currentSelectedSensor="currentSelectedSensor"
           :cloudpointparams="cloudpointparams" :devicesHub="devicesHub" :isCollapsedConfig="isCollapsed" />
         <sensorConfigs 
-          v-show="false"
+          v-show="isCollapsed"
           ref="sensorConfigsRef" 
           :deviceids="deviceids"
           @getCurrentPorts="getCurrentPorts" 
@@ -22,7 +22,7 @@
           @setAllTreeKeys="setAllTreeKeys" 
           @changeProps="changeProps"
           @setDevicesHub="setDevicesHub" />          
-        <div v-show="false">
+        <div>
           <el-icon>
             <DArrowRight v-show="isCollapsed"  @click="toggleSidebar" />
           </el-icon>
