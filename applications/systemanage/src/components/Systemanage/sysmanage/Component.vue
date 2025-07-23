@@ -19,13 +19,28 @@
       <el-card class="sensor-card" shadow="never">
         <div class="card-title">Sensor points</div>
         <el-table :data="sensorData" size="small" border height="100%">
-          <el-table-column prop="id" label="#" width="40" />
-          <el-table-column prop="name" label="Name" width="60" />
-          <el-table-column prop="forward" label="Forw" width="60" />
-          <el-table-column prop="right" label="Right" width="60" />
-          <el-table-column prop="heading" label="Heading" width="80" />
-          <el-table-column prop="fov1" label="Field 1" width="80" />
-          <el-table-column prop="fov2" label="Field 2" width="80" />
+          <el-table-column prop="id" label="ID" />
+          <!-- <el-table-column prop="name" label="Name"/> -->
+          <el-table-column prop="name" label="Name">
+            <template #default="scope">
+              <el-input type="text" v-model="scope.row.name" size="small" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="x" label="X">
+            <template #default="scope">
+              <el-input type="number" step="0.01" v-model.number="scope.row.x" size="small" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="y" label="Y">
+            <template #default="scope">
+              <el-input type="number" step="0.01" v-model.number="scope.row.y" size="small" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="z" label="Z">
+            <template #default="scope">
+              <el-input type="number" step="0.01" v-model.number="scope.row.z" size="small" />
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
     </div>
@@ -61,7 +76,7 @@
               class="sensor-icon"
               :style="getIconStyle(sensor)"
             >
-              <span class="sensor-label">{{ index + 1 }}</span>
+              <span class="sensor-label">{{ sensor.name || index + 1 }}</span>
             </div>
           </div>
         </div>
@@ -84,16 +99,24 @@ const physicalData = reactive([
 interface SensorPoint {
   id: number
   name: string
-  forward: number
-  right: number
-  heading: number
-  fov1: number
-  fov2: number
+  x: number
+  y: number
+  z: number
 }
 
 const sensorData: SensorPoint[] = reactive([
-  { id: 1, name: 'SEN1', forward: 0.5, right: 1.0, heading: 0, fov1: 45, fov2: 2 },
-  { id: 2, name: 'SEN2', forward: 1.0, right: 0.0, heading: 0, fov1: 45, fov2: 2 },
+  { id: 1, name: 'p1', x: -1.05, y: 0.65, z: 0 },
+  { id: 2, name: 'p2', x: 1.05, y: 0.65, z: 0 },
+  { id: 3, name: 'p3', x: 0.7, y: 1.95, z: 0 },
+  { id: 4, name: 'p4', x: -0.7, y: 1.95, z: 0 },
+  { id: 5, name: 'p5', x: 0.85, y: -1.95, z: 0 },
+  { id: 6, name: 'p6', x: -0.85, y: -1.95, z: 0 },
+  { id: 7, name: 'p7', x: 0, y: 2.15, z: 0 },
+  { id: 8, name: 'p8', x: 0, y: -2.15, z: 0 },
+  { id: 9, name: 'p9', x: -0.85, y:1.33, z: 0 },
+  { id: 10, name: 'p10', x: 0.85, y: 1.33, z: 0 },
+  { id: 11, name: 'p11', x: 0.94, y: -1.14, z: 0 },
+  { id: 12, name: 'p12', x: -0.94, y: -1.14, z: 0 },
   // 添加更多锚点数据...
 ])
 
@@ -119,14 +142,21 @@ const onPhysicalChange = () => {
   updateImageSize()
 }
 
-const getIconStyle = (sensor: SensorPoint) => {
-  const offsetX = sensor.right * 100 * scale.value
-  const offsetY = sensor.forward * 100 * scale.value
+function getIconStyle(sensor) {
+  // 以图片中心为(0,0)
+  if (!imageSize.value.width || !imageSize.value.height || !width.value || !length.value) return {};
+  const pxPerMeterX = imageSize.value.width / width.value;
+  const pxPerMeterY = imageSize.value.height / length.value;
+  const centerX = imageSize.value.width / 2;
+  const centerY = imageSize.value.height / 2;
+  // x: 右为正，左为负；y: 下为正，上为负
+  const left = centerX + (sensor.x || 0) * pxPerMeterX;
+  const top = centerY - (sensor.y || 0) * pxPerMeterY;
   return {
-    left: `calc(50% + ${offsetX}px)`,
-    top: `calc(50% - ${offsetY}px)`,
-    transform: 'translate(-50%, -50%) scale(' + scale.value.toFixed(2) + ')'
-  }
+    left: `${left}px`,
+    top: `${top}px`,
+    transform: 'translate(-50%, -50%)'
+  };
 }
 
 const getPhysicalValue = (param: string) => {
@@ -213,7 +243,7 @@ watch(() => vehicleImage, () => {
 }
 
 .left-panel {
-  width: 350px;
+  width: 600px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -221,7 +251,7 @@ watch(() => vehicleImage, () => {
   box-sizing: border-box;
   background: #f9f9f9;
   border-right: 1px solid #ddd;
-  min-width: 300px;
+  min-width: 60px;
 }
 
 .physical-card,
