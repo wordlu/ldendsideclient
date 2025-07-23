@@ -35,15 +35,15 @@
       <div class="vehicle-area">
         <div class="vertical-ruler" :style="{ height: imageSize.height + 'px', width: '32px' }">
           <div v-for="tick in rulerTicks" :key="tick.value" class="ruler-tick" :style="{ top: tick.top + 'px' }">
-            <span class="ruler-label left-label" :class="{ 'zero-tick': tick.isZero }">{{ tick.label }}</span>
-            <div class="ruler-line" :class="{ 'zero-tick-line': tick.isZero }"></div>
+            <span v-if="tick.label" class="ruler-label left-label" :class="{ 'zero-tick': tick.value === '0.00', 'edge-tick': tick.isEdge }">{{ tick.label }}</span>
+            <div class="ruler-line" :class="{ 'major-tick-line': tick.isMajor, 'edge-tick-line': tick.isEdge }"></div>
           </div>
         </div>
         <div class="vehicle-main">
           <div class="horizontal-ruler" :style="{ width: imageSize.width + 'px', height: '32px' }">
             <div v-for="tick in horizontalRulerTicks" :key="tick.value" class="ruler-tick-horizontal" :style="{ left: tick.left + 'px' }">
-              <span class="ruler-label-horizontal" :class="{ 'zero-tick': tick.isZero }">{{ tick.label }}</span>
-              <div class="ruler-line-horizontal" :class="{ 'zero-tick-line': tick.isZero }"></div>
+              <span v-if="tick.label" class="ruler-label-horizontal" :class="{ 'zero-tick': tick.value === '0.00', 'edge-tick': tick.isEdge }">{{ tick.label }}</span>
+              <div class="ruler-line-horizontal" :class="{ 'major-tick-line': tick.isMajor, 'edge-tick-line': tick.isEdge }"></div>
             </div>
           </div>
           <div class="vehicle-container"
@@ -138,49 +138,52 @@ const length = computed(() => getPhysicalValue('Length'))
 const width = computed(() => getPhysicalValue('Width'))
 const height = computed(() => getPhysicalValue('Height'))
 
-// 保证 rulerTicks/horizontalRulerTicks 计算用 imageSize.height/width
-// 横向主刻度
-const horizontalRulerTicks = computed(() => {
-  if (!imageSize.value.width || width.value === 0) return []
-  const ticks = []
-  const pxPerMeter = imageSize.value.width / width.value
-  const center = imageSize.value.width / 2
-  const half = Math.floor(width.value / 2)
-  for (let i = -half; i <= half; i++) {
-    const left = center + i * pxPerMeter
-    ticks.push({
-      value: i,
-      label: `${i}m`,
-      left,
-      isZero: i === 0
-    })
-  }
-  if (half === 0) {
-    ticks.push({ value: 0, label: '0m', left: center, isZero: true })
-  }
-  return ticks
-})
-// 纵向主刻度
+const TICK_SEGMENTS = 3; // 分三段
 const rulerTicks = computed(() => {
-  if (!imageSize.value.height || length.value === 0) return []
-  const ticks = []
-  const pxPerMeter = imageSize.value.height / length.value
-  const center = imageSize.value.height / 2
-  const half = Math.floor(length.value / 2)
-  for (let i = -half; i <= half; i++) {
-    const top = center - i * pxPerMeter
+  if (!imageSize.value.height || length.value === 0) return [];
+  const ticks = [];
+  const total = length.value;
+  const half = total / 2;
+  const step = half / TICK_SEGMENTS;
+  const pxPerMeter = imageSize.value.height / total;
+  const center = imageSize.value.height / 2;
+  for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
+    const value = Math.abs(i * step);
+    const top = center - i * step * pxPerMeter;
+    const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     ticks.push({
-      value: i,
-      label: `${i}m`,
+      value: value.toFixed(2),
+      label: isMajor ? value.toFixed(2) : '',
       top,
+      isMajor,
       isZero: i === 0
-    })
+    });
   }
-  if (half === 0) {
-    ticks.push({ value: 0, label: '0m', top: center, isZero: true })
+  return ticks;
+});
+
+const horizontalRulerTicks = computed(() => {
+  if (!imageSize.value.width || width.value === 0) return [];
+  const ticks = [];
+  const total = width.value;
+  const half = total / 2;
+  const step = half / TICK_SEGMENTS;
+  const pxPerMeter = imageSize.value.width / total;
+  const center = imageSize.value.width / 2;
+  for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
+    const value = Math.abs(i * step);
+    const left = center + i * step * pxPerMeter;
+    const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
+    ticks.push({
+      value: value.toFixed(2),
+      label: isMajor ? value.toFixed(2) : '',
+      left,
+      isMajor,
+      isZero: i === 0
+    });
   }
-  return ticks
-})
+  return ticks;
+});
 
 onMounted(() => {
   window.addEventListener('resize', updateImageSize)
@@ -306,6 +309,7 @@ watch(() => vehicleImage, () => {
   height: 100%;
   z-index: 100;
   pointer-events: none;
+  top: 32px;
 }
 .ruler-tick-horizontal {
   position: absolute;
@@ -416,5 +420,64 @@ watch(() => vehicleImage, () => {
   z-index: 99;
   width: 3px !important;
   height: 3px !important;
+}
+.ruler-line {
+  flex: 1;
+  height: 1px;
+  background: #888;
+  width: 10px;
+  margin-left: 0;
+}
+.ruler-line-horizontal {
+  width: 1px;
+  height: 10px;
+  background: #888;
+  margin-top: 0;
+}
+.major-tick-line {
+  background: #1976d2 !important;
+  width: 18px !important;
+  height: 2px !important;
+}
+.ruler-line-horizontal.major-tick-line {
+  height: 18px !important;
+  width: 2px !important;
+}
+.edge-tick-line {
+  background: #1976d2 !important;
+  width: 22px !important;
+  height: 3px !important;
+}
+.ruler-line-horizontal.edge-tick-line {
+  height: 22px !important;
+  width: 3px !important;
+}
+.ruler-label-horizontal, .ruler-label.left-label {
+  font-size: 13px;
+  color: #333;
+  font-weight: bold;
+  background: #fff;
+  border-radius: 4px;
+  padding: 0 4px;
+  box-shadow: 0 0 2px #1976d2;
+  z-index: 101;
+}
+.zero-tick {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 16px;
+  background: #fff;
+  border-radius: 4px;
+  padding: 0 4px;
+  box-shadow: 0 0 2px #1976d2;
+}
+.edge-tick {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 15px;
+  background: #fff;
+  border-radius: 4px;
+  padding: 0 4px;
+  box-shadow: 0 0 2px #1976d2;
 }
 </style>
