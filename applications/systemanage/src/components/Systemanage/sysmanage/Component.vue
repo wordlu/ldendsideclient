@@ -279,6 +279,7 @@ watch(() => vehicleImage, () => {
   justify-content: center;
   width: 100%;
   min-height: 100vh;
+  background-color: #fff;
 }
 .vehicle-main {
   display: flex;
@@ -294,7 +295,8 @@ watch(() => vehicleImage, () => {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  display: block;
+  display: block;    
+  border: 2px solid #000;
 }
 
 .vehicle-center-dot {
@@ -448,8 +450,8 @@ watch(() => vehicleImage, () => {
 .center-line-vertical, .center-line-horizontal {
   background: #1976d2;
   z-index: 99;
-  width: 3px !important;
-  height: 3px !important;
+  /* width: 3px !important;
+  height: 3px !important; */
 }
 .ruler-line {
   flex: 1;
