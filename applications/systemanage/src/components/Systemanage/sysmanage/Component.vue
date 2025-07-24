@@ -18,7 +18,15 @@
       <!-- 下半：传感器参数 -->
       <el-card class="sensor-card" shadow="never">
         <div class="card-title">Sensor points</div>
-        <el-table :data="sensorData" size="small" border height="100%">
+        <el-table 
+          :data="sensorData" 
+          size="small" 
+          border 
+          height="100%"
+          :row-class-name="tableRowClassName"
+          @row-click="handleTableRowClick"
+          ref="sensorTableRef"
+        >
           <el-table-column prop="id" label="ID" />
           <!-- <el-table-column prop="name" label="Name"/> -->
           <el-table-column prop="name" label="Name">
@@ -74,7 +82,9 @@
               v-for="(sensor, index) in sensorData"
               :key="sensor.id"
               class="sensor-icon"
+              :class="{ 'sensor-icon-active': selectedSensorId === sensor.id }" 
               :style="getIconStyle(sensor)"
+              @click="handleSensorIconClick(sensor)"
             >
               <span class="sensor-label">{{ sensor.name || index + 1 }}</span>
             </div>
@@ -86,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, reactive, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, reactive, computed, watch, nextTick } from 'vue'
 
 const vehicleImage = 'http://localhost:8083/apps/systemanage/img/st_car.jpg'
 
@@ -117,14 +127,15 @@ const sensorData: SensorPoint[] = reactive([
   { id: 10, name: 'p10', x: 0.85, y: 1.33, z: 0 },
   { id: 11, name: 'p11', x: 0.94, y: -1.14, z: 0 },
   { id: 12, name: 'p12', x: -0.94, y: -1.14, z: 0 },
-  // 添加更多锚点数据...
 ])
 
 const imageRef = ref<HTMLImageElement | null>(null)
 const rightPanelRef = ref<HTMLDivElement | null>(null)
+const sensorTableRef = ref<any>(null) 
 const imageSize = ref({ width: 0, height: 0 })
 const scale = ref(1)
-
+// 新增：用于存储当前选中的传感器 ID
+const selectedSensorId = ref<number | null>(null)
 const updateImageSize = () => {
   const container = rightPanelRef.value
   const img = imageRef.value
@@ -215,6 +226,59 @@ const horizontalRulerTicks = computed(() => {
   return ticks;
 });
 
+// 新增：处理表格行点击事件
+const handleTableRowClick = (row: SensorPoint) => {
+  selectedSensorId.value = row.id;
+  scrollToSensorIcon(row.id);
+};
+
+// 新增：处理传感器图标点击事件
+const handleSensorIconClick = (sensor: SensorPoint) => {
+  selectedSensorId.value = sensor.id;
+  highlightTableRow(sensor.id);
+};
+
+// 新增：为表格行添加类名
+const tableRowClassName = ({ row }: { row: SensorPoint }) => {
+  return row.id === selectedSensorId.value ? 'selected-row' : '';
+};
+
+// 新增：高亮表格行
+const highlightTableRow = (sensorId: number) => {
+  // Element Plus 的 el-table 没有直接的 API 来高亮行，
+  // 但可以通过设置当前行来实现类似效果（如果需要选中行功能，可以使用 selection）
+  // 或者通过 CSS 类名 (已在 tableRowClassName 中实现)
+  // 这里我们主要依赖 tableRowClassName 和 selectedSensorId
+};
+
+// 新增：滚动到传感器图标（可选增强功能）
+const scrollToSensorIcon = (sensorId: number) => {
+  nextTick(() => {
+     // 查找对应的图标元素
+    const iconElement = document.querySelector(`.sensor-icon[data-sensor-id="${sensorId}"]`);
+    if (iconElement) {
+      // 获取 .vehicle-container 容器
+      const container = document.querySelector('.vehicle-container');
+      if (container) {
+        // 计算图标相对于容器的位置
+        const containerRect = container.getBoundingClientRect();
+        const iconRect = iconElement.getBoundingClientRect();
+
+        // 计算滚动偏移量，使图标居中
+        const scrollLeft = iconRect.left - containerRect.left - container.clientWidth / 2 + iconRect.width / 2;
+        const scrollTop = iconRect.top - containerRect.top - container.clientHeight / 2 + iconRect.height / 2;
+
+        // 执行滚动
+        container.scrollBy({
+          left: scrollLeft,
+          top: scrollTop,
+          behavior: 'smooth' // 平滑滚动
+        });
+      }
+    }
+  });
+};
+
 onMounted(() => {
   window.addEventListener('resize', updateImageSize)
   if (imageRef.value) {
@@ -235,7 +299,7 @@ watch(() => vehicleImage, () => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .car-sensor-config {
   display: flex;
   height: 100%;
@@ -246,15 +310,21 @@ watch(() => vehicleImage, () => {
   width: 600px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  // gap: 10px;
   padding: 10px;
   box-sizing: border-box;
   background: #f9f9f9;
   border-right: 1px solid #ddd;
   min-width: 60px;
+  min-height: 0;
 }
 
-.physical-card,
+.physical-card {
+  height:240px; 
+  overflow: auto;
+  margin-bottom: 10px; 
+}
+
 .sensor-card {
   flex: 1;
   overflow: auto;
@@ -324,8 +394,18 @@ watch(() => vehicleImage, () => {
   line-height: 30px;
   font-size: 14px;
   font-weight: bold;
-  pointer-events: none;
+  /* pointer-events: none; */
   transition: transform 0.2s ease;
+  cursor: pointer; /* 添加鼠标指针 */
+  z-index: 20; /* 提高 z-index 确保在标尺之上 */
+}
+
+/* 新增：传感器图标高亮样式 */
+.sensor-icon.sensor-icon-active {
+  background-color: orange; /* 或者其他你喜欢的高亮颜色 */
+  transform: translate(-50%, -50%) scale(1.2); /* 稍微放大 */
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.8); /* 添加发光效果 */
+  z-index: 21; /* 确保高亮的图标在最上层 */
 }
 
 .horizontal-ruler {
@@ -511,5 +591,14 @@ watch(() => vehicleImage, () => {
   border-radius: 4px;
   padding: 0 4px;
   box-shadow: 0 0 2px #1976d2;
+}
+
+/* 新增：表格行高亮样式 */
+:deep(.selected-row) {
+  background-color: #e6f7ff !important; /* Element Plus 主题色的浅蓝色 */
+  font-weight: bold;
+}
+:deep(.selected-row:hover) {
+  background-color: #d1e7ff !important; /* 悬停时的颜色 */
 }
 </style>
