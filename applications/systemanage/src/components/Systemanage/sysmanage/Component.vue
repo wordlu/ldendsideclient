@@ -48,22 +48,22 @@
           <!-- <el-table-column prop="name" label="Name"/> -->
           <el-table-column prop="name" label="Name">
             <template #default="scope">
-              <el-input type="text" v-model="scope.row.name" size="small" />
+              <el-input type="text" v-model="scope.row.name" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
           <el-table-column prop="x" label="X">
             <template #default="scope">
-              <el-input type="number" step="0.01" v-model.number="scope.row.x" size="small" />
+              <el-input type="number" step="0.01" v-model.number="scope.row.x" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
           <el-table-column prop="y" label="Y">
             <template #default="scope">
-              <el-input type="number" step="0.01" v-model.number="scope.row.y" size="small" />
+              <el-input type="number" step="0.01" v-model.number="scope.row.y" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
           <el-table-column prop="z" label="Z">
             <template #default="scope">
-              <el-input type="number" step="0.01" v-model.number="scope.row.z" size="small" />
+              <el-input type="number" step="0.01" v-model.number="scope.row.z" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
         </el-table>
@@ -217,7 +217,6 @@ const validateInput = (row) => {
 
 // 父组件变更事件
 const onPhysicalChange = async() => {
-  
   await updataAnchors()
 }
 
