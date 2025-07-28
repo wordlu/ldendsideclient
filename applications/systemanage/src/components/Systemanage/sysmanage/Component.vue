@@ -4,8 +4,8 @@
     <div class="left-panel">
       
       <div style="display: flex; margin-bottom: 10px;">
-        <el-button size="small" type="primary" @click="onSave">Import</el-button>
-        <el-button size="small" type="primary" @click="onSave">Export</el-button>
+        <el-button size="small" type="primary" @click="onImport">Import</el-button>
+        <el-button size="small" type="primary" @click="onExport">Export</el-button>
       </div>
       <!-- 上半：物理尺寸 -->
       <el-card class="physical-card" shadow="never">
@@ -118,6 +118,7 @@ import { ref, onMounted, onBeforeUnmount, reactive, computed, watch, nextTick } 
 import { findAll } from '@/api/jsonApi'
 import { vehicle_anchor_patch, vehicle_anchor_get } from '@/api/api'
 import gostore from '@/services/governance-store'
+import { ElMessage } from 'element-plus'
 
 const vehicleImage = 'http://localhost:8083/apps/systemanage/img/st_car.jpg'
 
@@ -434,6 +435,59 @@ const queryVehicleAnchor = () => {
   }).catch((err: any) => {
     console.log(err, 'err')
   })
+}
+
+// 导出
+function onExport() {
+  const vehicle_anchor = {
+    physicalDimension: physicalData,
+    sensorPoints: sensorData
+  }
+  const dataStr = JSON.stringify(vehicle_anchor, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'vehicle_anchor.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 导入
+function onImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = (e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event: any) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data && data.physicalDimension && data.sensorPoints) {
+          physicalData.splice(0, physicalData.length, ...data.physicalDimension)
+          sensorData.splice(0, sensorData.length, ...data.sensorPoints);
+          const vehicle_anchor = {
+            physicalDimension: physicalData,
+            sensorPoints: sensorData
+          }
+          vehicle_anchor_patch(vehicle_anchor).then(() => {
+            updateImageSize()
+            ElMessage.success('Import success')
+          }).catch((err) => {
+            console.log(err, 'err')
+          })
+        } else {
+          ElMessage.error('Import format error')
+        }
+      } catch (err) {
+        alert('Import error' + err);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 onMounted(() => {
