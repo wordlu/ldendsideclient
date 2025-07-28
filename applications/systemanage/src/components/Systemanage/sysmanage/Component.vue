@@ -2,6 +2,11 @@
   <div class="car-sensor-config">
     <!-- 左侧 -->
     <div class="left-panel">
+      
+      <div style="display: flex; margin-bottom: 10px;">
+        <el-button size="small" type="primary" @click="onSave">Import</el-button>
+        <el-button size="small" type="primary" @click="onSave">Export</el-button>
+      </div>
       <!-- 上半：物理尺寸 -->
       <el-card class="physical-card" shadow="never">
         <div class="card-title">Physical dimension</div>
@@ -9,7 +14,19 @@
           <el-table-column prop="param" label="Parameter" width="100" />
           <el-table-column prop="value" label="Value">
             <template #default="scope">
-              <el-input v-model="scope.row.value" size="small" @input="onPhysicalChange" />
+              <!-- <el-input v-model="scope.row.value" size="small" @input="onPhysicalChange" /> -->
+              <el-input
+                v-model="scope.row.value"
+                size="small"
+                @input="handleInput(scope.row, $event)"
+                @blur="validateInput(scope.row)"
+                :placeholder="`Enter ${scope.row.unit || ''}`"
+                class="input-field"
+              >
+                <template #append>
+                  <span class="unit-text">{{ scope.row.unit || '' }}</span>
+                </template>
+              </el-input>
             </template>
           </el-table-column>
         </el-table>
@@ -27,7 +44,7 @@
           @row-click="handleTableRowClick"
           ref="sensorTableRef"
         >
-          <el-table-column prop="id" label="ID" />
+          <el-table-column prop="id" label="ID"  width="50" />
           <!-- <el-table-column prop="name" label="Name"/> -->
           <el-table-column prop="name" label="Name">
             <template #default="scope">
@@ -98,13 +115,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, reactive, computed, watch, nextTick } from 'vue'
+import { findAll } from '@/api/jsonApi'
+import { vehicle_anchor_patch, vehicle_anchor_get } from '@/api/api'
+import gostore from '@/services/governance-store'
 
 const vehicleImage = 'http://localhost:8083/apps/systemanage/img/st_car.jpg'
 
 const physicalData = reactive([
-  { param: 'Length', value: '4.3 m' },
-  { param: 'Width', value: '2.1 m' },
-  { param: 'Height', value: '2.6 m' }
+  { param: 'Length', value: '4.3', unit: 'm' },
+  { param: 'Width', value: '2.1', unit: 'm' },
+  { param: 'Height', value: '2.6', unit: 'm' }
 ])
 
 interface SensorPoint {
@@ -150,8 +170,67 @@ const updateImageSize = () => {
   }
 }
 
-const onPhysicalChange = () => {
-  updateImageSize()
+// 处理输入事件
+const handleInput = (row, value) => {
+  // 只允许数字、小数点和负号
+  let cleanedValue = value.replace(/[^0-9.-]/g, '')
+  
+  // 处理多个小数点的情况
+  if (cleanedValue.split('.').length > 2) {
+    const parts = cleanedValue.split('.')
+    cleanedValue = parts[0] + '.' + parts.slice(1).join('')
+  }
+  
+  // 限制小数位数（可以根据需要调整）
+  if (cleanedValue.includes('.')) {
+    const parts = cleanedValue.split('.')
+    if (parts[1].length > 2) {
+      cleanedValue = `${parts[0]}.${parts[1].slice(0, 2)}`
+    }
+  }
+  
+  // 更新值
+  row.value = cleanedValue
+  
+  // 触发父组件的变更事件
+  onPhysicalChange()
+}
+
+// 输入验证
+const validateInput = (row) => {
+  const value = parseFloat(row.value)
+  
+  // 检查是否为有效数字
+  if (row.value && isNaN(value)) {
+    row.value = ''
+    return
+  }
+  
+  // 检查范围限制
+  if (row.min !== undefined && value < row.min) {
+    row.value = row.min.toString()
+  } else if (row.max !== undefined && value > row.max) {
+    row.value = row.max.toString()
+  }
+}
+
+// 父组件变更事件
+const onPhysicalChange = async() => {
+  
+  await updataAnchors()
+}
+
+const updataAnchors = async () => {
+  const anchors = {
+    physicalDimension: physicalData,
+    sensorPoints: sensorData
+  }
+  const v_id = currentViewport.value.id
+  vehicle_anchor_patch(anchors).then(() => {
+    updateImageSize()
+  }).catch((err) => {
+    console.log(err, 'err')
+  })
 }
 
 function getIconStyle(sensor) {
@@ -323,7 +402,43 @@ const scrollToSensorIcon = (sensorId: number) => {
   });
 };
 
+const currentViewport = ref<any>(null)
+const queryCurrentDrivers = () => {
+  try {
+    findAll('/models/viewports', {'filter[using]': true}).then((res: any) => {
+      gostore.reset()
+      gostore.sync(res.data)
+      const datavalue = gostore.findAll('viewports')
+      if(datavalue.length > 0) {
+        currentViewport.value = datavalue[0]
+      }
+    }).catch((err: any) => {
+      console.log(err, 'err')
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const queryVehicleAnchor = () => {
+  vehicle_anchor_get().then((res: any) => {
+   if (res.data) {
+    if (res.data.physicalDimension) {
+      physicalData.splice(0, physicalData.length, ...res.data.physicalDimension)
+    }
+    if (res.data.sensorPoints) {
+      // 清空原数组并添加新数据
+      sensorData.splice(0, sensorData.length, ...res.data.sensorPoints)
+    }
+   }
+  }).catch((err: any) => {
+    console.log(err, 'err')
+  })
+}
+
 onMounted(() => {
+  queryCurrentDrivers()
+  queryVehicleAnchor()
   window.addEventListener('resize', updateImageSize)
   if (imageRef.value) {
     imageRef.value.onload = updateImageSize

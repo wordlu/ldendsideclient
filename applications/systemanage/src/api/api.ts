@@ -31,3 +31,22 @@ export function getMdData(query) {
     params: {}
   })
 }
+
+export function vehicle_anchor_patch(data:any) {
+  return request({
+    url: `http://10.86.14.25:8000/api/logger/models/viewports/1/vehicle_anchor`,
+    method: 'patch',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data
+  })
+}
+
+export function vehicle_anchor_get() {
+  return request({
+    url: `http://10.86.14.25:8000/api/logger/models/viewports/1/vehicle_anchor`,
+    method: 'get',
+    params: {}
+  })
+}
