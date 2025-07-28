@@ -55,22 +55,23 @@
 
     <!-- 右侧 -->
     <div class="right-panel" ref="rightPanelRef">
-      <div class="vehicle-area">
+      <div class="vehicle-area" style="display: flex; align-items: flex-start;">
         <div class="vertical-ruler" :style="{ height: imageSize.height + 'px', width: '32px' }">
+          <div v-for="(tick, idx) in rulerSubTicks" :key="'sub-'+idx" class="ruler-subtick" :style="{ top: tick.top + 'px' }"></div>
           <div v-for="tick in rulerTicks" :key="tick.value" class="ruler-tick" :style="{ top: tick.top + 'px' }">
-            <span v-if="tick.label" class="ruler-label left-label" :class="{ 'zero-tick': tick.value === '0.00', 'edge-tick': tick.isEdge }">{{ tick.label }}</span>
-            <div class="ruler-line" :class="{ 'major-tick-line': tick.isMajor, 'edge-tick-line': tick.isEdge }"></div>
+            <span v-if="tick.label" class="ruler-label left-label" :class="{ 'zero-tick': tick.value === '0.00' }">{{ tick.label }}</span>
+            <div class="ruler-line" :class="{ 'major-tick-line': tick.isMajor }"></div>
           </div>
         </div>
-        <div class="vehicle-main">
+        <div class="vehicle-main" style="display: flex; flex-direction: column;">
           <div class="horizontal-ruler" :style="{ width: imageSize.width + 'px', height: '32px' }">
+            <div v-for="(tick, idx) in horizontalRulerSubTicks" :key="'hsub-'+idx" class="ruler-subtick-horizontal" :style="{ left: tick.left + 'px' }"></div>
             <div v-for="tick in horizontalRulerTicks" :key="tick.value" class="ruler-tick-horizontal" :style="{ left: tick.left + 'px' }">
-              <span v-if="tick.label" class="ruler-label-horizontal" :class="{ 'zero-tick': tick.value === '0.00', 'edge-tick': tick.isEdge }">{{ tick.label }}</span>
-              <div class="ruler-line-horizontal" :class="{ 'major-tick-line': tick.isMajor, 'edge-tick-line': tick.isEdge }"></div>
+              <span v-if="tick.label" class="ruler-label-horizontal" :class="{ 'zero-tick': tick.value === '0.00' }">{{ tick.label }}</span>
+              <div class="ruler-line-horizontal" :class="{ 'major-tick-line': tick.isMajor }"></div>
             </div>
           </div>
-          <div class="vehicle-container"
-            :style="{ width: imageSize.width + 'px', height: imageSize.height + 'px' }">
+          <div class="vehicle-container" :style="{ width: imageSize.width + 'px', height: imageSize.height + 'px' }">
             <div class="center-line-vertical" v-if="imageSize.height > 0" :style="{ height: imageSize.height + 'px', zIndex: 9, left: '50%', top: 0, position: 'absolute' }"></div>
             <div class="center-line-horizontal" v-if="imageSize.width > 0" :style="{ width: imageSize.width + 'px', zIndex: 9, top: '50%', left: 0, position: 'absolute' }"></div>
             <img class="vehicle-image" :src="vehicleImage" ref="imageRef" @load="updateImageSize"
@@ -226,6 +227,49 @@ const horizontalRulerTicks = computed(() => {
   return ticks;
 });
 
+// 纵向标尺小格子
+const rulerSubTicks = computed(() => {
+  if (!imageSize.value.height || length.value === 0) return [];
+  const ticks = [];
+  const total = length.value;
+  const half = total / 2;
+  const N = TICK_SEGMENTS;
+  const step = half / N;
+  const pxPerMeter = imageSize.value.height / total;
+  const center = imageSize.value.height / 2;
+  for (let i = -N; i < N; i++) {
+    const start = center - i * step * pxPerMeter;
+    const end = center - (i + 1) * step * pxPerMeter;
+    for (let j = 1; j < 10; j++) {
+      const t = j / 10;
+      const top = start + (end - start) * t;
+      ticks.push({ top });
+    }
+  }
+  return ticks;
+});
+// 横向标尺小格子
+const horizontalRulerSubTicks = computed(() => {
+  if (!imageSize.value.width || width.value === 0) return [];
+  const ticks = [];
+  const total = width.value;
+  const half = total / 2;
+  const N = TICK_SEGMENTS;
+  const step = half / N;
+  const pxPerMeter = imageSize.value.width / total;
+  const center = imageSize.value.width / 2;
+  for (let i = -N; i < N; i++) {
+    const start = center + i * step * pxPerMeter;
+    const end = center + (i + 1) * step * pxPerMeter;
+    for (let j = 1; j < 10; j++) {
+      const t = j / 10;
+      const left = start + (end - start) * t;
+      ticks.push({ left });
+    }
+  }
+  return ticks;
+});
+
 // 新增：处理表格行点击事件
 const handleTableRowClick = (row: SensorPoint) => {
   selectedSensorId.value = row.id;
@@ -340,26 +384,24 @@ watch(() => vehicleImage, () => {
   position: relative;
   overflow: hidden;
   background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #fff;
 }
-
 .vehicle-area {
   display: flex;
-  flex-direction: row;
   align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  min-height: 100vh;
-  background-color: #fff;
 }
 .vehicle-main {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 .vehicle-container {
   position: relative;
-  display: block;
-  background: #fff;
+  width: 100%;
+  height: 100%;
+  z-index: 50;
 }
 .vehicle-image {
   width: 100%;
@@ -413,7 +455,6 @@ watch(() => vehicleImage, () => {
   width: 100%;
   height: 32px;
   z-index: 100;
-  pointer-events: none;
 }
 .vertical-ruler {
   position: relative;
@@ -600,5 +641,21 @@ watch(() => vehicleImage, () => {
 }
 :deep(.selected-row:hover) {
   background-color: #d1e7ff !important; /* 悬停时的颜色 */
+}
+.ruler-subtick {
+  position: absolute;
+  left: 0;
+  width: 8px;
+  height: 1px;
+  background: #bbb;
+  z-index: 90;
+}
+.ruler-subtick-horizontal {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 8px;
+  background: #bbb;
+  z-index: 90;
 }
 </style>
