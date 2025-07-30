@@ -133,7 +133,7 @@ const physicalData = reactive([
   { param: 'Length', value: '4.3', unit: 'm' },
   { param: 'Width', value: '2.1', unit: 'm' },
   { param: 'Height', value: '2.6', unit: 'm' },
-  { param: 'Physical dimen', value: '0', unit: 'm' }
+  { param: 'Physical dimen', value: '1', unit: 'm' }
 ])
 
 interface SensorPoint {
@@ -243,13 +243,14 @@ const updataAnchors = async () => {
 
 // 坐标转换函数：将固定坐标系转换为基于移动中心点的坐标系
 const convertToCenterBasedCoordinates = (sensor) => {
-  if (!length.value || !physicalDimen.value) return sensor;
+  if (!length.value) return sensor;
   
-  // 计算中心点相对于图片中心的偏移量（以米为单位）
-  const centerOffsetInMeters = (length.value / 2) - physicalDimen.value;
+  // 计算X轴位置相对于图片中心的偏移量（以米为单位）
+  const physicalDimenValue = physicalDimen.value || 0;
+  const centerOffsetInMeters = (length.value / 2) - physicalDimenValue;
   
-  // 转换Y坐标：从固定坐标系转换为基于中心点的坐标系
-  // 在固定坐标系中，图片中心是0，现在横轴位置是0
+  // 转换Y坐标：从固定坐标系转换为基于X轴的坐标系
+  // 在固定坐标系中，图片中心是0，现在X轴位置是0
   // 注意：Y轴方向是上正下负
   const convertedY = sensor.y - centerOffsetInMeters;
   
@@ -304,20 +305,19 @@ const rulerTicks = computed(() => {
     const top = center - i * step * pxPerMeter; // 标尺位置固定
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     
-    // 计算基于横轴位置的数值，上正下负
-    // 根据length值动态计算坐标范围
+    // 根据Physical dimen调整坐标计算
     let displayValue;
     if (i === 0) {
       // 中心点（横轴位置）显示0
       displayValue = 0;
     } else if (i < 0) {
-      // 上方区域：显示负值 0 到 -length/2
-      const maxNegative = length.value / 2; // 最大负值
+      // 上方区域：显示负值 0 到 -Physical dimen
+      const maxNegative = physicalDimen.value || 0; // 最大负值
       const negativeStep = maxNegative / TICK_SEGMENTS;
       displayValue = -(Math.abs(i) * negativeStep);
     } else {
-      // 下方区域：显示正值 0 到 length/2
-      const maxPositive = length.value / 2; // 最大正值
+      // 下方区域：显示正值 0 到 length-Physical dimen
+      const maxPositive = length.value - (physicalDimen.value || 0); // 最大正值
       const positiveStep = maxPositive / TICK_SEGMENTS;
       displayValue = i * positiveStep;
     }
@@ -562,11 +562,16 @@ watch(() => vehicleImage, () => {
 
 // 新增：计算中心点 Y 轴位置
 const getCenterDotTop = () => {
-  if (!imageSize.value.height || !length.value || !physicalDimen.value) return imageSize.value.height / 2;
+  if (!imageSize.value.height || !length.value) return imageSize.value.height / 2;
   
-  // 计算中心点位置：从图片底部向上 physicalDimen 的距离
+  // 计算X轴位置：根据Physical dimen调整
+  // 当Physical dimen=0时，X轴在图片中心
+  // 当Physical dimen>0时，X轴向上移动
   const pxPerMeter = imageSize.value.height / length.value;
-  const centerY = imageSize.value.height - (physicalDimen.value * pxPerMeter);
+  const physicalDimenValue = physicalDimen.value || 0;
+  
+  // X轴位置：从图片底部向上 physicalDimen 的距离
+  const centerY = imageSize.value.height - (physicalDimenValue * pxPerMeter);
   
   return centerY;
 };
