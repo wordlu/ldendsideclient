@@ -250,6 +250,7 @@ const convertToCenterBasedCoordinates = (sensor) => {
   
   // 转换Y坐标：从固定坐标系转换为基于中心点的坐标系
   // 在固定坐标系中，图片中心是0，现在横轴位置是0
+  // 注意：Y轴方向是上正下负
   const convertedY = sensor.y - centerOffsetInMeters;
   
   return {
@@ -269,9 +270,9 @@ function getIconStyle(sensor) {
   // 转换传感器坐标
   const convertedSensor = convertToCenterBasedCoordinates(sensor);
   
-  // x: 右为正，左为负；y: 下为正，上为负
+  // x: 右为正，左为负；y: 上为正，下为负
   const left = centerX + (convertedSensor.x || 0) * pxPerMeterX;
-  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY;
+  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY; // 上正下负
   return {
     left: `${left}px`,
     top: `${top}px`,
@@ -303,20 +304,21 @@ const rulerTicks = computed(() => {
     const top = center - i * step * pxPerMeter; // 标尺位置固定
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     
-    // 计算基于横轴位置的数值
+    // 计算基于横轴位置的数值，上正下负
+    // 根据length值动态计算坐标范围
     let displayValue;
     if (i === 0) {
       // 中心点（横轴位置）显示0
       displayValue = 0;
     } else if (i < 0) {
-      // 负轴：从0到-Physical dimen
-      const negativeRange = physicalDimen.value || 0;
-      const negativeStep = negativeRange / TICK_SEGMENTS;
+      // 上方区域：显示负值 0 到 -length/2
+      const maxNegative = length.value / 2; // 最大负值
+      const negativeStep = maxNegative / TICK_SEGMENTS;
       displayValue = -(Math.abs(i) * negativeStep);
     } else {
-      // 正轴：从0到Length-Physical dimen
-      const positiveRange = length.value - (physicalDimen.value || 0);
-      const positiveStep = positiveRange / TICK_SEGMENTS;
+      // 下方区域：显示正值 0 到 length/2
+      const maxPositive = length.value / 2; // 最大正值
+      const positiveStep = maxPositive / TICK_SEGMENTS;
       displayValue = i * positiveStep;
     }
     
@@ -340,7 +342,7 @@ const horizontalRulerTicks = computed(() => {
   const pxPerMeter = imageSize.value.width / total;
   const center = imageSize.value.width / 2; // 水平标尺中心固定
   for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
-    const value = Math.abs(i * step);
+    const value = -i * (width.value / 2 / TICK_SEGMENTS); // 左正右负：根据width值动态计算
     const left = center + i * step * pxPerMeter;
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     ticks.push({
