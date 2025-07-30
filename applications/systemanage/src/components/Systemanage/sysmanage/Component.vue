@@ -90,11 +90,18 @@
           </div>
           <div class="vehicle-container" :style="{ width: imageSize.width + 'px', height: imageSize.height + 'px' }">
             <div class="center-line-vertical" v-if="imageSize.height > 0" :style="{ height: imageSize.height + 'px', zIndex: 9, left: '50%', top: 0, position: 'absolute' }"></div>
-            <div class="center-line-horizontal" v-if="imageSize.width > 0" :style="{ width: imageSize.width + 'px', zIndex: 9, top: '50%', left: 0, position: 'absolute' }"></div>
+            <div class="center-line-horizontal" v-if="imageSize.width > 0" :style="{ width: imageSize.width + 'px', zIndex: 9, top: getCenterDotTop() + 'px', left: 0, position: 'absolute' }"></div>
             <img class="vehicle-image" :src="vehicleImage" ref="imageRef" @load="updateImageSize"
               style="width:100%;height:100%;object-fit:contain;display:block;" />
             <div class="vehicle-center-dot"
-              :style="{ left: imageSize.width / 2 + 'px', top: imageSize.height / 2 + 'px', transform: 'translate(-50%, -50%)', zIndex: 10, pointerEvents: 'none', position: 'absolute' }"
+              :style="{ 
+                left: imageSize.width / 2 + 'px', 
+                top: getCenterDotTop() + 'px', 
+                transform: 'translate(-50%, -50%)', 
+                zIndex: 10, 
+                pointerEvents: 'none', 
+                position: 'absolute' 
+              }"
             ></div>
             <div
               v-for="(sensor, index) in sensorData"
@@ -125,7 +132,8 @@ const vehicleImage = 'http://localhost:8083/apps/systemanage/img/st_car.jpg'
 const physicalData = reactive([
   { param: 'Length', value: '4.3', unit: 'm' },
   { param: 'Width', value: '2.1', unit: 'm' },
-  { param: 'Height', value: '2.6', unit: 'm' }
+  { param: 'Height', value: '2.6', unit: 'm' },
+  { param: 'Physical dimen', value: '0', unit: 'm' }
 ])
 
 interface SensorPoint {
@@ -233,16 +241,37 @@ const updataAnchors = async () => {
   })
 }
 
+// 坐标转换函数：将固定坐标系转换为基于移动中心点的坐标系
+const convertToCenterBasedCoordinates = (sensor) => {
+  if (!length.value || !physicalDimen.value) return sensor;
+  
+  // 计算中心点相对于图片中心的偏移量（以米为单位）
+  const centerOffsetInMeters = (length.value / 2) - physicalDimen.value;
+  
+  // 转换Y坐标：从固定坐标系转换为基于中心点的坐标系
+  // 在固定坐标系中，图片中心是0，现在横轴位置是0
+  const convertedY = sensor.y - centerOffsetInMeters;
+  
+  return {
+    ...sensor,
+    y: convertedY
+  };
+};
+
 function getIconStyle(sensor) {
-  // 以图片中心为(0,0)
+  // 以移动的中心点为(0,0)
   if (!imageSize.value.width || !imageSize.value.height || !width.value || !length.value) return {};
   const pxPerMeterX = imageSize.value.width / width.value;
   const pxPerMeterY = imageSize.value.height / length.value;
   const centerX = imageSize.value.width / 2;
-  const centerY = imageSize.value.height / 2;
+  const centerY = getCenterDotTop(); // 使用移动的中心点作为0,0点
+  
+  // 转换传感器坐标
+  const convertedSensor = convertToCenterBasedCoordinates(sensor);
+  
   // x: 右为正，左为负；y: 下为正，上为负
-  const left = centerX + (sensor.x || 0) * pxPerMeterX;
-  const top = centerY - (sensor.y || 0) * pxPerMeterY;
+  const left = centerX + (convertedSensor.x || 0) * pxPerMeterX;
+  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY;
   return {
     left: `${left}px`,
     top: `${top}px`,
@@ -258,6 +287,7 @@ const getPhysicalValue = (param: string) => {
 const length = computed(() => getPhysicalValue('Length'))
 const width = computed(() => getPhysicalValue('Width'))
 const height = computed(() => getPhysicalValue('Height'))
+const physicalDimen = computed(() => getPhysicalValue('Physical dimen'))
 
 const TICK_SEGMENTS = 3; // 分三段
 const rulerTicks = computed(() => {
@@ -267,14 +297,32 @@ const rulerTicks = computed(() => {
   const half = total / 2;
   const step = half / TICK_SEGMENTS;
   const pxPerMeter = imageSize.value.height / total;
-  const center = imageSize.value.height / 2;
+  const center = imageSize.value.height / 2; // 标尺位置固定
+  
   for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
-    const value = Math.abs(i * step);
-    const top = center - i * step * pxPerMeter;
+    const top = center - i * step * pxPerMeter; // 标尺位置固定
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
+    
+    // 计算基于横轴位置的数值
+    let displayValue;
+    if (i === 0) {
+      // 中心点（横轴位置）显示0
+      displayValue = 0;
+    } else if (i < 0) {
+      // 负轴：从0到-Physical dimen
+      const negativeRange = physicalDimen.value || 0;
+      const negativeStep = negativeRange / TICK_SEGMENTS;
+      displayValue = -(Math.abs(i) * negativeStep);
+    } else {
+      // 正轴：从0到Length-Physical dimen
+      const positiveRange = length.value - (physicalDimen.value || 0);
+      const positiveStep = positiveRange / TICK_SEGMENTS;
+      displayValue = i * positiveStep;
+    }
+    
     ticks.push({
-      value: value.toFixed(2),
-      label: isMajor ? value.toFixed(2) : '',
+      value: displayValue.toFixed(2),
+      label: isMajor ? displayValue.toFixed(2) : '',
       top,
       isMajor,
       isZero: i === 0
@@ -290,7 +338,7 @@ const horizontalRulerTicks = computed(() => {
   const half = total / 2;
   const step = half / TICK_SEGMENTS;
   const pxPerMeter = imageSize.value.width / total;
-  const center = imageSize.value.width / 2;
+  const center = imageSize.value.width / 2; // 水平标尺中心固定
   for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
     const value = Math.abs(i * step);
     const left = center + i * step * pxPerMeter;
@@ -315,7 +363,7 @@ const rulerSubTicks = computed(() => {
   const N = TICK_SEGMENTS;
   const step = half / N;
   const pxPerMeter = imageSize.value.height / total;
-  const center = imageSize.value.height / 2;
+  const center = imageSize.value.height / 2; // 标尺位置固定
   for (let i = -N; i < N; i++) {
     const start = center - i * step * pxPerMeter;
     const end = center - (i + 1) * step * pxPerMeter;
@@ -509,6 +557,17 @@ watch(() => vehicleImage, () => {
     imageRef.value.onload = updateImageSize
   }
 })
+
+// 新增：计算中心点 Y 轴位置
+const getCenterDotTop = () => {
+  if (!imageSize.value.height || !length.value || !physicalDimen.value) return imageSize.value.height / 2;
+  
+  // 计算中心点位置：从图片底部向上 physicalDimen 的距离
+  const pxPerMeter = imageSize.value.height / length.value;
+  const centerY = imageSize.value.height - (physicalDimen.value * pxPerMeter);
+  
+  return centerY;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -532,7 +591,7 @@ watch(() => vehicleImage, () => {
 }
 
 .physical-card {
-  height:240px; 
+  height: 270px; 
   overflow: auto;
   margin-bottom: 10px; 
 }
