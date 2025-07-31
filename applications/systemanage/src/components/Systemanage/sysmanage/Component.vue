@@ -243,15 +243,13 @@ const updataAnchors = async () => {
 
 // 坐标转换函数：将固定坐标系转换为基于移动中心点的坐标系
 const convertToCenterBasedCoordinates = (sensor) => {
-  if (!length.value) return sensor;
+  if (!length.value || !physicalDimen.value) return sensor;
   
-  // 计算X轴位置相对于图片中心的偏移量（以米为单位）
-  const physicalDimenValue = physicalDimen.value || 0;
-  const centerOffsetInMeters = (length.value / 2) - physicalDimenValue;
+  // 计算中心点相对于图片中心的偏移量（以米为单位）
+  const centerOffsetInMeters = (length.value / 2) - physicalDimen.value;
   
-  // 转换Y坐标：从固定坐标系转换为基于X轴的坐标系
-  // 在固定坐标系中，图片中心是0，现在X轴位置是0
-  // 注意：Y轴方向是上正下负
+  // 转换Y坐标：从固定坐标系转换为基于中心点的坐标系
+  // 在固定坐标系中，图片中心是0，现在横轴位置是0
   const convertedY = sensor.y - centerOffsetInMeters;
   
   return {
@@ -271,9 +269,9 @@ function getIconStyle(sensor) {
   // 转换传感器坐标
   const convertedSensor = convertToCenterBasedCoordinates(sensor);
   
-  // x: 右为正，左为负；y: 上为正，下为负
+  // x: 右为正，左为负；y: 下为正，上为负
   const left = centerX + (convertedSensor.x || 0) * pxPerMeterX;
-  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY; // 上正下负
+  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY;
   return {
     left: `${left}px`,
     top: `${top}px`,
@@ -292,44 +290,43 @@ const height = computed(() => getPhysicalValue('Height'))
 const physicalDimen = computed(() => getPhysicalValue('Physical dimen'))
 
 const TICK_SEGMENTS = 3; // 分三段
+const METER_PER_TICK = 1; // 每1米一个刻度
 const rulerTicks = computed(() => {
   if (!imageSize.value.height || length.value === 0) return [];
   const ticks = [];
-  const total = length.value;
-  const half = total / 2;
-  const step = half / TICK_SEGMENTS;
-  const pxPerMeter = imageSize.value.height / total;
-  const center = imageSize.value.height / 2; // 标尺位置固定
+  const pxPerMeter = imageSize.value.height / length.value;
   
-  for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
-    const top = center - i * step * pxPerMeter; // 标尺位置固定
-    const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
-    
-    // 根据Physical dimen调整坐标计算
-    let displayValue;
-    if (i === 0) {
-      // 中心点（横轴位置）显示0
-      displayValue = 0;
-    } else if (i < 0) {
-      // 上方区域：显示负值 0 到 -Physical dimen
-      const maxNegative = physicalDimen.value || 0; // 最大负值
-      const negativeStep = maxNegative / TICK_SEGMENTS;
-      displayValue = -(Math.abs(i) * negativeStep);
-    } else {
-      // 下方区域：显示正值 0 到 length-Physical dimen
-      const maxPositive = length.value - (physicalDimen.value || 0); // 最大正值
-      const positiveStep = maxPositive / TICK_SEGMENTS;
-      displayValue = i * positiveStep;
-    }
+  // 计算刻度数量：根据图片长度计算，不受Physical dimen影响
+  const totalTicks = Math.ceil(length.value / METER_PER_TICK);
+  
+  // 生成刻度，从0开始到length，始终紧贴图片长度
+  for (let i = 0; i <= totalTicks; i++) {
+    const value = i * METER_PER_TICK;
+    const top = imageSize.value.height - (value * pxPerMeter); // 从图片底部开始计算
     
     ticks.push({
-      value: displayValue.toFixed(2),
-      label: isMajor ? displayValue.toFixed(2) : '',
+      value: value.toFixed(2),
+      label: value.toFixed(2), // 每个刻度都标注数字
       top,
-      isMajor,
+      isMajor: true,
       isZero: i === 0
     });
   }
+  
+  // 添加顶端刻度（如果length不是整数）
+  if (length.value > 0 && length.value !== Math.floor(length.value)) {
+    const topValue = length.value;
+    const topTop = imageSize.value.height - (topValue * pxPerMeter);
+    
+    ticks.push({
+      value: topValue.toFixed(2),
+      label: topValue.toFixed(2), // 顶端刻度标注数字
+      top: topTop,
+      isMajor: true,
+      isZero: false
+    });
+  }
+  
   return ticks;
 });
 
@@ -342,7 +339,7 @@ const horizontalRulerTicks = computed(() => {
   const pxPerMeter = imageSize.value.width / total;
   const center = imageSize.value.width / 2; // 水平标尺中心固定
   for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
-    const value = -i * (width.value / 2 / TICK_SEGMENTS); // 左正右负：根据width值动态计算
+    const value = Math.abs(i * step);
     const left = center + i * step * pxPerMeter;
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     ticks.push({
@@ -360,21 +357,32 @@ const horizontalRulerTicks = computed(() => {
 const rulerSubTicks = computed(() => {
   if (!imageSize.value.height || length.value === 0) return [];
   const ticks = [];
-  const total = length.value;
-  const half = total / 2;
-  const N = TICK_SEGMENTS;
-  const step = half / N;
-  const pxPerMeter = imageSize.value.height / total;
-  const center = imageSize.value.height / 2; // 标尺位置固定
-  for (let i = -N; i < N; i++) {
-    const start = center - i * step * pxPerMeter;
-    const end = center - (i + 1) * step * pxPerMeter;
+  const pxPerMeter = imageSize.value.height / length.value;
+  
+  // 计算刻度数量：根据图片长度计算，不受Physical dimen影响
+  const totalTicks = Math.ceil(length.value / METER_PER_TICK);
+  
+  // 生成小格子，在每个1米区间内
+  for (let i = 0; i < totalTicks; i++) {
+    const start = imageSize.value.height - ((i + 1) * METER_PER_TICK * pxPerMeter);
+    const end = imageSize.value.height - (i * METER_PER_TICK * pxPerMeter);
     for (let j = 1; j < 10; j++) {
       const t = j / 10;
       const top = start + (end - start) * t;
       ticks.push({ top });
     }
   }
+  
+  // 添加顶端小格子（如果length不是整数）
+  if (length.value > 0 && length.value !== Math.floor(length.value)) {
+    const lastIntegerTick = Math.floor(length.value);
+    const start = imageSize.value.height - (length.value * pxPerMeter);
+    const end = imageSize.value.height - (lastIntegerTick * pxPerMeter);
+    // 顶端小格子不细分，只添加一个
+    const top = start + (end - start) * 0.5; // 取中间位置
+    ticks.push({ top });
+  }
+  
   return ticks;
 });
 // 横向标尺小格子
@@ -562,16 +570,11 @@ watch(() => vehicleImage, () => {
 
 // 新增：计算中心点 Y 轴位置
 const getCenterDotTop = () => {
-  if (!imageSize.value.height || !length.value) return imageSize.value.height / 2;
+  if (!imageSize.value.height || !length.value || !physicalDimen.value) return imageSize.value.height / 2;
   
-  // 计算X轴位置：根据Physical dimen调整
-  // 当Physical dimen=0时，X轴在图片中心
-  // 当Physical dimen>0时，X轴向上移动
+  // 计算中心点位置：从图片底部向上 physicalDimen 的距离
   const pxPerMeter = imageSize.value.height / length.value;
-  const physicalDimenValue = physicalDimen.value || 0;
-  
-  // X轴位置：从图片底部向上 physicalDimen 的距离
-  const centerY = imageSize.value.height - (physicalDimenValue * pxPerMeter);
+  const centerY = imageSize.value.height - (physicalDimen.value * pxPerMeter);
   
   return centerY;
 };
