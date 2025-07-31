@@ -11,7 +11,7 @@
       <el-card class="physical-card" shadow="never">
         <div class="card-title">Physical dimension</div>
         <el-table :data="physicalData" style="width: 100%" size="small" border>
-          <el-table-column prop="param" label="Parameter" width="100" />
+          <el-table-column prop="param" label="Parameter" width="150" />
           <el-table-column prop="value" label="Value">
             <template #default="scope">
               <!-- <el-input v-model="scope.row.value" size="small" @input="onPhysicalChange" /> -->
@@ -116,7 +116,10 @@
           </div>
         </div>
       </div>
+      <!-- 图例 -->
+      <AxisLegend />
     </div>
+
   </div>
 </template>
 
@@ -126,6 +129,7 @@ import { findAll } from '@/api/jsonApi'
 import { vehicle_anchor_patch, vehicle_anchor_get } from '@/api/api'
 import gostore from '@/services/governance-store'
 import { ElMessage } from 'element-plus'
+import AxisLegend from './AxisLegend.vue'
 
 const vehicleImage = 'http://localhost:8083/apps/systemanage/img/st_car.jpg'
 
@@ -133,7 +137,7 @@ const physicalData = reactive([
   { param: 'Length', value: '4.3', unit: 'm' },
   { param: 'Width', value: '2.1', unit: 'm' },
   { param: 'Height', value: '2.6', unit: 'm' },
-  { param: 'Physical dimen', value: '1', unit: 'm' }
+  { param: 'Rear Overhang Length', value: '1', unit: 'm' }
 ])
 
 interface SensorPoint {
@@ -145,18 +149,18 @@ interface SensorPoint {
 }
 
 const sensorData: SensorPoint[] = reactive([
-  { id: 1, name: 'p1', x: -1.05, y: 0.65, z: 0 },
-  { id: 2, name: 'p2', x: 1.05, y: 0.65, z: 0 },
-  { id: 3, name: 'p3', x: 0.7, y: 1.95, z: 0 },
-  { id: 4, name: 'p4', x: -0.7, y: 1.95, z: 0 },
-  { id: 5, name: 'p5', x: 0.85, y: -1.95, z: 0 },
-  { id: 6, name: 'p6', x: -0.85, y: -1.95, z: 0 },
-  { id: 7, name: 'p7', x: 0, y: 2.15, z: 0 },
-  { id: 8, name: 'p8', x: 0, y: -2.15, z: 0 },
-  { id: 9, name: 'p9', x: -0.85, y:1.33, z: 0 },
-  { id: 10, name: 'p10', x: 0.85, y: 1.33, z: 0 },
-  { id: 11, name: 'p11', x: 0.94, y: -1.14, z: 0 },
-  { id: 12, name: 'p12', x: -0.94, y: -1.14, z: 0 },
+  { id: 1, name: 'p1', x: -1.05, y: 1.79, z: 0 },
+  { id: 2, name: 'p2', x: 1.05, y: 1.79, z: 0 },
+  { id: 3, name: 'p3', x: 0.7, y: 3.1, z: 0 },
+  { id: 4, name: 'p4', x: -0.7, y: 3.1, z: 0 },
+  { id: 5, name: 'p5', x: 0.85, y: -0.78, z: 0 },
+  { id: 6, name: 'p6', x: -0.85, y: -0.78, z: 0 },
+  { id: 7, name: 'p7', x: 0, y: 3.3, z: 0 },
+  { id: 8, name: 'p8', x: 0, y: -1, z: 0 },
+  { id: 9, name: 'p9', x: -0.85, y:2.5, z: 0 },
+  { id: 10, name: 'p10', x: 0.85, y: 2.5, z: 0 },
+  { id: 11, name: 'p11', x: 0.94, y: -0.14, z: 0 },
+  { id: 12, name: 'p12', x: -0.94, y: -0.14, z: 0 },
 ])
 
 const imageRef = ref<HTMLImageElement | null>(null)
@@ -241,37 +245,30 @@ const updataAnchors = async () => {
   })
 }
 
-// 坐标转换函数：将固定坐标系转换为基于移动中心点的坐标系
+// 坐标转换函数：将固定坐标系转换为基于X轴的坐标系
 const convertToCenterBasedCoordinates = (sensor) => {
-  if (!length.value || !physicalDimen.value) return sensor;
+  if (!length.value) return sensor;
   
-  // 计算中心点相对于图片中心的偏移量（以米为单位）
-  const centerOffsetInMeters = (length.value / 2) - physicalDimen.value;
-  
-  // 转换Y坐标：从固定坐标系转换为基于中心点的坐标系
-  // 在固定坐标系中，图片中心是0，现在横轴位置是0
-  const convertedY = sensor.y - centerOffsetInMeters;
-  
-  return {
-    ...sensor,
-    y: convertedY
-  };
+  // 传感器坐标已经是基于新坐标系的，不需要转换
+  // 直接返回原始坐标
+  return sensor;
 };
 
 function getIconStyle(sensor) {
-  // 以移动的中心点为(0,0)
+  // 以X轴位置为(0,0)原点
   if (!imageSize.value.width || !imageSize.value.height || !width.value || !length.value) return {};
   const pxPerMeterX = imageSize.value.width / width.value;
   const pxPerMeterY = imageSize.value.height / length.value;
   const centerX = imageSize.value.width / 2;
-  const centerY = getCenterDotTop(); // 使用移动的中心点作为0,0点
+  const xAxisTop = getCenterDotTop(); // 使用X轴位置作为0,0点
   
-  // 转换传感器坐标
-  const convertedSensor = convertToCenterBasedCoordinates(sensor);
+  // 传感器坐标直接使用，不需要转换
+  const sensorX = sensor.x || 0;
+  const sensorY = sensor.y || 0;
   
-  // x: 右为正，左为负；y: 下为正，上为负
-  const left = centerX + (convertedSensor.x || 0) * pxPerMeterX;
-  const top = centerY - (convertedSensor.y || 0) * pxPerMeterY;
+  // x: 左为正，右为负；y: 上为正，下为负
+  const left = centerX - sensorX * pxPerMeterX; // 左正右负，所以用减号
+  const top = xAxisTop - sensorY * pxPerMeterY; // 上正下负
   return {
     left: `${left}px`,
     top: `${top}px`,
@@ -287,7 +284,7 @@ const getPhysicalValue = (param: string) => {
 const length = computed(() => getPhysicalValue('Length'))
 const width = computed(() => getPhysicalValue('Width'))
 const height = computed(() => getPhysicalValue('Height'))
-const physicalDimen = computed(() => getPhysicalValue('Physical dimen'))
+const physicalDimen = computed(() => getPhysicalValue('Rear Overhang Length'))
 
 const TICK_SEGMENTS = 3; // 分三段
 const METER_PER_TICK = 1; // 每1米一个刻度
@@ -295,14 +292,22 @@ const rulerTicks = computed(() => {
   if (!imageSize.value.height || length.value === 0) return [];
   const ticks = [];
   const pxPerMeter = imageSize.value.height / length.value;
+  const physicalDimenValue = physicalDimen.value || 0;
   
-  // 计算刻度数量：根据图片长度计算，不受Physical dimen影响
-  const totalTicks = Math.ceil(length.value / METER_PER_TICK);
+  // 计算正轴和负轴的范围
+  const maxPositive = length.value - physicalDimenValue;
+  const maxNegative = physicalDimenValue;
   
-  // 生成刻度，从0开始到length，始终紧贴图片长度
-  for (let i = 0; i <= totalTicks; i++) {
+  // 计算正轴刻度数量
+  const positiveTicks = Math.ceil(maxPositive / METER_PER_TICK);
+  
+  // 计算X轴位置（0,0原点）
+  const xAxisTop = getCenterDotTop();
+  
+  // 生成正轴刻度（上方，从0到maxPositive）
+  for (let i = 0; i <= positiveTicks; i++) {
     const value = i * METER_PER_TICK;
-    const top = imageSize.value.height - (value * pxPerMeter); // 从图片底部开始计算
+    const top = xAxisTop - (value * pxPerMeter);
     
     ticks.push({
       value: value.toFixed(2),
@@ -313,15 +318,46 @@ const rulerTicks = computed(() => {
     });
   }
   
-  // 添加顶端刻度（如果length不是整数）
-  if (length.value > 0 && length.value !== Math.floor(length.value)) {
-    const topValue = length.value;
-    const topTop = imageSize.value.height - (topValue * pxPerMeter);
+  // 添加正轴顶端刻度（如果maxPositive不是整数）
+  if (maxPositive > 0 && maxPositive !== Math.floor(maxPositive)) {
+    const topValue = maxPositive;
+    const topTop = xAxisTop - (topValue * pxPerMeter);
     
     ticks.push({
       value: topValue.toFixed(2),
       label: topValue.toFixed(2), // 顶端刻度标注数字
       top: topTop,
+      isMajor: true,
+      isZero: false
+    });
+  }
+  
+  // 计算负轴刻度数量
+  const negativeTicks = Math.ceil(maxNegative / METER_PER_TICK);
+  
+  // 生成负轴刻度（下方，从0到-maxNegative）
+  for (let i = 1; i <= negativeTicks; i++) {
+    const value = -(i * METER_PER_TICK);
+    const top = xAxisTop + (i * METER_PER_TICK * pxPerMeter);
+    
+    ticks.push({
+      value: value.toFixed(2),
+      label: value.toFixed(2), // 每个刻度都标注数字
+      top,
+      isMajor: true,
+      isZero: false
+    });
+  }
+  
+  // 添加负轴顶端刻度（如果maxNegative不是整数）
+  if (maxNegative > 0 && maxNegative !== Math.floor(maxNegative)) {
+    const bottomValue = -maxNegative;
+    const bottomTop = xAxisTop + (maxNegative * pxPerMeter);
+    
+    ticks.push({
+      value: bottomValue.toFixed(2),
+      label: bottomValue.toFixed(2), // 底端刻度标注数字
+      top: bottomTop,
       isMajor: true,
       isZero: false
     });
@@ -339,7 +375,7 @@ const horizontalRulerTicks = computed(() => {
   const pxPerMeter = imageSize.value.width / total;
   const center = imageSize.value.width / 2; // 水平标尺中心固定
   for (let i = -TICK_SEGMENTS; i <= TICK_SEGMENTS; i++) {
-    const value = Math.abs(i * step);
+    const value = -i * step; // 左端为正数，右端为负数
     const left = center + i * step * pxPerMeter;
     const isMajor = i === 0 || Math.abs(i) === TICK_SEGMENTS;
     ticks.push({
@@ -358,14 +394,22 @@ const rulerSubTicks = computed(() => {
   if (!imageSize.value.height || length.value === 0) return [];
   const ticks = [];
   const pxPerMeter = imageSize.value.height / length.value;
+  const physicalDimenValue = physicalDimen.value || 0;
   
-  // 计算刻度数量：根据图片长度计算，不受Physical dimen影响
-  const totalTicks = Math.ceil(length.value / METER_PER_TICK);
+  // 计算X轴位置（0,0原点）
+  const xAxisTop = getCenterDotTop();
   
-  // 生成小格子，在每个1米区间内
-  for (let i = 0; i < totalTicks; i++) {
-    const start = imageSize.value.height - ((i + 1) * METER_PER_TICK * pxPerMeter);
-    const end = imageSize.value.height - (i * METER_PER_TICK * pxPerMeter);
+  // 计算正轴和负轴的范围
+  const maxPositive = length.value - physicalDimenValue;
+  const maxNegative = physicalDimenValue;
+  
+  // 计算正轴刻度数量
+  const positiveTicks = Math.ceil(maxPositive / METER_PER_TICK);
+  
+  // 生成正轴小格子（上方）
+  for (let i = 0; i < positiveTicks; i++) {
+    const start = xAxisTop - ((i + 1) * METER_PER_TICK * pxPerMeter);
+    const end = xAxisTop - (i * METER_PER_TICK * pxPerMeter);
     for (let j = 1; j < 10; j++) {
       const t = j / 10;
       const top = start + (end - start) * t;
@@ -373,12 +417,36 @@ const rulerSubTicks = computed(() => {
     }
   }
   
-  // 添加顶端小格子（如果length不是整数）
-  if (length.value > 0 && length.value !== Math.floor(length.value)) {
-    const lastIntegerTick = Math.floor(length.value);
-    const start = imageSize.value.height - (length.value * pxPerMeter);
-    const end = imageSize.value.height - (lastIntegerTick * pxPerMeter);
+  // 添加正轴顶端小格子（如果maxPositive不是整数）
+  if (maxPositive > 0 && maxPositive !== Math.floor(maxPositive)) {
+    const lastIntegerTick = Math.floor(maxPositive);
+    const start = xAxisTop - (maxPositive * pxPerMeter);
+    const end = xAxisTop - (lastIntegerTick * pxPerMeter);
     // 顶端小格子不细分，只添加一个
+    const top = start + (end - start) * 0.5; // 取中间位置
+    ticks.push({ top });
+  }
+  
+  // 计算负轴刻度数量
+  const negativeTicks = Math.ceil(maxNegative / METER_PER_TICK);
+  
+  // 生成负轴小格子（下方）
+  for (let i = 0; i < negativeTicks; i++) {
+    const start = xAxisTop + (i * METER_PER_TICK * pxPerMeter);
+    const end = xAxisTop + ((i + 1) * METER_PER_TICK * pxPerMeter);
+    for (let j = 1; j < 10; j++) {
+      const t = j / 10;
+      const top = start + (end - start) * t;
+      ticks.push({ top });
+    }
+  }
+  
+  // 添加负轴底端小格子（如果maxNegative不是整数）
+  if (maxNegative > 0 && maxNegative !== Math.floor(maxNegative)) {
+    const lastIntegerTick = Math.floor(maxNegative);
+    const start = xAxisTop + (lastIntegerTick * pxPerMeter);
+    const end = xAxisTop + (maxNegative * pxPerMeter);
+    // 底端小格子不细分，只添加一个
     const top = start + (end - start) * 0.5; // 取中间位置
     ticks.push({ top });
   }
