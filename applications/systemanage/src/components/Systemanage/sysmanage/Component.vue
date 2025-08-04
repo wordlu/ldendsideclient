@@ -74,10 +74,10 @@
     <div class="right-panel" ref="rightPanelRef">
       <div class="vehicle-area" style="display: flex; align-items: flex-start;">
         <div class="vertical-ruler" :style="{ height: imageSize.height + 'px', width: '32px' }">
-          <div v-for="(tick, idx) in rulerSubTicks" :key="'sub-'+idx" class="ruler-subtick" :style="{ top: tick.top + 'px' }"></div>
+          <!-- <div v-for="(tick, idx) in rulerSubTicks" :key="'sub-'+idx" class="ruler-subtick" :style="{ top: tick.top + 'px' }"></div> -->
           <div v-for="tick in rulerTicks" :key="tick.value" class="ruler-tick" :style="{ top: tick.top + 'px' }">
             <span v-if="tick.label" class="ruler-label left-label" :class="{ 'zero-tick': tick.value === '0.00' }">{{ tick.label }}</span>
-            <div class="ruler-line" :class="{ 'major-tick-line': tick.isMajor }"></div>
+            <!-- <div class="ruler-line" :class="{ 'major-tick-line': tick.isMajor }"></div> -->
           </div>
         </div>
         <div class="vehicle-main" style="display: flex; flex-direction: column;">
@@ -159,8 +159,8 @@ const sensorData: SensorPoint[] = reactive([
   { id: 8, name: 'p8', x: 0, y: -1, z: 0 },
   { id: 9, name: 'p9', x: -0.85, y:2.5, z: 0 },
   { id: 10, name: 'p10', x: 0.85, y: 2.5, z: 0 },
-  { id: 11, name: 'p11', x: 0.94, y: -0.14, z: 0 },
-  { id: 12, name: 'p12', x: -0.94, y: -0.14, z: 0 },
+  { id: 11, name: 'p11', x: 0.94, y: 0, z: 0 },
+  { id: 12, name: 'p12', x: -0.94, y: 0, z: 0 },
 ])
 
 const imageRef = ref<HTMLImageElement | null>(null)
@@ -298,65 +298,40 @@ const rulerTicks = computed(() => {
   const maxPositive = length.value - physicalDimenValue;
   const maxNegative = physicalDimenValue;
   
-  // 计算正轴刻度数量
-  const positiveTicks = Math.ceil(maxPositive / METER_PER_TICK);
-  
   // 计算X轴位置（0,0原点）
   const xAxisTop = getCenterDotTop();
   
-  // 生成正轴刻度（上方，从0到maxPositive）
-  for (let i = 0; i <= positiveTicks; i++) {
-    const value = i * METER_PER_TICK;
-    const top = xAxisTop - (value * pxPerMeter);
-    
-    ticks.push({
-      value: value.toFixed(2),
-      label: value.toFixed(2), // 每个刻度都标注数字
-      top,
-      isMajor: true,
-      isZero: i === 0
-    });
-  }
+  // 添加0,0刻度
+  ticks.push({
+    value: '0.00',
+    label: '0.00',
+    top: xAxisTop,
+    isMajor: true,
+    isZero: true
+  });
   
-  // 添加正轴顶端刻度（如果maxPositive不是整数）
-  if (maxPositive > 0 && maxPositive !== Math.floor(maxPositive)) {
+  // 添加正轴顶端刻度
+  if (maxPositive > 0) {
     const topValue = maxPositive;
     const topTop = xAxisTop - (topValue * pxPerMeter);
     
     ticks.push({
       value: topValue.toFixed(2),
-      label: topValue.toFixed(2), // 顶端刻度标注数字
+      label: topValue.toFixed(2),
       top: topTop,
       isMajor: true,
       isZero: false
     });
   }
   
-  // 计算负轴刻度数量
-  const negativeTicks = Math.ceil(maxNegative / METER_PER_TICK);
-  
-  // 生成负轴刻度（下方，从0到-maxNegative）
-  for (let i = 1; i <= negativeTicks; i++) {
-    const value = -(i * METER_PER_TICK);
-    const top = xAxisTop + (i * METER_PER_TICK * pxPerMeter);
-    
-    ticks.push({
-      value: value.toFixed(2),
-      label: value.toFixed(2), // 每个刻度都标注数字
-      top,
-      isMajor: true,
-      isZero: false
-    });
-  }
-  
-  // 添加负轴顶端刻度（如果maxNegative不是整数）
-  if (maxNegative > 0 && maxNegative !== Math.floor(maxNegative)) {
+  // 添加负轴顶端刻度
+  if (maxNegative > 0) {
     const bottomValue = -maxNegative;
     const bottomTop = xAxisTop + (maxNegative * pxPerMeter);
     
     ticks.push({
       value: bottomValue.toFixed(2),
-      label: bottomValue.toFixed(2), // 底端刻度标注数字
+      label: bottomValue.toFixed(2),
       top: bottomTop,
       isMajor: true,
       isZero: false
