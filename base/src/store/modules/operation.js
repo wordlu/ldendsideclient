@@ -214,6 +214,16 @@ const actions = {
             layout = state.Layouts[key];
           }
         }
+        micro_app[1].menus[0].pages.push({
+          "id": "ld66f11960jqwe",
+          "code": 'dbc',
+          "cnname": 'dbc',
+          "name": 'dbc',
+          route: '/dbc',
+          "hidden": true,
+          "pagePolicy": "pagesysmanagedec",
+          "menu": "f73WXGh41EADUfw",
+        })
         for(let i=0;i<micro_app.length;i++){
           let development;
           let isfind = false;

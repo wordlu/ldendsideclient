@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import SysmanagePage from '../components/Systemanage/sysmanage/Component.vue'
+import DbcPage from '../components/Systemanage/dbc/Component.vue'
 import SystemMonitorPage from '../components/Systemanage/SystemMonitor/Component.vue'
 import StatusMonitorPage from '../components/Systemanage/StatusMonitor/Component.vue'
 import LogsAnalyzePage from '../components/Systemanage/LogsAnalyze/Component.vue'
@@ -57,6 +58,10 @@ const router = createRouter({
         {
           path: 'logsanalyze',
           component: LogsAnalyzePage
+        }
+        {
+          path: 'dbc',
+          component: DbcPage
         }
       ]
     }

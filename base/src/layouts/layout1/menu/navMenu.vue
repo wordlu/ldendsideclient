@@ -165,6 +165,11 @@ export default {
                 title: '系统环境',
                 policy: "pagesystemanagesysmanage",
               },
+              {
+                index: '/systemanage/dbc',
+                title: 'dbc管理',
+                policy: "pagesystemanagedbc",
+              },
             ]
           },
           {
