@@ -143,6 +143,14 @@ module.exports = {
         pathRewrite:{
           '^/langs':'/langs'
         }
+      },
+      '/can_parser': {
+        target: 'http://10.86.14.25:18000',
+        changeOrigin: true,
+        ws: true,
+        pathRewrite:{
+          '^/can_parser':'/can_parser'
+        }
       }
     }
   },
