@@ -28,7 +28,13 @@
           </div>
           
           <div class="table-container">
-            <el-table :data="dbcList" style="width: 100%" v-loading="loading">
+            <el-table 
+              :data="dbcList" 
+              style="width: 100%" 
+              v-loading="loading"
+              @row-click="handleRowClick"
+              :row-class-name="() => 'clickable-row'"
+            >
               <el-table-column prop="name" label="文件名称" width="200" />
               <el-table-column prop="description" label="描述" />
               <el-table-column prop="upload_time" label="上传时间" width="180">
@@ -134,6 +140,235 @@
         </span>
       </template>
     </el-dialog>
+    
+    <!-- DBC Detail Dialog -->
+    <el-dialog v-model="showDetailDialog" title="DBC文件详情" width="1000px">
+      <div v-loading="detailLoading">
+        <div v-if="dbcDetail" class="detail-content">
+          <!-- 基本信息 -->
+          <el-descriptions title="基本信息" :column="2" border>
+            <el-descriptions-item label="文件名称">{{ dbcDetail.name }}</el-descriptions-item>
+            <el-descriptions-item label="描述">{{ dbcDetail.description || '无描述' }}</el-descriptions-item>
+            <el-descriptions-item label="上传时间">{{ formatTime(dbcDetail.upload_time) }}</el-descriptions-item>
+            <el-descriptions-item label="文件大小">{{ formatFileSize(dbcDetail.file_size) }}</el-descriptions-item>
+            <el-descriptions-item label="源文件名">{{ dbcDetail.source_filename }}</el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag :type="currentDbc === dbcDetail.name ? 'success' : 'info'" size="small">
+                {{ currentDbc === dbcDetail.name ? '当前使用' : '未使用' }}
+              </el-tag>
+            </el-descriptions-item>
+          </el-descriptions>
+          
+          <!-- 信号版本管理 -->
+          <div class="signal-version-section">
+            <div class="section-header">
+              <h3>信号版本管理</h3>
+              <div class="version-actions">
+                <el-button type="primary" size="small" @click="showSignalVersionDialog = true">
+                  创建信号版本
+                </el-button>
+              </div>
+            </div>
+            
+            <!-- 信号版本列表 -->
+            <div v-if="signalVersions.length > 0" class="version-list">
+              <el-table :data="signalVersions" size="small" style="width: 100%">
+                <el-table-column prop="name" label="版本名称" width="150" />
+                <el-table-column prop="description" label="描述" />
+                <el-table-column prop="signal_count" label="信号数量" width="100" />
+                <el-table-column label="状态" width="120">
+                  <template #default="scope">
+                    <el-tag 
+                      :type="currentSignalVersion === scope.row.name ? 'success' : 'info'"
+                      size="small"
+                    >
+                      {{ currentSignalVersion === scope.row.name ? '当前使用' : '未使用' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200">
+                  <template #default="scope">
+                    <el-button 
+                      size="small" 
+                      type="success" 
+                      @click="switchSignalVersion(scope.row.name)"
+                      :disabled="currentSignalVersion === scope.row.name"
+                    >
+                      应用
+                    </el-button>
+                    <el-button 
+                      size="small" 
+                      type="danger" 
+                      @click="deleteSignalVersion(scope.row.name)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            
+            <div v-else class="empty-versions">
+              <el-empty description="暂无信号版本" />
+            </div>
+          </div>
+          
+          <!-- 信号选择区域 -->
+          <div class="signal-selection-section">
+            <h3>信号选择</h3>
+            <div class="selection-info">
+              <span>已选择 {{ selectedSignals.length }} 个信号</span>
+              <div class="selection-actions">
+                <el-button 
+                  size="small" 
+                  @click="toggleAllNodes"
+                >
+                  {{ expandedKeys.length > 0 ? '折叠全部' : '展开全部' }}
+                </el-button>
+                <el-button 
+                  v-if="selectedSignals.length > 0" 
+                  size="small" 
+                  @click="selectedSignals = []"
+                >
+                  清空选择
+                </el-button>
+              </div>
+            </div>
+            
+            <div class="signal-tree-container">
+              <el-tree
+                ref="treeRef"
+                :data="signalTreeData"
+                show-checkbox
+                node-key="id"
+                :default-checked-keys="selectedSignals"
+                :expanded-keys="expandedKeys"
+                @check="handleSignalSelectionChange"
+                :props="{
+                  children: 'children',
+                  label: 'label'
+                }"
+                :expand-on-click-node="false"
+                :check-strictly="false"
+                :default-expand-all="false"
+              >
+                <template #default="{ node, data }">
+                  <el-tooltip
+                    v-if="hasNodeComment(data)"
+                    :content="getNodeComment(data)"
+                    :placement="getTooltipPlacement(data)"
+                    effect="light"
+                    :show-after="300"
+                    :hide-after="0"
+                    popper-class="signal-comment-tooltip"
+                    :popper-options="{
+                      modifiers: [
+                        {
+                          name: 'preventOverflow',
+                          options: {
+                            boundary: 'viewport',
+                            padding: 12
+                          }
+                        },
+                        {
+                          name: 'flip',
+                          options: {
+                            fallbackPlacements: getTooltipFallbackPlacements(data)
+                          }
+                        }
+                      ]
+                    }"
+                  >
+                    <span 
+                      class="custom-tree-node"
+                      :class="{ 
+                        'signal-node': data.id.startsWith('signal_'),
+                        'message-node': data.id.startsWith('msg_')
+                      }"
+                    >
+                      <i 
+                        :class="getNodeIcon(data)" 
+                        style="margin-right: 5px; color: #409eff;"
+                      ></i>
+                      <span>{{ node.label }}</span>
+                      <span v-if="data.id.startsWith('signal_')" class="signal-info">
+                        ({{ data.data?.signal?.start_bit || 0 }}:{{ data.data?.signal?.length || 0 }})
+                      </span>
+                      <i 
+                        v-if="hasNodeComment(data)" 
+                        class="el-icon-info" 
+                        style="margin-left: 5px; color: #909399; font-size: 12px;"
+                      ></i>
+                    </span>
+                  </el-tooltip>
+                  <span 
+                    v-else
+                    class="custom-tree-node"
+                    :class="{ 
+                      'signal-node': data.id.startsWith('signal_'),
+                      'message-node': data.id.startsWith('msg_')
+                    }"
+                  >
+                    <i 
+                      :class="getNodeIcon(data)" 
+                      style="margin-right: 5px; color: #409eff;"
+                    ></i>
+                    <span>{{ node.label }}</span>
+                    <span v-if="data.id.startsWith('signal_')" class="signal-info">
+                      ({{ data.data?.signal?.start_bit || 0 }}:{{ data.data?.signal?.length || 0 }})
+                    </span>
+                  </span>
+                </template>
+              </el-tree>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showDetailDialog = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    
+    <!-- Create Signal Version Dialog -->
+    <el-dialog v-model="showSignalVersionDialog" title="创建信号版本" width="600px">
+      <el-form :model="signalVersionForm" label-width="100px">
+        <el-form-item label="版本名称" required>
+          <el-input v-model="signalVersionForm.name" placeholder="请输入版本名称" />
+        </el-form-item>
+        <el-form-item label="版本描述">
+          <el-input 
+            v-model="signalVersionForm.description" 
+            type="textarea" 
+            placeholder="请输入版本描述"
+            :rows="3"
+          />
+        </el-form-item>
+        <el-form-item label="已选信号">
+          <div class="selected-signals-info">
+            <span>已选择 {{ selectedSignals.length }} 个信号</span>
+            <div v-if="selectedSignals.length > 0" class="selected-signals-list">
+              <el-tag 
+                v-for="signalId in selectedSignals" 
+                :key="signalId"
+                size="small"
+                style="margin: 2px"
+                type="info"
+              >
+                {{ getSignalDisplayName(signalId) }}
+              </el-tag>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showSignalVersionDialog = false">取消</el-button>
+          <el-button type="primary" @click="createSignalVersion">确认创建</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -147,10 +382,26 @@ import axios from 'axios'
 const dbcList = ref([])
 const currentDbc = ref('')
 const loading = ref(false)
+const detailLoading = ref(false)
+const dbcDetail = ref(null)
+
+// Signal version management
+const signalTreeData = ref([])
+const selectedSignals = ref([])
+const signalVersions = ref([])
+const currentSignalVersion = ref('')
+const signalVersionForm = reactive({
+  name: '',
+  description: ''
+})
+const treeRef = ref(null)
+const expandedKeys = ref([])
 
 // Dialog states
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
+const showDetailDialog = ref(false)
+const showSignalVersionDialog = ref(false)
 const uploading = ref(false)
 
 // Form refs
@@ -357,6 +608,336 @@ const submitEditDbc = async () => {
   }
 }
 
+// 获取DBC详情
+const getDbcDetail = async (dbcName: string) => {
+  detailLoading.value = true
+  try {
+    const response = await axios.get(`${API_BASE}/dbc/${dbcName}`)
+    if (response.data.status === 200) {
+      dbcDetail.value = response.data.data
+      console.log('DBC数据结构:', response.data.data.dbc)
+      // 构建信号树形数据 - 传递整个dbc对象
+      signalTreeData.value = buildSignalTree(response.data.data.dbc)
+      console.log('构建的树形数据:', signalTreeData.value)
+      // 加载信号版本列表
+      await loadSignalVersions(dbcName)
+      showDetailDialog.value = true
+    }
+  } catch (error) {
+    console.error('获取DBC详情失败:', error)
+    ElMessage.error('获取DBC详情失败')
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+// 处理表格行点击
+const handleRowClick = (row: any) => {
+  getDbcDetail(row.name)
+}
+
+// 构建信号树形数据
+const buildSignalTree = (dbcData: any) => {
+  if (!dbcData) return []
+  
+  console.log('开始构建树形数据，输入数据:', dbcData)
+  
+  // 构建三层结构：DBC -> Messages -> Signals
+  const result = Object.keys(dbcData).map(dbcName => {
+    const dbcInfo = dbcData[dbcName]
+    console.log(`处理DBC: ${dbcName}`, dbcInfo)
+    
+    const dbcNode = {
+      id: `dbc_${dbcName}`,
+      label: `${dbcName} (${dbcInfo.description || 'DBC文件'})`,
+      children: []
+    }
+    
+    if (dbcInfo.messages) {
+      console.log(`DBC ${dbcName} 的messages:`, dbcInfo.messages)
+      dbcNode.children = Object.keys(dbcInfo.messages).map(messageId => {
+        const message = dbcInfo.messages[messageId]
+        console.log(`处理消息 ${messageId}:`, message)
+        
+        const messageNode = {
+          id: `msg_${messageId}`,
+          label: `${message.name} (ID: ${messageId}, Size: ${message.size || message.length || 0})`,
+          children: [],
+          data: {
+            dbcName: dbcName,
+            messageId: messageId,
+            messageName: message.name,
+            message: message
+          }
+        }
+        
+        if (message.signals) {
+          console.log(`消息 ${messageId} 的signals:`, message.signals)
+          messageNode.children = Object.keys(message.signals).map(signalName => {
+            const signal = message.signals[signalName]
+            console.log(`处理信号 ${signalName}:`, signal)
+            
+            return {
+              id: `signal_${messageId}_${signalName}`,
+              label: `${signalName} (${signal.start_bit || 0}:${signal.length || 0})`,
+              data: {
+                dbcName: dbcName,
+                messageId: messageId,
+                messageName: message.name,
+                signal: signal
+              }
+            }
+          })
+        }
+        
+        return messageNode
+      })
+    }
+    
+    return dbcNode
+  })
+  
+  console.log('构建完成的树形数据:', result)
+  return result
+}
+
+// 加载信号版本列表
+const loadSignalVersions = async (dbcName: string) => {
+  try {
+    const response = await axios.get(`${API_BASE}/dbc/${dbcName}/signal-collections`)
+    if (response.data.status === 200) {
+      signalVersions.value = response.data.data
+    }
+  } catch (error) {
+    console.error('加载信号版本失败:', error)
+  }
+}
+
+// 创建信号版本
+const createSignalVersion = async () => {
+  if (!signalVersionForm.name.trim()) {
+    ElMessage.error('请输入版本名称')
+    return
+  }
+  
+  if (selectedSignals.value.length === 0) {
+    ElMessage.error('请选择至少一个信号')
+    return
+  }
+  
+  try {
+    const signalData = selectedSignals.value.map(signalId => {
+      // 解析信号ID: signal_${messageId}_${signalName}
+      const parts = signalId.replace('signal_', '').split('_')
+      const messageId = parts[0]
+      const signalName = parts.slice(1).join('_') // 处理信号名中可能包含下划线的情况
+      
+      // 在DBC数据中查找对应的消息和信号
+      let foundMessage = null
+      let foundSignal = null
+      
+      // 遍历所有DBC对象
+      for (const dbcName in dbcDetail.value.dbc) {
+        const dbcInfo = dbcDetail.value.dbc[dbcName]
+        if (dbcInfo.messages && dbcInfo.messages[messageId]) {
+          foundMessage = dbcInfo.messages[messageId]
+          if (foundMessage.signals && foundMessage.signals[signalName]) {
+            foundSignal = foundMessage.signals[signalName]
+            break
+          }
+        }
+      }
+      
+      if (!foundMessage || !foundSignal) {
+        console.error(`未找到信号: ${signalName} 在消息: ${messageId}`)
+        return null
+      }
+      
+      return {
+        name: signalName,
+        message: foundMessage.name,
+        dbc: Object.keys(dbcDetail.value.dbc)[0], // 获取DBC名称
+        ...foundSignal
+      }
+    }).filter(Boolean) // 过滤掉null值
+    
+    if (signalData.length === 0) {
+      ElMessage.error('没有找到有效的信号数据')
+      return
+    }
+    
+    const response = await axios.post(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections`, {
+      name: signalVersionForm.name,
+      description: signalVersionForm.description,
+      signals: signalData
+    })
+    
+    if (response.data.status === 200) {
+      ElMessage.success('信号版本创建成功')
+      showSignalVersionDialog.value = false
+      await loadSignalVersions(dbcDetail.value.name)
+      
+      // Reset form
+      signalVersionForm.name = ''
+      signalVersionForm.description = ''
+      selectedSignals.value = []
+    }
+  } catch (error) {
+    console.error('创建信号版本失败:', error)
+    ElMessage.error('创建信号版本失败')
+  }
+}
+
+// 切换信号版本
+const switchSignalVersion = async (versionName: string) => {
+  try {
+    const response = await axios.put(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections/current`, {
+      name: versionName
+    })
+    
+    if (response.data.status === 200) {
+      currentSignalVersion.value = versionName
+      ElMessage.success('信号版本切换成功')
+    }
+  } catch (error) {
+    console.error('切换信号版本失败:', error)
+    ElMessage.error('切换信号版本失败')
+  }
+}
+
+// 删除信号版本
+const deleteSignalVersion = async (versionName: string) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除信号版本 "${versionName}" 吗？`,
+      '确认删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    const response = await axios.delete(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections/${versionName}`)
+    if (response.data.status === 200) {
+      ElMessage.success('删除成功')
+      await loadSignalVersions(dbcDetail.value.name)
+      if (currentSignalVersion.value === versionName) {
+        currentSignalVersion.value = ''
+      }
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除信号版本失败:', error)
+      ElMessage.error('删除信号版本失败')
+    }
+  }
+}
+
+// 处理信号选择变化
+const handleSignalSelectionChange = (checkedKeys: any) => {
+  selectedSignals.value = checkedKeys
+}
+
+// 获取信号的显示名称
+const getSignalDisplayName = (signalId: string) => {
+  if (!signalId.startsWith('signal_')) return signalId
+  
+  const parts = signalId.replace('signal_', '').split('_')
+  const messageId = parts[0]
+  const signalName = parts.slice(1).join('_')
+  
+  // 在树形数据中查找对应的标签
+  for (const dbcNode of signalTreeData.value) {
+    for (const msgNode of dbcNode.children || []) {
+      if (msgNode.id === `msg_${messageId}`) {
+        for (const signalNode of msgNode.children || []) {
+          if (signalNode.id === signalId) {
+            return `${signalName} (${messageId})`
+          }
+        }
+      }
+    }
+  }
+  
+  return signalName
+}
+
+// 获取节点图标
+const getNodeIcon = (data: any) => {
+  if (data.id.startsWith('dbc_')) {
+    return 'el-icon-folder-opened'
+  } else if (data.id.startsWith('msg_')) {
+    return 'el-icon-document'
+  } else if (data.id.startsWith('signal_')) {
+    return 'el-icon-connection'
+  }
+  return 'el-icon-document'
+}
+
+// 检查节点是否有comment
+const hasNodeComment = (data: any) => {
+  if (data.id.startsWith('signal_')) {
+    return data.data?.signal?.comment && data.data.signal.comment.trim() !== ''
+  } else if (data.id.startsWith('msg_')) {
+    return data.data?.message?.comment && data.data.message.comment.trim() !== ''
+  }
+  return false
+}
+
+// 获取节点的comment
+const getNodeComment = (data: any) => {
+  if (data.id.startsWith('signal_')) {
+    return data.data?.signal?.comment || ''
+  } else if (data.id.startsWith('msg_')) {
+    return data.data?.message?.comment || ''
+  }
+  return ''
+}
+
+// 获取tooltip的最佳位置
+const getTooltipPlacement = (data: any) => {
+  // 根据节点类型和位置智能选择
+  if (data.id.startsWith('signal_')) {
+    // 信号节点优先使用top，如果靠近屏幕顶部则使用bottom
+    return 'top'
+  } else if (data.id.startsWith('msg_')) {
+    // 消息节点使用top
+    return 'top'
+  }
+  return 'top'
+}
+
+// 获取tooltip的备选位置
+const getTooltipFallbackPlacements = (data: any) => {
+  if (data.id.startsWith('signal_')) {
+    return ['top', 'bottom', 'left', 'right']
+  } else if (data.id.startsWith('msg_')) {
+    return ['top', 'bottom']
+  }
+  return ['top']
+}
+
+// 展开/折叠所有节点
+const toggleAllNodes = () => {
+  if (expandedKeys.value.length > 0) {
+    expandedKeys.value = []
+  } else {
+    // 展开所有节点
+    const allKeys = []
+    const collectKeys = (nodes: any[]) => {
+      nodes.forEach(node => {
+        allKeys.push(node.id)
+        if (node.children && node.children.length > 0) {
+          collectKeys(node.children)
+        }
+      })
+    }
+    collectKeys(signalTreeData.value)
+    expandedKeys.value = allKeys
+  }
+}
+
 // Initialize
 onMounted(async () => {
   await loadDbcList()
@@ -456,5 +1037,227 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+// 可点击行样式
+::v-deep .clickable-row {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #f0f9ff !important;
+  }
+}
+
+// 详情弹窗样式
+.detail-content {
+  .signal-version-section {
+    margin-top: 20px;
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      
+      h3 {
+        color: #303133;
+        margin: 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #409eff;
+      }
+      
+      .version-actions {
+        display: flex;
+        gap: 10px;
+      }
+    }
+    
+    .version-list {
+      margin-bottom: 20px;
+    }
+    
+    .empty-versions {
+      text-align: center;
+      padding: 20px;
+      color: #909399;
+    }
+  }
+  
+  .signal-selection-section {
+    margin-top: 20px;
+    
+    h3 {
+      color: #303133;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #409eff;
+    }
+    
+    .selection-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f5f7fa;
+      border-radius: 4px;
+      
+      span {
+        color: #606266;
+        font-weight: 500;
+      }
+      
+      .selection-actions {
+        display: flex;
+        gap: 8px;
+      }
+    }
+    
+    .signal-tree-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+      padding: 10px;
+      
+      ::v-deep .el-tree {
+        background: none;
+        
+        .el-tree-node__content {
+          height: 32px;
+          
+          &:hover {
+            background-color: #f0f9ff;
+          }
+        }
+        
+        .el-tree-node.is-current > .el-tree-node__content {
+          background-color: #ecf5ff;
+        }
+        
+        .custom-tree-node {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          
+          .signal-info {
+            margin-left: 8px;
+            color: #909399;
+            font-size: 12px;
+          }
+          
+          &.signal-node,
+          &.message-node {
+            cursor: pointer;
+            
+            &:hover {
+              background-color: #f0f9ff;
+              border-radius: 4px;
+              padding: 2px 4px;
+              margin: -2px -4px;
+            }
+          }
+          
+          &.signal-node {
+            &:hover {
+              background-color: #f0f9ff;
+            }
+          }
+          
+          &.message-node {
+            &:hover {
+              background-color: #f5f7fa;
+            }
+          }
+        }
+        
+        // 自定义tooltip样式
+        ::v-deep .el-tooltip__popper {
+          max-width: 300px;
+          word-wrap: break-word;
+          white-space: pre-wrap;
+          line-height: 1.4;
+          
+          .el-tooltip__content {
+            font-size: 12px;
+            color: #606266;
+          }
+        }
+        
+        // 信号comment tooltip专用样式
+        ::v-deep .signal-comment-tooltip {
+          max-width: 400px !important;
+          min-width: 250px !important;
+          
+          .el-tooltip__content {
+            font-size: 13px !important;
+            color: #303133 !important;
+            line-height: 1.6 !important;
+            padding: 10px 14px !important;
+            background-color: #ffffff !important;
+            border: 1px solid #dcdfe6 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15) !important;
+            font-weight: 400 !important;
+            word-break: break-word !important;
+            white-space: pre-wrap !important;
+          }
+          
+          .el-tooltip__arrow {
+            border-top-color: #dcdfe6 !important;
+            
+            &::before {
+              border-top-color: #ffffff !important;
+            }
+          }
+          
+          // 为不同位置调整箭头样式
+          &[x-placement^="top"] .el-tooltip__arrow {
+            border-top-color: #dcdfe6 !important;
+            
+            &::before {
+              border-top-color: #ffffff !important;
+            }
+          }
+          
+          &[x-placement^="left"] .el-tooltip__arrow {
+            border-left-color: #dcdfe6 !important;
+            
+            &::before {
+              border-left-color: #ffffff !important;
+            }
+          }
+        }
+        
+        // 不同层级的不同样式
+        .el-tree-node[data-level="1"] .el-tree-node__content {
+          background-color: #f8f9fa;
+          font-weight: 600;
+        }
+        
+        .el-tree-node[data-level="2"] .el-tree-node__content {
+          background-color: #fafbfc;
+          font-weight: 500;
+        }
+        
+        .el-tree-node[data-level="3"] .el-tree-node__content {
+          background-color: #ffffff;
+        }
+      }
+    }
+  }
+}
+
+// 创建版本弹窗样式
+.selected-signals-info {
+  .selected-signals-list {
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e4e7ed;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #f9f9f9;
+  }
 }
 </style>
