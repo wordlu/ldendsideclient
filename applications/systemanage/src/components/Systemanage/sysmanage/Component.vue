@@ -51,12 +51,12 @@
               <el-input type="text" v-model="scope.row.name" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
-          <el-table-column prop="x" label="X">
+          <el-table-column prop="x" label="Y">
             <template #default="scope">
               <el-input type="number" step="0.01" v-model.number="scope.row.x" size="small" @input="onPhysicalChange" />
             </template>
           </el-table-column>
-          <el-table-column prop="y" label="Y">
+          <el-table-column prop="y" label="X">
             <template #default="scope">
               <el-input type="number" step="0.01" v-model.number="scope.row.y" size="small" @input="onPhysicalChange" />
             </template>
