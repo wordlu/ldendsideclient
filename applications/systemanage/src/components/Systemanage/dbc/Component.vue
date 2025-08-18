@@ -62,7 +62,7 @@
                   <el-button 
                     size="small" 
                     type="success" 
-                    @click="applyDbc(scope.row.name)"
+                    @click.stop="applyDbc(scope.row.name)"
                     :disabled="currentDbc === scope.row.name"
                   >
                     应用
@@ -70,14 +70,14 @@
                   <el-button 
                     size="small" 
                     type="warning" 
-                    @click="editDbc(scope.row)"
+                    @click.stop="editDbc(scope.row)"
                   >
                     修改
                   </el-button>
                   <el-button 
                     size="small" 
                     type="danger" 
-                    @click="deleteDbc(scope.row.name)"
+                    @click.stop="deleteDbc(scope.row.name)"
                   >
                     删除
                   </el-button>
@@ -163,11 +163,11 @@
           <div class="signal-version-section">
             <div class="section-header">
               <h3>信号版本管理</h3>
-              <div class="version-actions">
+              <!-- <div class="version-actions">
                 <el-button type="primary" size="small" @click="showSignalVersionDialog = true">
                   创建信号版本
                 </el-button>
-              </div>
+              </div> -->
             </div>
             
             <!-- 信号版本列表 -->
@@ -175,7 +175,11 @@
               <el-table :data="signalVersions" size="small" style="width: 100%">
                 <el-table-column prop="name" label="版本名称" width="150" />
                 <el-table-column prop="description" label="描述" />
-                <el-table-column prop="signal_count" label="信号数量" width="100" />
+                <el-table-column label="信号数量" width="100">
+                  <template #default="scope">
+                    {{ scope.row.signals ? scope.row.signals.length : 0 }}
+                  </template>
+                </el-table-column>
                 <el-table-column label="状态" width="120">
                   <template #default="scope">
                     <el-tag 
@@ -191,7 +195,7 @@
                     <el-button 
                       size="small" 
                       type="success" 
-                      @click="switchSignalVersion(scope.row.name)"
+                      @click.stop="switchSignalVersion(scope.row.name)"
                       :disabled="currentSignalVersion === scope.row.name"
                     >
                       应用
@@ -199,7 +203,7 @@
                     <el-button 
                       size="small" 
                       type="danger" 
-                      @click="deleteSignalVersion(scope.row.name)"
+                      @click.stop="deleteSignalVersion(scope.row.name)"
                     >
                       删除
                     </el-button>
@@ -209,26 +213,38 @@
             </div>
             
             <div v-else class="empty-versions">
-              <el-empty description="暂无信号版本" />
+              <el-empty image-size="80" description="暂无信号版本" />
             </div>
           </div>
           
           <!-- 信号选择区域 -->
           <div class="signal-selection-section">
-            <h3>信号选择</h3>
-            <div class="selection-info">
-              <span>已选择 {{ selectedSignals.length }} 个信号</span>
-              <div class="selection-actions">
+            <div class="section-header">
+              <h3>信号选择</h3>
+              <!-- <div class="tree-actions">
                 <el-button 
                   size="small" 
                   @click="toggleAllNodes"
                 >
                   {{ expandedKeys.length > 0 ? '折叠全部' : '展开全部' }}
                 </el-button>
+              </div> -->
+            </div>
+            <div class="selection-info">
+              <span>已选择 {{ selectedSignals.length }} 个信号</span>
+              <div class="selection-actions">
+                <el-button 
+                  size="small" 
+                  type="primary"
+                  @click.stop="showSaveCollectionDialog = true"
+                  :disabled="selectedSignals.length === 0"
+                >
+                  保存为信号合集
+                </el-button>
                 <el-button 
                   v-if="selectedSignals.length > 0" 
                   size="small" 
-                  @click="selectedSignals = []"
+                  @click.stop="clearSelectedSignals"
                 >
                   清空选择
                 </el-button>
@@ -249,8 +265,9 @@
                   label: 'label'
                 }"
                 :expand-on-click-node="false"
-                :check-strictly="false"
+                :check-strictly="true"
                 :default-expand-all="false"
+                :check-on-click-node="false"
               >
                 <template #default="{ node, data }">
                   <el-tooltip
@@ -369,6 +386,45 @@
         </span>
       </template>
     </el-dialog>
+    
+    <!-- Save Signal Collection Dialog -->
+    <el-dialog v-model="showSaveCollectionDialog" title="保存信号合集" width="600px">
+      <el-form :model="saveCollectionForm" label-width="100px">
+        <el-form-item label="合集名称" required>
+          <el-input v-model="saveCollectionForm.name" placeholder="请输入合集名称" />
+        </el-form-item>
+        <el-form-item label="合集描述">
+          <el-input 
+            v-model="saveCollectionForm.description" 
+            type="textarea" 
+            placeholder="请输入合集描述"
+            :rows="3"
+          />
+        </el-form-item>
+        <el-form-item label="已选信号">
+          <div class="selected-signals-info">
+            <span>已选择 {{ selectedSignals.length }} 个信号</span>
+            <div v-if="selectedSignals.length > 0" class="selected-signals-list">
+              <el-tag 
+                v-for="signalId in selectedSignals" 
+                :key="signalId"
+                size="small"
+                style="margin: 2px"
+                type="info"
+              >
+                {{ getSignalDisplayName(signalId) }}
+              </el-tag>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showSaveCollectionDialog = false">取消</el-button>
+          <el-button type="primary" @click="saveSignalCollection">确认保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -394,6 +450,11 @@ const signalVersionForm = reactive({
   name: '',
   description: ''
 })
+
+const saveCollectionForm = reactive({
+  name: '',
+  description: ''
+})
 const treeRef = ref(null)
 const expandedKeys = ref([])
 
@@ -402,6 +463,7 @@ const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const showDetailDialog = ref(false)
 const showSignalVersionDialog = ref(false)
+const showSaveCollectionDialog = ref(false)
 const uploading = ref(false)
 
 // Form refs
@@ -619,6 +681,10 @@ const getDbcDetail = async (dbcName: string) => {
       // 构建信号树形数据 - 传递整个dbc对象
       signalTreeData.value = buildSignalTree(response.data.data.dbc)
       console.log('构建的树形数据:', signalTreeData.value)
+      // 重置选中的信号
+      selectedSignals.value = []
+      // 重置展开的节点
+      expandedKeys.value = []
       // 加载信号版本列表
       await loadSignalVersions(dbcName)
       showDetailDialog.value = true
@@ -707,6 +773,7 @@ const loadSignalVersions = async (dbcName: string) => {
     const response = await axios.get(`${API_BASE}/dbc/${dbcName}/signal-collections`)
     if (response.data.status === 200) {
       signalVersions.value = response.data.data
+      console.log('加载的信号版本数据:', response.data.data)
     }
   } catch (error) {
     console.error('加载信号版本失败:', error)
@@ -735,14 +802,16 @@ const createSignalVersion = async () => {
       // 在DBC数据中查找对应的消息和信号
       let foundMessage = null
       let foundSignal = null
+      let dbcName = ''
       
       // 遍历所有DBC对象
-      for (const dbcName in dbcDetail.value.dbc) {
-        const dbcInfo = dbcDetail.value.dbc[dbcName]
+      for (const dbcKey in dbcDetail.value.dbc) {
+        const dbcInfo = dbcDetail.value.dbc[dbcKey]
         if (dbcInfo.messages && dbcInfo.messages[messageId]) {
           foundMessage = dbcInfo.messages[messageId]
           if (foundMessage.signals && foundMessage.signals[signalName]) {
             foundSignal = foundMessage.signals[signalName]
+            dbcName = dbcKey
             break
           }
         }
@@ -753,11 +822,11 @@ const createSignalVersion = async () => {
         return null
       }
       
+      // 根据接口文档返回正确的数据结构
       return {
-        name: signalName,
-        message: foundMessage.name,
-        dbc: Object.keys(dbcDetail.value.dbc)[0], // 获取DBC名称
-        ...foundSignal
+        nodeName: dbcName,
+        messageName: foundMessage.name,
+        signalName: signalName
       }
     }).filter(Boolean) // 过滤掉null值
     
@@ -765,6 +834,12 @@ const createSignalVersion = async () => {
       ElMessage.error('没有找到有效的信号数据')
       return
     }
+    
+    console.log('发送到API的信号版本数据:', {
+      name: signalVersionForm.name,
+      description: signalVersionForm.description,
+      signals: signalData
+    })
     
     const response = await axios.post(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections`, {
       name: signalVersionForm.name,
@@ -780,7 +855,13 @@ const createSignalVersion = async () => {
       // Reset form
       signalVersionForm.name = ''
       signalVersionForm.description = ''
+      // 清空选中的信号
       selectedSignals.value = []
+      // 重置树的选中状态
+      if (treeRef.value) {
+        treeRef.value.setCheckedKeys([])
+        console.log('创建版本后清空选中状态')
+      }
     }
   } catch (error) {
     console.error('创建信号版本失败:', error)
@@ -835,8 +916,19 @@ const deleteSignalVersion = async (versionName: string) => {
 }
 
 // 处理信号选择变化
-const handleSignalSelectionChange = (checkedKeys: any) => {
-  selectedSignals.value = checkedKeys
+const handleSignalSelectionChange = (data: any, checkedInfo: any) => {
+  console.log('选择变化事件参数:', { data, checkedInfo })
+  
+  // Element Plus el-tree 的 @check 事件传递的参数格式
+  // checkedInfo 包含 { checkedKeys, checkedNodes, halfCheckedKeys, halfCheckedNodes }
+  if (checkedInfo && checkedInfo.checkedKeys) {
+    // 只选择信号节点，过滤掉 DBC 和消息节点
+    const signalKeys = checkedInfo.checkedKeys.filter((key: string) => key.startsWith('signal_'))
+    selectedSignals.value = signalKeys
+    console.log('选中的信号节点:', signalKeys)
+  } else {
+    selectedSignals.value = []
+  }
 }
 
 // 获取信号的显示名称
@@ -916,6 +1008,104 @@ const getTooltipFallbackPlacements = (data: any) => {
     return ['top', 'bottom']
   }
   return ['top']
+}
+
+// 保存信号合集
+const saveSignalCollection = async () => {
+  if (!saveCollectionForm.name.trim()) {
+    ElMessage.error('请输入合集名称')
+    return
+  }
+  
+  if (selectedSignals.value.length === 0) {
+    ElMessage.error('请选择至少一个信号')
+    return
+  }
+  
+  try {
+    const signalData = selectedSignals.value.map(signalId => {
+      // 解析信号ID: signal_${messageId}_${signalName}
+      const parts = signalId.replace('signal_', '').split('_')
+      const messageId = parts[0]
+      const signalName = parts.slice(1).join('_') // 处理信号名中可能包含下划线的情况
+      
+      // 在DBC数据中查找对应的消息和信号
+      let foundMessage = null
+      let foundSignal = null
+      let dbcName = ''
+      
+      // 遍历所有DBC对象
+      for (const dbcKey in dbcDetail.value.dbc) {
+        const dbcInfo = dbcDetail.value.dbc[dbcKey]
+        if (dbcInfo.messages && dbcInfo.messages[messageId]) {
+          foundMessage = dbcInfo.messages[messageId]
+          if (foundMessage.signals && foundMessage.signals[signalName]) {
+            foundSignal = foundMessage.signals[signalName]
+            dbcName = dbcKey
+            break
+          }
+        }
+      }
+      
+      if (!foundMessage || !foundSignal) {
+        console.error(`未找到信号: ${signalName} 在消息: ${messageId}`)
+        return null
+      }
+      
+      // 根据接口文档返回正确的数据结构
+      return {
+        nodeName: dbcName,
+        messageName: foundMessage.name,
+        signalName: signalName
+      }
+    }).filter(Boolean) // 过滤掉null值
+    
+    if (signalData.length === 0) {
+      ElMessage.error('没有找到有效的信号数据')
+      return
+    }
+    
+    console.log('发送到API的信号合集数据:', {
+      name: saveCollectionForm.name,
+      description: saveCollectionForm.description,
+      signals: signalData
+    })
+    
+    const response = await axios.post(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections`, {
+      name: saveCollectionForm.name,
+      description: saveCollectionForm.description,
+      signals: signalData
+    })
+    
+    if (response.data.status === 200) {
+      ElMessage.success('信号合集保存成功')
+      showSaveCollectionDialog.value = false
+      await loadSignalVersions(dbcDetail.value.name)
+      
+      // Reset form
+      saveCollectionForm.name = ''
+      saveCollectionForm.description = ''
+      // 清空选中的信号
+      selectedSignals.value = []
+      // 重置树的选中状态
+      if (treeRef.value) {
+        treeRef.value.setCheckedKeys([])
+        console.log('保存合集后清空选中状态')
+      }
+    }
+  } catch (error) {
+    console.error('保存信号合集失败:', error)
+    ElMessage.error('保存信号合集失败')
+  }
+}
+
+// 清空选中的信号
+const clearSelectedSignals = () => {
+  selectedSignals.value = []
+  if (treeRef.value) {
+    treeRef.value.setCheckedKeys([])
+    console.log('已清空选中的信号')
+  }
 }
 
 // 展开/折叠所有节点
@@ -1086,11 +1276,23 @@ onMounted(async () => {
   .signal-selection-section {
     margin-top: 20px;
     
-    h3 {
-      color: #303133;
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #409eff;
+      
+      h3 {
+        color: #303133;
+        margin: 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #409eff;
+      }
+      
+      .tree-actions {
+        display: flex;
+        gap: 10px;
+      }
     }
     
     .selection-info {
