@@ -308,9 +308,9 @@
                         style="margin-right: 5px; color: #409eff;"
                       ></i>
                       <span>{{ node.label }}</span>
-                      <span v-if="data.id.startsWith('signal_')" class="signal-info">
+                      <!-- <span v-if="data.id.startsWith('signal_')" class="signal-info">
                         ({{ data.data?.signal?.start_bit || 0 }}:{{ data.data?.signal?.length || 0 }})
-                      </span>
+                      </span> -->
                       <i 
                         v-if="hasNodeComment(data)" 
                         class="el-icon-info" 
@@ -331,9 +331,9 @@
                       style="margin-right: 5px; color: #409eff;"
                     ></i>
                     <span>{{ node.label }}</span>
-                    <span v-if="data.id.startsWith('signal_')" class="signal-info">
+                    <!-- <span v-if="data.id.startsWith('signal_')" class="signal-info">
                       ({{ data.data?.signal?.start_bit || 0 }}:{{ data.data?.signal?.length || 0 }})
-                    </span>
+                    </span> -->
                   </span>
                 </template>
               </el-tree>
@@ -745,7 +745,7 @@ const buildSignalTree = (dbcData: any) => {
             
             return {
               id: `signal_${messageId}_${signalName}`,
-              label: `${signalName} (${signal.start_bit || 0}:${signal.length || 0})`,
+              label: `${signalName}`,
               data: {
                 dbcName: dbcName,
                 messageId: messageId,
