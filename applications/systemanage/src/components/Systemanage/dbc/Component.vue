@@ -265,7 +265,7 @@
                   label: 'label'
                 }"
                 :expand-on-click-node="false"
-                :check-strictly="true"
+                :check-strictly="false"
                 :default-expand-all="false"
                 :check-on-click-node="false"
               >
@@ -926,6 +926,7 @@ const handleSignalSelectionChange = (data: any, checkedInfo: any) => {
     const signalKeys = checkedInfo.checkedKeys.filter((key: string) => key.startsWith('signal_'))
     selectedSignals.value = signalKeys
     console.log('选中的信号节点:', signalKeys)
+    console.log('选中的节点总数:', checkedInfo.checkedKeys.length, '信号节点数:', signalKeys.length)
   } else {
     selectedSignals.value = []
   }
