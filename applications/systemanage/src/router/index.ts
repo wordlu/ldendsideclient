@@ -58,7 +58,7 @@ const router = createRouter({
         {
           path: 'logsanalyze',
           component: LogsAnalyzePage
-        }
+        },
         {
           path: 'dbc',
           component: DbcPage
