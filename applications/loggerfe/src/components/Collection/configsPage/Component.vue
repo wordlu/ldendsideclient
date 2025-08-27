@@ -449,9 +449,7 @@ const queryCurrentDrivers = () => {
       const datavalue = gostore.findAll('viewports')
       currentViewport.value = datavalue[0]
       viewport_bg.value = datavalue[0]['image-path']
-      baseStyle.value = datavalue[0].type === "场端" ? {
-        height: '689px',
-      } : {
+      baseStyle.value = {
         width: '559px',
       }
       name.value = datavalue[0].name
@@ -566,7 +564,7 @@ const drawSensors = (ctx) => {
   sensorCanvas.value.height = imageHeight
 
   sensorData.value.forEach((sensor) => {
-    let color = '#bbb'
+    let color = '#fff1e5'
     // @wodelu:TODO 计算适应缩放后的坐标
     const scaleX = imageWidth / imageWidth
     const scaleY = imageHeight / imageHeight
