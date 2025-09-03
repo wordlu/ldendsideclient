@@ -274,7 +274,6 @@
                     v-if="hasNodeComment(data)"
                     :content="getNodeComment(data)"
                     :placement="getTooltipPlacement(data)"
-                    effect="light"
                     :show-after="300"
                     :hide-after="0"
                     popper-class="signal-comment-tooltip"

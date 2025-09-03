@@ -75,7 +75,6 @@
                 placement="top"
                 :show-after="500"
                 :hide-after="0"
-                effect="light"
                 popper-class="signal-tree-tooltip"
               >
                 <span class="custom-tree-node">
