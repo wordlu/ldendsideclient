@@ -28,9 +28,40 @@
       <div class="signal-tree-panel">
         <div class="panel-header">
           <h3>信号选择</h3>
+          <div class="tree-controls">
+            <el-button size="small" @click="refreshSignalTree" :loading="signalTreeLoading">
+              刷新信号树
+            </el-button>
+            <el-switch 
+              v-model="autoRefreshSignalTree" 
+              size="small"
+              @change="toggleAutoRefreshSignalTree"
+              style="margin-left: 8px;"
+            />
+            <span style="margin-left: 4px; font-size: 12px; color: #666;">自动刷新</span>
+          </div>
         </div>
         <div class="tree-container">
+          <!-- 当前DBC和信号合集信息 -->
+          <div class="current-info" v-if="currentDbc || currentSignalCollection">
+            <div class="info-item" v-if="currentDbc">
+              <span class="label">当前DBC:</span>
+              <span class="value">{{ currentDbc }}</span>
+            </div>
+            <div class="info-item" v-if="currentSignalCollection">
+              <span class="label">当前信号合集:</span>
+              <span class="value">{{ currentSignalCollection }}</span>
+            </div>
+          </div>
+          
+          <!-- 加载状态 -->
+          <div v-if="signalTreeLoading" class="loading-state">
+            <el-empty description="正在加载信号树..." />
+          </div>
+          
+          <!-- 信号树 -->
           <el-tree
+            v-else
             :data="signalTreeData"
             :props="treeProps"
             @node-click="handleNodeClick"
@@ -39,16 +70,30 @@
             node-key="id"
             default-expand-all>
             <template #default="{ node, data }">
-              <span class="custom-tree-node">
-                <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
-                <el-icon v-else><Document /></el-icon>
-                <span>{{ node.label }}</span>
-                <span v-if="data.id && data.size" class="signal-info">
-                  (ID: {{ data.id }}, Size: {{ data.size }})
+              <el-tooltip
+                :content="getNodeTooltipContent(node, data)"
+                placement="top"
+                :show-after="500"
+                :hide-after="0"
+                effect="light"
+                popper-class="signal-tree-tooltip"
+              >
+                <span class="custom-tree-node">
+                  <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
+                  <el-icon v-else><Document /></el-icon>
+                  <span>{{ node.label }}</span>
+                  <span v-if="data.id && data.size" class="signal-info">
+                    (Size: {{ data.size }})
+                  </span>
                 </span>
-              </span>
+              </el-tooltip>
             </template>
           </el-tree>
+          
+          <!-- 空状态 -->
+          <div v-if="!signalTreeLoading && signalTreeData.length === 0" class="empty-state">
+            <el-empty description="暂无信号数据" />
+          </div>
         </div>
       </div>
 
@@ -191,107 +236,12 @@ const selectedLeafNodes = ref([]);
 const currentSelectedSensor = ref([])
 
 // 信号树数据和图表相关变量
-const signalTreeData = ref([
-  {
-    id: 'aflm',
-    label: 'AFLM (AFLM)',
-    type: 'folder',
-    children: [
-      {
-        id: '1069',
-        label: 'AFLS_MAIN_LIGHTS_Rx_QM',
-        type: 'signal',
-        size: 5
-      },
-      {
-        id: '1070',
-        label: 'AFLS_MAIN_LIGHTS_Lx_QM',
-        type: 'signal',
-        size: 5
-      },
-      {
-        id: '2564485488',
-        label: 'DIAGNOSTIC_RESPONSE_AFLM',
-        type: 'signal',
-        size: 8
-      },
-      {
-        id: '2651930653',
-        label: 'CFG_DATA_CODE_RSP_AFLM',
-        type: 'signal',
-        size: 6
-      },
-      {
-        id: '2654339101',
-        label: 'STATUS_C_AFLM',
-        type: 'signal',
-        size: 1
-      },
-      {
-        id: '2658971433',
-        label: 'ECU_APPL_AFLM',
-        type: 'signal',
-        size: 8
-      }
-    ]
-  },
-  {
-    id: 'ahcp',
-    label: 'AHCP (AHCP)',
-    type: 'folder',
-    children: [
-      {
-        id: '2001',
-        label: 'AHCP_STATUS_SIGNAL',
-        type: 'signal',
-        size: 4
-      },
-      {
-        id: '2002',
-        label: 'AHCP_CONTROL_SIGNAL',
-        type: 'signal',
-        size: 3
-      },
-      {
-        id: '2003',
-        label: 'AHCP_CONFIG_SIGNAL',
-        type: 'signal',
-        size: 6
-      }
-    ]
-  },
-  {
-    id: 'abs',
-    label: 'ABS (ABS)',
-    type: 'folder',
-    children: [
-      {
-        id: '3001',
-        label: 'ABS_WHEEL_SPEED_FL',
-        type: 'signal',
-        size: 2
-      },
-      {
-        id: '3002',
-        label: 'ABS_WHEEL_SPEED_FR',
-        type: 'signal',
-        size: 2
-      },
-      {
-        id: '3003',
-        label: 'ABS_WHEEL_SPEED_RL',
-        type: 'signal',
-        size: 2
-      },
-      {
-        id: '3004',
-        label: 'ABS_WHEEL_SPEED_RR',
-        type: 'signal',
-        size: 2
-      }
-    ]
-  }
-])
+const signalTreeData = ref([])
+const currentDbc = ref('')
+const currentSignalCollection = ref('')
+const signalTreeLoading = ref(false)
+const signalTreeRefreshInterval = ref(null)
+const autoRefreshSignalTree = ref(true)
 
 const treeProps = {
   children: 'children',
@@ -476,6 +426,236 @@ const getCurrentPorts = () => {
   currentSelectedSensorId.value = selectedLeafNodes.value.map(node => node.deviceid)
 }
 
+// 加载当前应用的DBC信号树数据
+const loadCurrentDbcSignalTree = async () => {
+  signalTreeLoading.value = true
+  try {
+    // 1. 获取当前使用的DBC文件
+    const dbcResponse = await fetch('/can_parser/dbc/current')
+    const dbcData = await dbcResponse.json()
+    
+    if (dbcData.status === 200 && dbcData.data) {
+      currentDbc.value = dbcData.data
+      console.log('当前DBC:', currentDbc.value)
+      
+      // 2. 获取DBC文件详情
+      const detailResponse = await fetch(`/can_parser/dbc/${dbcData.data}`)
+      const detailData = await detailResponse.json()
+      
+      if (detailData.status === 200 && detailData.data) {
+        const dbcDetail = detailData.data
+        currentSignalCollection.value = dbcDetail.currentSignalCollectionName
+        console.log('当前信号合集:', currentSignalCollection.value)
+        
+        // 3. 如果有当前使用的信号合集，获取其详情
+        if (dbcDetail.currentSignalCollectionName) {
+          const collectionResponse = await fetch(`/can_parser/dbc/${dbcData.data}/signal-collections/${dbcDetail.currentSignalCollectionName}`)
+          const collectionData = await collectionResponse.json()
+          
+          if (collectionData.status === 200 && collectionData.data) {
+            // 构建信号树数据
+            signalTreeData.value = buildSignalTreeFromCollection(collectionData.data, dbcDetail.dbc)
+            console.log('从信号合集构建的树:', signalTreeData.value)
+          } else {
+            // 如果没有信号合集，使用DBC中的所有信号
+            signalTreeData.value = buildSignalTreeFromDbc(dbcDetail.dbc)
+            console.log('从DBC构建的树:', signalTreeData.value)
+          }
+        } else {
+          // 如果没有信号合集，使用DBC中的所有信号
+          signalTreeData.value = buildSignalTreeFromDbc(dbcDetail.dbc)
+          console.log('从DBC构建的树:', signalTreeData.value)
+        }
+      }
+    } else {
+      console.log('没有当前DBC，使用默认数据')
+      signalTreeData.value = []
+    }
+  } catch (error) {
+    console.error('加载DBC信号树失败:', error)
+    // 如果API调用失败，使用默认的空数据
+    signalTreeData.value = []
+  } finally {
+    signalTreeLoading.value = false
+  }
+}
+
+// 刷新信号树
+const refreshSignalTree = async () => {
+  await loadCurrentDbcSignalTree()
+  ElMessage.success('信号树刷新成功')
+}
+
+// 切换自动刷新信号树
+const toggleAutoRefreshSignalTree = (value: boolean) => {
+  if (value) {
+    startAutoRefreshSignalTree()
+  } else {
+    stopAutoRefreshSignalTree()
+  }
+}
+
+// 开始自动刷新信号树
+const startAutoRefreshSignalTree = () => {
+  if (signalTreeRefreshInterval.value) {
+    clearInterval(signalTreeRefreshInterval.value)
+  }
+  
+  // 每30秒自动刷新一次信号树
+  signalTreeRefreshInterval.value = setInterval(async () => {
+    if (!signalTreeLoading.value) {
+      await loadCurrentDbcSignalTree()
+      console.log('自动刷新信号树完成')
+    }
+  }, 30000)
+  
+  console.log('开始自动刷新信号树')
+}
+
+// 停止自动刷新信号树
+const stopAutoRefreshSignalTree = () => {
+  if (signalTreeRefreshInterval.value) {
+    clearInterval(signalTreeRefreshInterval.value)
+    signalTreeRefreshInterval.value = null
+  }
+  console.log('停止自动刷新信号树')
+}
+
+// 获取节点的提示内容
+const getNodeTooltipContent = (node: any, data: any) => {
+  let content = `节点名称: ${node.label} `
+  
+  if (data.type === 'signal' && data.id && data.size) {
+    content += `\n信号ID: ${data.id}\n数据大小: ${data.size} `
+  } else if (data.type === 'folder') {
+    content += `\n类型: ${data.type === 'folder' ? '文件夹' : '信号'}`
+  }
+  
+  return content
+}
+
+// 从信号合集构建信号树
+const buildSignalTreeFromCollection = (collection, dbcData) => {
+  if (!collection.signals || !dbcData) return []
+  
+  const treeData = []
+  const nodeMap = new Map() // 用于去重
+  
+  collection.signals.forEach((signal) => {
+    const { nodeName, messageName, signalName } = signal
+    
+    // 查找或创建DBC节点
+    let dbcNode = treeData.find(node => node.id === `dbc_${nodeName}`)
+    if (!dbcNode) {
+      dbcNode = {
+        id: `dbc_${nodeName}`,
+        label: `${nodeName} (DBC)`,
+        type: 'folder',
+        children: []
+      }
+      treeData.push(dbcNode)
+    }
+    
+    // 查找或创建消息节点
+    let messageNode = dbcNode.children.find(node => node.id === `msg_${messageName}`)
+    if (!messageNode) {
+      messageNode = {
+        id: `msg_${messageName}`,
+        label: `${messageName}`,
+        type: 'folder',
+        children: []
+      }
+      dbcNode.children.push(messageNode)
+    }
+    
+    // 创建信号节点
+    const signalNode = {
+      id: `signal_${nodeName}_${messageName}_${signalName}`,
+      label: signalName,
+      type: 'signal',
+      size: getSignalSize(dbcData, nodeName, messageName, signalName)
+    }
+    
+    messageNode.children.push(signalNode)
+  })
+  
+  return treeData
+}
+
+// 从DBC数据构建信号树
+const buildSignalTreeFromDbc = (dbcData) => {
+  if (!dbcData) return []
+  
+  const treeData = []
+  
+  Object.keys(dbcData).forEach(dbcName => {
+    const dbcInfo = dbcData[dbcName]
+    const dbcNode = {
+      id: `dbc_${dbcName}`,
+      label: `${dbcName} (DBC)`,
+      type: 'folder',
+      children: []
+    }
+    
+    if (dbcInfo.messages) {
+      Object.keys(dbcInfo.messages).forEach(messageId => {
+        const message = dbcInfo.messages[messageId]
+        const messageNode = {
+          id: `msg_${message.name || messageId}`,
+          label: `${message.name || messageId} (ID: ${messageId})`,
+          type: 'folder',
+          children: []
+        }
+        
+        if (message.signals) {
+          Object.keys(message.signals).forEach(signalName => {
+            const signal = message.signals[signalName]
+            const signalNode = {
+              id: `signal_${dbcName}_${message.name || messageId}_${signalName}`,
+              label: signalName,
+              type: 'signal',
+              size: signal.length || signal.size || 0
+            }
+            messageNode.children.push(signalNode)
+          })
+        }
+        
+        dbcNode.children.push(messageNode)
+      })
+    }
+    
+    treeData.push(dbcNode)
+  })
+  
+  return treeData
+}
+
+// 获取信号大小
+const getSignalSize = (dbcData, nodeName, messageName, signalName) => {
+  try {
+    // 先查找消息ID对应的消息
+    const dbcInfo = dbcData[nodeName]
+    if (!dbcInfo || !dbcInfo.messages) return 0
+    
+    // 查找匹配的消息（可能通过名称或ID查找）
+    let targetMessage = null
+    Object.keys(dbcInfo.messages).forEach(messageId => {
+      const message = dbcInfo.messages[messageId]
+      if (message.name === messageName || messageId === messageName) {
+        targetMessage = message
+      }
+    })
+    
+    if (targetMessage && targetMessage.signals && targetMessage.signals[signalName]) {
+      return targetMessage.signals[signalName].length || 
+             targetMessage.signals[signalName].size || 0
+    }
+  } catch (error) {
+    console.error('获取信号大小失败:', error)
+  }
+  return 0
+}
+
 //获取设备树
 const queryCurrentDrivers = () => {
   try {
@@ -549,6 +729,14 @@ const closeDialogFormVisible = () => {
 
 onMounted(() => {
   queryCurrentDrivers()
+  // 加载DBC信号树数据
+  loadCurrentDbcSignalTree()
+  
+  // 启动自动刷新信号树
+  if (autoRefreshSignalTree.value) {
+    startAutoRefreshSignalTree()
+  }
+  
   // 建立普通警告长连接
   eventSource = new EventSource(
     `${window.server.mecPrefix}/api/logger/events/alert?channel=high`,
@@ -793,6 +981,11 @@ onUnmounted(() => {
   if (refreshInterval.value) {
     clearInterval(refreshInterval.value)
   }
+  
+  // 清理信号树自动刷新定时器
+  if (signalTreeRefreshInterval.value) {
+    clearInterval(signalTreeRefreshInterval.value)
+  }
 });
 
 </script>
@@ -886,33 +1079,158 @@ onUnmounted(() => {
 
   // 第一列：信号树
   .signal-tree-panel {
-    width: 280px;
+    width: 320px; // 增加面板宽度
+    min-width: 320px; // 设置最小宽度，防止被压缩
 
     .tree-container {
       flex: 1;
       padding: 16px;
       overflow-y: auto;
+      overflow-x: auto; // 添加横向滚动条
       height: calc(100% - 60px); // 减去header高度
-
-      .custom-tree-node {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: #333;
-
-        .el-icon {
-          font-size: 16px;
-          color: #666;
+      min-width: 0; // 允许容器收缩
+      // 设置内容的最小宽度，确保有足够的滚动空间
+      & > * {
+        min-width: 320px; // 所有子元素都有足够的最小宽度
+      }
+        
+        // 自定义滚动条样式
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 4px;
+          
+          &:hover {
+            background: #a8a8a8;
+          }
         }
 
-        .signal-info {
-          color: #999;
-          font-size: 12px;
-          margin-left: 8px;
+        .current-info {
+          margin-bottom: 16px;
+          padding: 12px;
+          background: #f8f9fa;
+          border-radius: 6px;
+          border: 1px solid #e9ecef;
+          min-width: 320px; // 增加最小宽度，确保有足够滚动空间
+
+          .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            white-space: nowrap; // 防止换行
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .label {
+              color: #666;
+              font-size: 12px;
+              min-width: 100px; // 增加标签宽度，确保对齐美观
+              font-weight: 500;
+              flex-shrink: 0; // 防止标签被压缩
+            }
+
+            .value {
+              color: #333;
+              font-size: 12px;
+              font-weight: 600;
+              background: #e3f2fd;
+              padding: 2px 8px;
+              border-radius: 4px;
+              flex-shrink: 0; // 防止值被压缩
+              max-width: 200px; // 增加最大宽度，确保长DBC名称和信号合集名称完整显示
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+
+        .loading-state,
+        .empty-state {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 200px;
+          min-width: 320px; // 增加最小宽度，确保有足够滚动空间
+        }
+
+                // 为树形组件添加横向滚动支持
+        ::v-deep .el-tree {
+          min-width: 320px; // 增加最小宽度，确保有足够滚动空间
+          
+          .el-tree-node__content {
+            min-width: 320px; // 确保节点内容有足够宽度
+            white-space: nowrap; // 防止节点内容换行
+            padding-right: 16px; // 增加右侧内边距，确保内容不被截断
+          }
+          
+          // 为树节点添加更多样式
+          .el-tree-node {
+            width: 100%;
+            
+            .el-tree-node__children {
+              width: 100%;
+            }
+          }
+        }
+        
+        // 自定义tooltip样式
+        ::v-deep .signal-tree-tooltip {
+          max-width: 300px !important;
+          
+          .el-tooltip__content {
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-line;
+          }
+        }
+
+        .custom-tree-node {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          color: #333;
+          min-width: 320px; // 增加最小宽度，确保有足够滚动空间
+          white-space: nowrap; // 防止换行
+          width: 100%; // 占满可用宽度
+
+          .el-icon {
+            font-size: 16px;
+            color: #666;
+            flex-shrink: 0; // 防止图标被压缩
+          }
+
+          span {
+            // flex: 1; // 让文本内容占据剩余空间
+            min-width: 0; // 允许文本收缩
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .signal-info {
+            color: #999;
+            font-size: 12px;
+            margin-left: 8px;
+            flex-shrink: 0; // 防止信号信息被压缩
+            white-space: nowrap; // 防止换行
+            max-width: 220px; // 进一步增加最大宽度，确保长ID和Size信息完整显示
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       }
-    }
   }
 
   // 第二列：信号折线图
