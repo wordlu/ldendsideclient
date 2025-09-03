@@ -157,7 +157,7 @@
                 {{ currentDbc === dbcDetail.name ? '当前使用' : '未使用' }}
               </el-tag>
             </el-descriptions-item>
-          </el-descriptions>
+              </el-descriptions>
           
           <!-- 信号版本管理 -->
           <div class="signal-version-section">
@@ -168,8 +168,8 @@
                   创建信号版本
                 </el-button>
               </div> -->
-            </div>
-            
+      </div>
+      
             <!-- 信号版本列表 -->
             <div v-if="signalVersions.length > 0" class="version-list">
               <el-table :data="signalVersions" size="small" style="width: 100%">
@@ -183,10 +183,10 @@
                 <el-table-column label="状态" width="120">
                   <template #default="scope">
                     <el-tag 
-                      :type="currentSignalVersion === scope.row.name ? 'success' : 'info'"
+                      :type="scope.row.current ? 'success' : 'info'"
                       size="small"
                     >
-                      {{ currentSignalVersion === scope.row.name ? '当前使用' : '未使用' }}
+                      {{ scope.row.current ? '当前使用' : '未使用' }}
                     </el-tag>
                   </template>
                 </el-table-column>
@@ -196,7 +196,7 @@
                       size="small" 
                       type="success" 
                       @click.stop="switchSignalVersion(scope.row.name)"
-                      :disabled="currentSignalVersion === scope.row.name"
+                      :disabled="scope.row.current"
                     >
                       应用
                     </el-button>
@@ -210,11 +210,11 @@
                   </template>
                 </el-table-column>
               </el-table>
-            </div>
+    </div>
             
             <div v-else class="empty-versions">
               <el-empty image-size="80" description="暂无信号版本" />
-            </div>
+  </div>
           </div>
           
           <!-- 信号选择区域 -->
@@ -772,12 +772,37 @@ const loadSignalVersions = async (dbcName: string) => {
   try {
     const response = await axios.get(`${API_BASE}/dbc/${dbcName}/signal-collections`)
     if (response.data.status === 200) {
-      signalVersions.value = response.data.data
-      console.log('加载的信号版本数据:', response.data.data)
+      // 获取当前使用的信号合集名称
+      const currentCollectionName = await getCurrentSignalCollection(dbcName)
+      
+      // 为每个信号合集添加current字段
+      signalVersions.value = response.data.data.map((collection: any) => ({
+        ...collection,
+        current: collection.name === currentCollectionName
+      }))
+      
+      // 设置当前使用的信号合集名称
+      currentSignalVersion.value = currentCollectionName || ''
+      
+      console.log('加载的信号版本数据:', signalVersions.value)
+      console.log('当前使用的信号合集:', currentCollectionName)
     }
   } catch (error) {
     console.error('加载信号版本失败:', error)
   }
+}
+
+// 获取当前使用的信号合集名称
+const getCurrentSignalCollection = async (dbcName: string) => {
+  try {
+    const response = await axios.get(`${API_BASE}/dbc/${dbcName}`)
+    if (response.data.status === 200) {
+      return response.data.data.currentSignalCollectionName || ''
+    }
+  } catch (error) {
+    console.error('获取当前信号合集失败:', error)
+  }
+  return ''
 }
 
 // 创建信号版本
@@ -850,7 +875,13 @@ const createSignalVersion = async () => {
     if (response.data.status === 200) {
       ElMessage.success('信号版本创建成功')
       showSignalVersionDialog.value = false
-      await loadSignalVersions(dbcDetail.value.name)
+      
+      // 如果这是第一个信号版本，自动设置为当前使用
+      if (signalVersions.value.length === 0) {
+        await switchSignalVersion(signalVersionForm.name)
+      } else {
+        await loadSignalVersions(dbcDetail.value.name)
+      }
       
       // Reset form
       signalVersionForm.name = ''
@@ -878,6 +909,13 @@ const switchSignalVersion = async (versionName: string) => {
     
     if (response.data.status === 200) {
       currentSignalVersion.value = versionName
+      
+      // 更新信号合集列表中的current状态
+      signalVersions.value = signalVersions.value.map((collection: any) => ({
+        ...collection,
+        current: collection.name === versionName
+      }))
+      
       ElMessage.success('信号版本切换成功')
     }
   } catch (error) {
@@ -902,10 +940,14 @@ const deleteSignalVersion = async (versionName: string) => {
     const response = await axios.delete(`${API_BASE}/dbc/${dbcDetail.value.name}/signal-collections/${versionName}`)
     if (response.data.status === 200) {
       ElMessage.success('删除成功')
-      await loadSignalVersions(dbcDetail.value.name)
+      
+      // 如果删除的是当前使用的版本，清空当前版本
       if (currentSignalVersion.value === versionName) {
         currentSignalVersion.value = ''
       }
+      
+      // 重新加载信号版本列表
+      await loadSignalVersions(dbcDetail.value.name)
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -1081,7 +1123,13 @@ const saveSignalCollection = async () => {
     if (response.data.status === 200) {
       ElMessage.success('信号合集保存成功')
       showSaveCollectionDialog.value = false
-      await loadSignalVersions(dbcDetail.value.name)
+      
+      // 如果这是第一个信号合集，自动设置为当前使用
+      if (signalVersions.value.length === 0) {
+        await switchSignalVersion(saveCollectionForm.name)
+      } else {
+        await loadSignalVersions(dbcDetail.value.name)
+      }
       
       // Reset form
       saveCollectionForm.name = ''
@@ -1225,7 +1273,7 @@ onMounted(async () => {
 }
 
 .dialog-footer {
-  display: flex;
+        display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
