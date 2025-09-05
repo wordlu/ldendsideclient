@@ -17,10 +17,10 @@ export interface SignalData {
 
 export class SignalDataManager {
   private signals: Map<string, SignalData> = new Map();
-  private maxDataPoints: number = 100; // 默认最大数据点数量
+  private maxDataPoints = 100; // 默认最大数据点数量
   private dataUpdateCallbacks: Map<string, (data: SignalData) => void> = new Map();
 
-  constructor(maxDataPoints: number = 100) {
+  constructor(maxDataPoints = 100) {
     this.maxDataPoints = maxDataPoints;
   }
 

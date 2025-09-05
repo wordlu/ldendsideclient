@@ -70,14 +70,14 @@
                 :hide-after="0"
                 popper-class="signal-tree-tooltip"
               >
-                <span class="custom-tree-node">
-                  <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
-                  <el-icon v-else><Document /></el-icon>
-                  <span>{{ node.label }}</span>
-                  <span v-if="data.id && data.size" class="signal-info">
+              <span class="custom-tree-node">
+                <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
+                <el-icon v-else><Document /></el-icon>
+                <span>{{ node.label }}</span>
+                <span v-if="data.id && data.size" class="signal-info">
                     (Size: {{ data.size }})
-                  </span>
                 </span>
+              </span>
               </el-tooltip>
             </template>
           </el-tree>
@@ -155,20 +155,24 @@
               <span class="value updating">500ms</span>
             </div>
           </div>
+          <!-- 调试控制按钮 -->
+          <div class="debug-controls" v-if="websocketConnected">
+            <!-- <div class="debug-header"> -->
+              <div class="debug-buttons" style="display: flex; align-items: center;">
+                <el-button size="small" type="primary" @click="testDataFlow">测试数据流</el-button>
+                <el-button size="small" type="success" @click="testWebSocketMessage">测试WS消息</el-button>
+                <el-button size="small" type="info" @click="refreshDebugInfo">刷新</el-button>
+                <el-button size="small" type="warning" @click="clearDebugInfo">清空</el-button>
+              </div>
+            <!-- </div> -->
+          </div>
+          
           <div class="chart-wrapper">
             <div ref="chartRef" class="chart"></div>
           </div>
           
           <!-- 调试信息显示区域 -->
           <div class="debug-info" v-if="websocketConnected">
-                      <div class="debug-header">
-            <h4>WebSocket 数据调试信息</h4>
-            <div class="debug-controls">
-              <el-button size="small" @click="testDataFlow">测试数据流</el-button>
-              <el-button size="small" @click="refreshDebugInfo">刷新</el-button>
-              <el-button size="small" @click="clearDebugInfo">清空</el-button>
-            </div>
-          </div>
             
             <!-- 连接状态 -->
             <div class="debug-section">
@@ -960,6 +964,7 @@ const initWebSocket = () => {
       if (signalDataManager.value) {
         signalDataManager.value.processRosMessage(message);
       }
+      
       // 添加到调试信息
       console.log('准备调用 addDebugInfo...');
       addDebugInfo(message);
@@ -977,38 +982,6 @@ const initWebSocket = () => {
     
     // 测试消息处理器是否正常工作
     console.log('消息处理器已注册，等待消息...');
-    
-    // 添加一个测试消息来验证处理器
-    setTimeout(() => {
-      console.log('发送测试消息来验证处理器...');
-      const testMessage: RosTopicMessage = {
-        topic_name: 'test_topic',
-        topic_type: 0,
-        timestamp: Date.now() * 1000000,
-        data: {
-          raw_str: {
-            header: {
-              stamp: Date.now() * 1000000,
-              frame_id: 'test_frame',
-              seq: 1
-            },
-            raw_data: JSON.stringify({
-              test_signal: Math.random() * 100
-            }),
-            extra_data: 'Test message'
-          }
-        },
-        extra_data: ''
-      };
-      
-      // 手动触发消息处理器
-      websocketManager.value?.addMessageHandler((msg: RosTopicMessage) => {
-        console.log('测试消息处理器被调用:', msg);
-      });
-      
-      // 直接调用 addDebugInfo 测试
-      addDebugInfo(testMessage);
-    }, 2000);
 
     // 连接到 WebSocket 服务器
     console.log('开始连接 WebSocket...');
@@ -1158,6 +1131,12 @@ const addDebugInfo = (message: RosTopicMessage) => {
           ...signal,
           timestamp: Date.now()
         });
+        
+        // 重要：将解析后的信号数据添加到信号数据管理器
+        if (signal.signalName && typeof signal.value === 'number') {
+          console.log(`添加信号数据到管理器: ${signal.signalName} = ${signal.value}`);
+          signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
+        }
       });
       
       // 限制解析数据数量，最多保存20条
@@ -1189,6 +1168,12 @@ const addDebugInfo = (message: RosTopicMessage) => {
                   ...signal,
                   timestamp: Date.now()
                 });
+                
+                // 重要：将解析后的信号数据添加到信号数据管理器
+                if (signal.signalName && typeof signal.value === 'number') {
+                  console.log(`字段 ${key} 解析成功，添加信号: ${signal.signalName} = ${signal.value}`);
+                  signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
+                }
               });
               console.log(`字段 ${key} 解析成功，添加了 ${parsedData.length} 个信号`);
             }
@@ -1204,21 +1189,32 @@ const addDebugInfo = (message: RosTopicMessage) => {
   if (selectedSignalName.value && signalDataManager.value) {
     console.log('检测到选中信号，准备更新图表:', selectedSignalName.value);
     
-    // 立即更新图表，确保实时性
-    updateChartWithRealData(selectedSignalName.value);
+    // 检查是否有有效数据
+    const currentData = signalDataManager.value.getChartData(selectedSignalName.value);
+    if (currentData && currentData.times && currentData.values && currentData.values.length > 0) {
+      console.log('有有效数据，立即更新图表');
+      updateChartWithRealData(selectedSignalName.value);
+    } else {
+      console.log('暂无有效数据，等待数据...');
+    }
     
-    // 设置定时器，持续更新图表
+    // 设置定时器，持续更新图表（但只在有数据时更新）
     if (window.chartUpdateTimer) {
       clearInterval(window.chartUpdateTimer);
     }
     
-    // 更频繁的更新，确保实时性
+    // 更智能的更新：只在有数据时更新
     window.chartUpdateTimer = setInterval(() => {
       if (selectedSignalName.value && signalDataManager.value) {
-        console.log('定时器触发图表更新:', selectedSignalName.value);
-        updateChartWithRealData(selectedSignalName.value);
+        const data = signalDataManager.value.getChartData(selectedSignalName.value);
+        if (data && data.times && data.values && data.values.length > 0) {
+          console.log('定时器触发图表更新:', selectedSignalName.value);
+          updateChartWithRealData(selectedSignalName.value);
+        } else {
+          console.log('定时器检查：暂无有效数据');
+        }
       }
-    }, 500); // 每500毫秒更新一次，提高实时性
+    }, 1000); // 降低更新频率，减少无效更新
   }
 };
 
@@ -1343,6 +1339,19 @@ const testDataFlow = () => {
   console.log('信号数据管理器:', !!signalDataManager.value);
   
   if (selectedSignalName.value && signalDataManager.value) {
+    // 检查当前数据状态
+    const currentData = signalDataManager.value.getChartData(selectedSignalName.value);
+    console.log('当前图表数据:', currentData);
+    
+    // 检查信号数据管理器的内部状态
+    const allSignals = signalDataManager.value.getAllSignalNames();
+    console.log('信号数据管理器中的所有信号:', allSignals);
+    
+    if (allSignals.includes(selectedSignalName.value)) {
+      const signalData = signalDataManager.value.getSignalData(selectedSignalName.value);
+      console.log('当前信号的详细数据:', signalData);
+    }
+    
     // 手动添加测试数据
     const testValue = Math.random() * 100;
     const testTimestamp = Date.now();
@@ -1351,14 +1360,24 @@ const testDataFlow = () => {
     
     signalDataManager.value.addSignalData(selectedSignalName.value, testValue, testTimestamp);
     
-    // 获取图表数据
-    const chartData = signalDataManager.value.getChartData(selectedSignalName.value);
-    console.log('测试后的图表数据:', chartData);
+    // 再次检查数据状态
+    const updatedData = signalDataManager.value.getChartData(selectedSignalName.value);
+    console.log('添加测试数据后的图表数据:', updatedData);
     
     // 更新图表
-    if (chartData) {
-      updateChart(chartData.times, chartData.values);
+    if (updatedData) {
+      updateChart(updatedData.times, updatedData.values);
       ElMessage.success('测试数据流成功，图表已更新');
+      
+      // 更新实时数据
+      if (realTimeData.value) {
+        realTimeData.value.currentValue = testValue;
+        realTimeData.value.timestamp = new Date(testTimestamp).toLocaleTimeString('zh-CN', { hour12: false });
+        realTimeData.value.dataPoints = updatedData.values.length;
+      }
+      
+      // 更新最后图表更新时间
+      lastChartUpdate.value = new Date().toLocaleTimeString('zh-CN', { hour12: false });
     } else {
       ElMessage.error('测试数据流失败，无法获取图表数据');
     }
@@ -1367,6 +1386,51 @@ const testDataFlow = () => {
   }
   
   console.log('=== 测试数据流完成 ===');
+};
+
+// 测试WebSocket消息处理
+const testWebSocketMessage = () => {
+  console.log('=== 测试WebSocket消息处理 ===');
+  
+  if (!websocketManager.value) {
+    ElMessage.error('WebSocket管理器未初始化');
+    return;
+  }
+  
+  // 创建测试消息
+  const testMessage: RosTopicMessage = {
+    topic_name: 'test_topic',
+    topic_type: 0,
+    timestamp: Date.now() * 1000000,
+    data: {
+      raw_str: {
+        header: {
+          stamp: Date.now() * 1000000,
+          frame_id: 'test_frame',
+          seq: 1
+        },
+        raw_data: JSON.stringify({
+          AFSFaultSts: Math.random() * 100,
+          test_signal: Math.random() * 50
+        }),
+        extra_data: 'Test message'
+      }
+    },
+    extra_data: ''
+  };
+  
+  console.log('发送测试消息:', testMessage);
+  
+  // 直接调用消息处理器
+  if (signalDataManager.value) {
+    signalDataManager.value.processRosMessage(testMessage);
+  }
+  
+  // 调用调试信息处理
+  addDebugInfo(testMessage);
+  
+  ElMessage.success('测试消息已发送');
+  console.log('=== 测试WebSocket消息处理完成 ===');
 };
 
 // 获取 WebSocket 状态
@@ -2030,19 +2094,19 @@ onUnmounted(() => {
           }
         }
 
-        .custom-tree-node {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          color: #333;
+      .custom-tree-node {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #333;
           min-width: 320px; // 增加最小宽度，确保有足够滚动空间
           white-space: nowrap; // 防止换行
           width: 100%; // 占满可用宽度
 
-          .el-icon {
-            font-size: 16px;
-            color: #666;
+        .el-icon {
+          font-size: 16px;
+          color: #666;
             flex-shrink: 0; // 防止图标被压缩
           }
 
@@ -2052,20 +2116,20 @@ onUnmounted(() => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-          }
+        }
 
-          .signal-info {
-            color: #999;
-            font-size: 12px;
-            margin-left: 8px;
+        .signal-info {
+          color: #999;
+          font-size: 12px;
+          margin-left: 8px;
             flex-shrink: 0; // 防止信号信息被压缩
             white-space: nowrap; // 防止换行
             max-width: 220px; // 进一步增加最大宽度，确保长ID和Size信息完整显示
             overflow: hidden;
             text-overflow: ellipsis;
-          }
         }
       }
+    }
   }
 
   // 第二列：信号折线图
@@ -2074,12 +2138,12 @@ onUnmounted(() => {
     height: 100%;
     min-height: 600px; // 确保有足够的最小高度
 
-          .chart-container {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        height: calc(100% - 60px); // 减去header高度
+    .chart-container {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 60px); // 减去header高度
         min-height: 500px; // 设置最小高度，确保有足够空间
         max-height: 600px; // 增加最大高度，避免内容被压缩
 
@@ -2128,34 +2192,34 @@ onUnmounted(() => {
           }
         }
 
-        .chart-info {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 16px;
-          padding: 12px;
-          background: #f8f9fa;
-          border-radius: 6px;
-          flex-shrink: 0; // 防止压缩
+      .chart-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        flex-shrink: 0; // 防止压缩
           min-height: 120px; // 确保有足够高度显示所有信息
 
-          .info-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
             min-height: 20px; // 确保每行有足够高度
 
-            .label {
-              color: #666;
-              font-size: 12px;
+          .label {
+            color: #666;
+            font-size: 12px;
               min-width: 80px; // 增加标签宽度，确保对齐
               flex-shrink: 0; // 防止标签被压缩
-            }
+          }
 
-            .value {
-              color: #333;
-              font-weight: 500;
-              font-size: 12px;
+          .value {
+            color: #333;
+            font-weight: 500;
+            font-size: 12px;
               flex: 1; // 让值占据剩余空间
               word-break: break-all; // 允许长文本换行
               
@@ -2176,21 +2240,78 @@ onUnmounted(() => {
                 font-weight: 500;
               }
             }
-          }
         }
+      }
 
-              .chart-wrapper {
-          flex: 1;
-          position: relative;
-          min-height: 0; // 重要：允许flex子项收缩
+      .chart-wrapper {
+        flex: 1;
+        position: relative;
+        min-height: 0; // 重要：允许flex子项收缩
           height: 300px; // 固定高度，确保图表完整显示
 
-          .chart {
-            width: 100%;
-            height: 100%;
-            min-height: 200px;
-            max-height: 300px; // 限制最大高度
+        .chart {
+          width: 100%;
+          height: 100%;
+          min-height: 200px;
+          max-height: 300px; // 限制最大高度
             overflow: visible; // 允许内容溢出，避免被裁剪
+          }
+        }
+        
+        // 调试控制按钮样式
+        .debug-controls {
+          // margin-bottom: 16px;
+          padding: 12px;
+          // background: #f8f9fa;
+          // border: 1px solid #e9ecef;
+          // border-radius: 6px;
+          flex-shrink: 0;
+          max-height: 120px; // 限制最大高度
+          overflow-y: auto; // 添加竖向滚动条
+
+          .el-button+.el-button {
+            margin-left: 4px;
+          }
+          
+          // 自定义滚动条样式
+          &::-webkit-scrollbar {
+            width: 6px;
+          }
+          
+          &::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+          }
+          
+          &::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+            
+            &:hover {
+              background: #a8a8a8;
+            }
+          }
+          
+          .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; // 改为顶部对齐，适应滚动
+            
+            h4 {
+              margin: 0;
+              color: #333;
+              font-size: 14px;
+              font-weight: 600;
+              flex-shrink: 0; // 防止标题被压缩
+            }
+            
+            .debug-buttons {
+              display: flex;
+              gap: 8px;
+              flex-wrap: wrap;
+              flex: 1; // 让按钮区域占据剩余空间
+              justify-content: flex-end; // 按钮右对齐
+            }
           }
         }
         
@@ -2201,25 +2322,6 @@ onUnmounted(() => {
           padding-top: 16px;
           flex-shrink: 0; // 防止被压缩
           min-height: 200px; // 确保有足够高度显示调试信息
-          
-          .debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            
-            h4 {
-              margin: 0;
-              color: #333;
-              font-size: 14px;
-              font-weight: 600;
-            }
-            
-            .debug-controls {
-              display: flex;
-              gap: 8px;
-            }
-          }
           
           .debug-section {
             margin-bottom: 20px;
@@ -2327,8 +2429,8 @@ onUnmounted(() => {
                 }
               }
             }
-          }
         }
+      }
     }
 
     .no-selection {

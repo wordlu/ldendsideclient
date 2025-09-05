@@ -27,7 +27,7 @@ const i18n:any = createI18n({
 // mergeLocale('governance')
 
 function mergeLocale(project:any){
-  for(let key in messages){
+  for(const key in messages){
     axios.get(`/langs/${project}/${key}.json`).then((res:any)=>{
       i18n.global.mergeLocaleMessage(key, res.data)
     }).catch((err:any)=>{
