@@ -10,7 +10,7 @@ export interface WebSocketConfig {
 
 export interface WebSocketMessage {
   type: 'message' | 'error' | 'close' | 'open';
-  data?: any;
+  data?: unknown;
   error?: Error;
 }
 
@@ -21,7 +21,7 @@ export class WebSocketManager {
   private ws: WebSocket | null = null;
   private config: WebSocketConfig;
   private reconnectAttempts = 0;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: number | null = null;
   private messageHandlers: MessageHandler[] = [];
   private connectionHandlers: ConnectionHandler[] = [];
   private isConnecting = false;
@@ -70,7 +70,6 @@ export class WebSocketManager {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('WebSocket 连接已建立');
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.notifyConnectionHandlers(true);
@@ -81,14 +80,12 @@ export class WebSocketManager {
       this.handleMessage(event);
     };
 
-    this.ws.onerror = (error) => {
-      console.error('WebSocket 连接错误:', error);
+    this.ws.onerror = () => {
       this.isConnecting = false;
       reject(new Error('WebSocket 连接失败'));
     };
 
-    this.ws.onclose = (event) => {
-      console.log('WebSocket 连接已关闭:', event.code, event.reason);
+    this.ws.onclose = () => {
       this.isConnecting = false;
       this.notifyConnectionHandlers(false);
       
@@ -99,22 +96,80 @@ export class WebSocketManager {
   }
 
   /**
+   * 将 Blob 转换为 ArrayBuffer
+   */
+  private convertBlobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(reader.result);
+        } else {
+          reject(new Error('FileReader 结果不是 ArrayBuffer'));
+        }
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('FileReader 读取失败'));
+      };
+      
+      reader.readAsArrayBuffer(blob);
+    });
+  }
+
+  /**
+   * 创建默认的Blob消息（当解析失败时使用）
+   */
+  private createDefaultBlobMessage(arrayBuffer: ArrayBuffer): RosTopicMessage {
+    const timestamp = Date.now() * 1000000;
+    return {
+      topic_name: 'unparsed_blob',
+      topic_type: 0, // TopicDataType.RawStr
+      timestamp: timestamp,
+      data: {
+        raw_str: {
+          header: {
+            stamp: timestamp,
+            frame_id: 'unknown',
+            seq: 0
+          },
+          raw_data: `Unparsed blob data (${arrayBuffer.byteLength} bytes)`,
+          extra_data: `Failed to parse blob message. Size: ${arrayBuffer.byteLength} bytes`
+        }
+      },
+      extra_data: `Blob parsing failed - ${arrayBuffer.byteLength} bytes`
+    };
+  }
+
+  /**
    * 处理接收到的消息
    */
   private handleMessage(event: MessageEvent) {
     try {
       let message: RosTopicMessage | null = null;
-
+      
       if (event.data instanceof ArrayBuffer) {
-        // 二进制数据，使用 FlatBuffers 解析
         message = FlatBuffersParser.parseMessage(event.data);
+      } else if (event.data instanceof Blob) {
+        this.convertBlobToArrayBuffer(event.data).then((arrayBuffer) => {
+          const blobMessage = FlatBuffersParser.parseMessage(arrayBuffer);
+          
+          if (blobMessage) {
+            this.notifyMessageHandlers(blobMessage);
+          } else {
+            const defaultMessage = this.createDefaultBlobMessage(arrayBuffer);
+            this.notifyMessageHandlers(defaultMessage);
+          }
+        }).catch((error) => {
+          console.error('Blob 转换失败:', error);
+        });
+        return;
       } else if (typeof event.data === 'string') {
-        // 文本数据，尝试解析为 JSON
         try {
           const jsonData = JSON.parse(event.data);
           message = FlatBuffersParser.convertJsonToMessage(jsonData);
-        } catch {
-          // 如果不是 JSON，创建简单的消息对象
+        } catch (jsonError) {
           message = {
             topic_name: 'unknown',
             topic_type: 0,
@@ -153,8 +208,6 @@ export class WebSocketManager {
 
     this.reconnectAttempts++;
     const delay = this.config.reconnectInterval || 5000;
-    
-    console.log(`计划在 ${delay}ms 后重连 (尝试 ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`);
     
     this.reconnectTimer = setTimeout(() => {
       if (!this.isManualClose) {
@@ -204,7 +257,7 @@ export class WebSocketManager {
    * 检查是否已连接
    */
   public isConnected(): boolean {
-    return this.ws && this.ws.readyState === WebSocket.OPEN;
+    return !!(this.ws && this.ws.readyState === WebSocket.OPEN);
   }
 
   /**
@@ -245,7 +298,8 @@ export class WebSocketManager {
    * 通知消息处理器
    */
   private notifyMessageHandlers(message: RosTopicMessage): void {
-    this.messageHandlers.forEach(handler => {
+    console.log('解析后的WebSocket数据:', message);
+    this.messageHandlers.forEach((handler) => {
       try {
         handler(message);
       } catch (error) {
@@ -258,7 +312,7 @@ export class WebSocketManager {
    * 通知连接状态处理器
    */
   private notifyConnectionHandlers(connected: boolean): void {
-    this.connectionHandlers.forEach(handler => {
+    this.connectionHandlers.forEach((handler) => {
       try {
         handler(connected);
       } catch (error) {

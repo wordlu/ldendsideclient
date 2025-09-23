@@ -152,97 +152,14 @@
             <!-- 实时更新频率 -->
             <div class="info-item">
               <span class="label">更新频率:</span>
-              <span class="value updating">500ms</span>
+              <span class="value updating">1000ms</span>
             </div>
-          </div>
-          <!-- 调试控制按钮 -->
-          <div class="debug-controls" v-if="websocketConnected">
-            <!-- <div class="debug-header"> -->
-              <div class="debug-buttons" style="display: flex; align-items: center;">
-                <el-button size="small" type="primary" @click="testDataFlow">测试数据流</el-button>
-                <el-button size="small" type="success" @click="testWebSocketMessage">测试WS消息</el-button>
-                <el-button size="small" type="info" @click="refreshDebugInfo">刷新</el-button>
-                <el-button size="small" type="warning" @click="clearDebugInfo">清空</el-button>
-              </div>
-            <!-- </div> -->
           </div>
           
           <div class="chart-wrapper">
-            <div ref="chartRef" class="chart"></div>
+            <SimpleEcgChart />
           </div>
           
-          <!-- 调试信息显示区域 -->
-          <div class="debug-info" v-if="websocketConnected">
-            
-            <!-- 连接状态 -->
-            <div class="debug-section">
-              <div class="section-title">连接状态</div>
-              <div class="debug-content">
-                <div class="debug-item">
-                  <span class="label">状态:</span>
-                  <span class="value" :class="{ 'connected': websocketConnected, 'disconnected': !websocketConnected }">
-                    {{ websocketStatus }}
-                  </span>
-                </div>
-                <div class="debug-item">
-                  <span class="label">连接地址:</span>
-                  <span class="value">ws://10.86.14.25:8001/ros_ws</span>
-                </div>
-                <div class="debug-item">
-                  <span class="label">连接状态:</span>
-                  <span class="value">{{ getWebSocketState() }}</span>
-                </div>
-                <div class="debug-item">
-                  <span class="label">最后更新:</span>
-                  <span class="value">{{ lastWebSocketUpdate || '无' }}</span>
-                </div>
-                <div class="debug-item">
-                  <span class="label">消息计数:</span>
-                  <span class="value">{{ websocketMessageCount }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 原始数据 -->
-            <!-- <div class="debug-section">
-              <div class="section-title">原始数据 (最新5条)</div>
-              <div class="debug-content">
-                <div v-if="rawWebSocketData.length === 0" class="no-data">
-                  暂无数据
-                </div>
-                <div v-else class="raw-data-list">
-                  <div v-for="(item, index) in rawWebSocketData.slice(-5)" :key="index" class="raw-data-item">
-                    <div class="data-header">
-                      <span class="timestamp">{{ formatTimestamp(item.timestamp) }}</span>
-                      <span class="topic-name">{{ item.topic_name }}</span>
-                    </div>
-                    <div class="data-content">
-                      <pre>{{ JSON.stringify(item, null, 2) }}</pre>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> -->
-            
-            <!-- 解析后的信号数据 -->
-            <!-- <div class="debug-section">
-              <div class="section-title">解析后的信号数据</div>
-              <div class="debug-content">
-                <div v-if="parsedSignalData.length === 0" class="no-data">
-                  暂无解析数据
-                </div>
-                <div v-else class="parsed-data-list">
-                  <div v-for="(item, index) in parsedSignalData.slice(-5)" :key="index" class="parsed-data-item">
-                    <div class="data-header">
-                      <span class="timestamp">{{ formatTimestamp(item.timestamp) }}</span>
-                      <span class="signal-name">{{ item.signalName }}</span>
-                      <span class="signal-value">{{ item.value }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> -->
-          </div>
         </div>
         <div class="no-selection" v-else>
           <el-empty description="请选择左侧信号节点查看数据图表" />
@@ -301,37 +218,30 @@
 </template>
 
 <script setup lang="ts">
-import { ElContainer, ElAside, ElCollapse, ElCollapseItem, ElButton, ElMessageBox, ElMessage, ElNotification, ElTree, ElIcon, ElEmpty, ElTooltip } from 'element-plus';
-import { ref, computed, onMounted, onBeforeUnmount, onUnmounted, nextTick } from 'vue';
-import { addItem, findAll, findItem, deleteItem } from '@/api/jsonApi'
+import { ElButton, ElMessage, ElNotification, ElTree, ElIcon, ElEmpty, ElTooltip } from 'element-plus';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { addItem, findAll, findItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
 import BasicScene from '@/components/visualization/index/BasicScene.vue'
-import DisplayPanel from '@/components/visualization/index/DisplayPanel.vue'
 import sensorConfigs from '@/components/visualization/index/sensorConfigs.vue'
-import gostore from '@/services/governance-store'
-import { MoreFilled, Monitor, Cpu, Folder, Document } from "@element-plus/icons-vue"
-import { useRouter, useRoute } from 'vue-router';
+import { Folder, Document } from "@element-plus/icons-vue"
+import { useRouter } from 'vue-router';
 // import * as echarts from 'echarts';
 
 // 导入 WebSocket 和信号数据管理相关模块
 import { WebSocketManager } from '@/utils/websocket-manager';
 import { SignalDataManager } from '@/utils/signal-data-manager';
 import { RosTopicMessage } from '@/utils/flatbuffers-parser';
+import SimpleEcgChart from '@/components/DataVisualization/SimpleEcgChart.vue';
 
 // 获取当前路由对象
 const router = useRouter();
-const route = useRoute()
 // 创建响应式变量
 const message = ref(null); // 用于存储 SSE 消息
 const messageHigh = ref(null); // 用于存储 SSE cpu负载过高消息
 const error = ref(null);   // 用于存储错误信息
 let eventSource = null;    // 存储 EventSource 对象
 const dialogFormVisible = ref(false)
-interface Option {
-  key: number
-  label: string
-  data: object
-}
 
 const cloudpointparams = ref({
   color: "00ffff",
@@ -341,15 +251,11 @@ const changeProps = (obj) => {
   cloudpointparams.value = Object.assign(cloudpointparams.value, obj)
 }
 
-const loadingtext = ref('')
 // const pageLoading = ref(false)
 const switchLoading = ref(true)
-const showRecordOnDevice = ref(false)
 const testDevice = ref(false)
 const startCollect = ref(false)
 const sensorConfigsRef = ref(null);
-const isAsideExpanded = ref(true);
-const isAsideExpanded1 = ref(true);
 const viewportId = ref('')
 
 const selectedLeafNodes = ref([]);
@@ -372,10 +278,6 @@ const selectedSignalName = ref('')
 const realTimeData = ref<any>(null)
 
 // 调试信息相关变量
-const rawWebSocketData = ref<any[]>([])
-const parsedSignalData = ref<any[]>([])
-const websocketMessageCount = ref(0)
-const lastWebSocketUpdate = ref('')
 const lastChartUpdate = ref('')
 
 const treeProps = {
@@ -433,7 +335,6 @@ const handleLeafNodes = (leafNodes) => {
 };
 
 
-const directive = ref('')
 // 开始调试
 const startupDevice = () => {
   getCurrentPorts()
@@ -639,7 +540,6 @@ const buildSignalTreeFromCollection = (collection, dbcData) => {
   if (!collection.signals || !dbcData) return []
   
   const treeData = []
-  const nodeMap = new Map() // 用于去重
   
   collection.signals.forEach((signal) => {
     const { nodeName, messageName, signalName } = signal
@@ -821,11 +721,6 @@ const closeModal = () => {
   clearInterval(messageInterval);  // 清除定时器
 };
 
-const closeDialogFormVisible = () => {
-  closeModal()
-  shutdownDevice()
-  testDevice.value = false
-}
 
 onMounted(() => {
   queryCurrentDrivers()
@@ -863,7 +758,6 @@ onMounted(() => {
   // 监听服务器发送的消息
   eventSource.addEventListener('message', (event) => {
     message.value = JSON.parse(event.data); // 更新最新消息
-    const title = message.value?.alerts[0]?.labels?.alertname
     const content = message.value?.commonAnnotations?.summary
     const severity = message.value?.alerts[0]?.labels?.severity
     const state = message.value?.alerts[0]?.labels?.state
@@ -929,7 +823,7 @@ const initWebSocket = () => {
 
     // 尝试连接到真实的 WebSocket 服务器
     websocketManager.value = new WebSocketManager({
-      url: 'ws://10.86.14.25:8001/ros_ws',
+      url: 'ws://10.86.14.25:18011/ros_ws',
       reconnectInterval: 3000,
       maxReconnectAttempts: 10 // 增加重连次数，确保连接稳定
     });
@@ -950,33 +844,72 @@ const initWebSocket = () => {
       } else {
         ElMessage.warning('WebSocket 连接已断开');
         console.log('WebSocket 连接断开，尝试重连...');
-        // 连接失败时启动模拟模式
-        startMockMode();
+        // 连接断开时不显示任何数据
+        websocketStatus.value = '未连接';
+        websocketConnected.value = false;
+        // 清空实时数据
+        realTimeData.value = null;
       }
     });
 
     // 添加消息处理器
     websocketManager.value.addMessageHandler((message: RosTopicMessage) => {
-      console.log('WebSocket 接收到消息:', message);
-      console.log('消息类型:', typeof message);
-      console.log('消息结构:', JSON.stringify(message, null, 2));
+      console.log('=== WebSocket 接收到消息 ===');
+      console.log('完整消息结构:', JSON.stringify(message, null, 2));
       
-      if (signalDataManager.value) {
-        signalDataManager.value.processRosMessage(message);
+      // 直接打印所有可能的数据字段
+      console.log('=== 消息数据字段 ===');
+      console.log('topic_name:', message.topic_name);
+      console.log('topic_type:', message.topic_type);
+      console.log('timestamp:', message.timestamp);
+      console.log('data字段:', message.data);
+      
+      if (message.data) {
+        console.log('=== data字段内容 ===');
+        Object.keys(message.data).forEach(key => {
+          console.log(`${key}:`, message.data[key]);
+        });
+        
+        // 检查can_signals字段
+        if (message.data.can_signals) {
+          console.log('=== can_signals数据 ===');
+          console.log('can_signals:', message.data.can_signals);
+          if (message.data.can_signals.signals) {
+            console.log('信号数量:', message.data.can_signals.signals.length);
+            message.data.can_signals.signals.forEach((signal: any, index: number) => {
+              console.log(`信号 ${index + 1}:`, signal);
+            });
+          }
+        }
+        
+        // 检查raw_str字段
+        if (message.data.raw_str) {
+          console.log('=== raw_str数据 ===');
+          console.log('raw_str:', message.data.raw_str);
+          if (message.data.raw_str.raw_data) {
+            console.log('raw_data:', message.data.raw_str.raw_data);
+          }
+        }
       }
       
-      // 添加到调试信息
-      console.log('准备调用 addDebugInfo...');
-      addDebugInfo(message);
-      console.log('addDebugInfo 调用完成');
+      // 处理信号数据
+      if (message.data && message.data.can_signals && message.data.can_signals.signals) {
+        message.data.can_signals.signals.forEach((signal: any) => {
+          if (signal.signalName && typeof signal.value === 'number') {
+            console.log(`处理信号: ${signal.signalName} = ${signal.value}`);
+            if (signalDataManager.value) {
+              signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
+            }
+          }
+        });
+      }
       
       // 实时更新：如果有选中的信号，立即更新图表
       if (selectedSignalName.value && signalDataManager.value) {
         console.log('接收到新数据，立即更新图表:', selectedSignalName.value);
-        // 延迟一小段时间确保数据处理完成
         setTimeout(() => {
           updateChartWithRealData(selectedSignalName.value);
-        }, 100);
+        }, 1000);
       }
     });
     
@@ -1004,7 +937,10 @@ const initWebSocket = () => {
             }
           } else {
             console.log('WebSocket 连接状态异常:', ws?.readyState);
-            startMockMode();
+            websocketStatus.value = '连接异常';
+            websocketConnected.value = false;
+            // 清空实时数据
+            realTimeData.value = null;
           }
         }
       }, 1000);
@@ -1012,7 +948,10 @@ const initWebSocket = () => {
     }).catch(error => {
       console.error('WebSocket 连接失败:', error);
       ElMessage.error('WebSocket 连接失败: ' + error.message);
-      startMockMode();
+      websocketStatus.value = '连接失败';
+      websocketConnected.value = false;
+      // 清空实时数据
+      realTimeData.value = null;
     });
     
     // 监控 WebSocket 状态变化
@@ -1036,423 +975,24 @@ const initWebSocket = () => {
 
   } catch (error) {
     console.error('初始化 WebSocket 失败:', error);
-    ElMessage.warning('初始化 WebSocket 失败，启动模拟模式: ' + error.message);
-    startMockMode();
+    ElMessage.warning('初始化 WebSocket 失败: ' + error.message);
+    websocketStatus.value = '初始化失败';
+    websocketConnected.value = false;
+    // 清空实时数据
+    realTimeData.value = null;
   }
 };
 
-// 启动模拟模式，生成模拟数据来测试实时更新
-const startMockMode = () => {
-  websocketStatus.value = '模拟模式';
-  websocketConnected.value = false;
-  
-  ElMessage.warning('WebSocket 连接失败，启动模拟模式进行测试');
-  
-  // 启动模拟数据生成器
-  startMockDataGenerator();
-};
 
-// 模拟数据生成器
-let mockDataInterval = null;
-const startMockDataGenerator = () => {
-  if (mockDataInterval) {
-    clearInterval(mockDataInterval);
-  }
-  
-  mockDataInterval = setInterval(() => {
-    if (selectedSignalName.value && signalDataManager.value) {
-      // 生成模拟数据
-      const mockValue = Math.random() * 100;
-      const mockTimestamp = Date.now();
-      
-      console.log('生成模拟数据:', selectedSignalName.value, mockValue);
-      
-      // 添加到信号数据管理器
-      signalDataManager.value.addSignalData(selectedSignalName.value, mockValue, mockTimestamp);
-      
-      // 立即更新图表
-      updateChartWithRealData(selectedSignalName.value);
-      
-      // 更新调试信息
-      websocketMessageCount.value++;
-      lastWebSocketUpdate.value = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-      
-      // 更新实时数据
-      if (realTimeData.value) {
-        realTimeData.value.currentValue = mockValue;
-        realTimeData.value.timestamp = new Date(mockTimestamp).toLocaleTimeString('zh-CN', { hour12: false });
-        realTimeData.value.dataPoints++;
-      }
-    }
-  }, 1000); // 每秒生成一个模拟数据点
-  
-  console.log('模拟数据生成器已启动');
-};
 
-// 添加调试信息
-const addDebugInfo = (message: RosTopicMessage) => {
-  console.log('addDebugInfo 被调用，消息:', message);
-  
-  // 添加原始数据
-  rawWebSocketData.value.push({
-    ...message,
-    timestamp: Date.now()
-  });
-  
-  // 限制原始数据数量，最多保存20条
-  if (rawWebSocketData.value.length > 20) {
-    rawWebSocketData.value = rawWebSocketData.value.slice(-20);
-  }
-  
-  // 更新消息计数
-  websocketMessageCount.value++;
-  lastWebSocketUpdate.value = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-  
-  console.log('原始数据数组长度:', rawWebSocketData.value.length);
-  console.log('消息计数:', websocketMessageCount.value);
-  
-  // 尝试解析信号数据
-  console.log('检查消息结构...');
-  console.log('message.data:', message.data);
-  console.log('message.data.raw_str:', message.data?.raw_str);
-  console.log('message.data.raw_str?.raw_data:', message.data?.raw_str?.raw_data);
-  
-  if (message.data?.raw_str?.raw_data) {
-    try {
-      const rawData = message.data.raw_str.raw_data;
-      console.log('原始数据内容:', rawData);
-      
-      const parsedData = parseRawDataToSignals(rawData, message.timestamp);
-      console.log('解析后的信号数据:', parsedData);
-      
-      // 添加解析后的信号数据
-      parsedData.forEach(signal => {
-        parsedSignalData.value.push({
-          ...signal,
-          timestamp: Date.now()
-        });
-        
-        // 重要：将解析后的信号数据添加到信号数据管理器
-        if (signal.signalName && typeof signal.value === 'number') {
-          console.log(`添加信号数据到管理器: ${signal.signalName} = ${signal.value}`);
-          signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
-        }
-      });
-      
-      // 限制解析数据数量，最多保存20条
-      if (parsedSignalData.value.length > 20) {
-        parsedSignalData.value = parsedSignalData.value.slice(-20);
-      }
-      
-      console.log('解析数据数组长度:', parsedSignalData.value.length);
-    } catch (error) {
-      console.error('解析信号数据失败:', error);
-    }
-  } else {
-    console.log('消息中没有 raw_str 或 raw_data，尝试其他字段...');
-    
-    // 尝试其他可能的数据字段
-    if (message.data) {
-      console.log('可用的数据字段:', Object.keys(message.data));
-      
-      // 如果直接有数据字段，尝试解析
-      Object.keys(message.data).forEach(key => {
-        const value = message.data[key];
-        if (typeof value === 'string' && (value.includes('{') || value.includes('='))) {
-          console.log(`尝试解析字段 ${key}:`, value);
-          try {
-            const parsedData = parseRawDataToSignals(value, message.timestamp);
-            if (parsedData.length > 0) {
-              parsedData.forEach(signal => {
-                parsedSignalData.value.push({
-                  ...signal,
-                  timestamp: Date.now()
-                });
-                
-                // 重要：将解析后的信号数据添加到信号数据管理器
-                if (signal.signalName && typeof signal.value === 'number') {
-                  console.log(`字段 ${key} 解析成功，添加信号: ${signal.signalName} = ${signal.value}`);
-                  signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
-                }
-              });
-              console.log(`字段 ${key} 解析成功，添加了 ${parsedData.length} 个信号`);
-            }
-          } catch (error) {
-            console.error(`解析字段 ${key} 失败:`, error);
-          }
-        }
-      });
-    }
-  }
-  
-  // 如果有选中的信号，实时更新图表
-  if (selectedSignalName.value && signalDataManager.value) {
-    console.log('检测到选中信号，准备更新图表:', selectedSignalName.value);
-    
-    // 检查是否有有效数据
-    const currentData = signalDataManager.value.getChartData(selectedSignalName.value);
-    if (currentData && currentData.times && currentData.values && currentData.values.length > 0) {
-      console.log('有有效数据，立即更新图表');
-      updateChartWithRealData(selectedSignalName.value);
-    } else {
-      console.log('暂无有效数据，等待数据...');
-    }
-    
-    // 设置定时器，持续更新图表（但只在有数据时更新）
-    if (window.chartUpdateTimer) {
-      clearInterval(window.chartUpdateTimer);
-    }
-    
-    // 更智能的更新：只在有数据时更新
-    window.chartUpdateTimer = setInterval(() => {
-      if (selectedSignalName.value && signalDataManager.value) {
-        const data = signalDataManager.value.getChartData(selectedSignalName.value);
-        if (data && data.times && data.values && data.values.length > 0) {
-          console.log('定时器触发图表更新:', selectedSignalName.value);
-          updateChartWithRealData(selectedSignalName.value);
-        } else {
-          console.log('定时器检查：暂无有效数据');
-        }
-      }
-    }, 1000); // 降低更新频率，减少无效更新
-  }
-};
 
-// 解析原始数据为信号数据
-const parseRawDataToSignals = (rawData: string, timestamp: number): any[] => {
-  console.log('parseRawDataToSignals 开始解析:', rawData);
-  console.log('数据类型:', typeof rawData);
-  console.log('数据长度:', rawData?.length);
-  
-  if (!rawData || typeof rawData !== 'string') {
-    console.log('原始数据无效，返回空数组');
-    return [];
-  }
-  
-  const signals: any[] = [];
-  
-  try {
-    // 尝试解析为 JSON
-    const data = JSON.parse(rawData);
-    console.log('JSON 解析成功:', data);
-    console.log('JSON 数据类型:', typeof data);
-    console.log('JSON 数据键:', Object.keys(data));
-    
-    if (data.signals) {
-      console.log('找到 signals 字段:', data.signals);
-      // 如果有 signals 字段，遍历所有信号
-      Object.keys(data.signals).forEach(signalName => {
-        const value = data.signals[signalName];
-        console.log(`检查信号 ${signalName}:`, value, '类型:', typeof value);
-        if (typeof value === 'number' || !isNaN(parseFloat(value))) {
-          const numValue = typeof value === 'number' ? value : parseFloat(value);
-          signals.push({
-            signalName,
-            value: numValue,
-            timestamp: timestamp / 1000000
-          });
-          console.log(`添加信号: ${signalName} = ${numValue}`);
-        }
-      });
-    } else {
-      console.log('没有 signals 字段，尝试直接解析');
-      // 尝试从其他字段中提取数值
-      Object.keys(data).forEach(key => {
-        const value = data[key];
-        console.log(`检查字段 ${key}:`, value, '类型:', typeof value);
-        if (typeof value === 'number' || !isNaN(parseFloat(value))) {
-          const numValue = typeof value === 'number' ? value : parseFloat(value);
-          signals.push({
-            signalName: key,
-            value: numValue,
-            timestamp: timestamp / 1000000
-          });
-          console.log(`添加信号: ${key} = ${numValue}`);
-        }
-      });
-    }
-  } catch (error) {
-    console.log('JSON 解析失败，尝试文本解析:', error);
-    // 如果不是 JSON，尝试其他解析方式
-    const pattern = /(\w+)=([^,\s]+)/g;
-    let match;
-    
-    while ((match = pattern.exec(rawData)) !== null) {
-      const signalName = match[1];
-      const valueStr = match[2];
-      const value = parseFloat(valueStr);
-      
-      if (!isNaN(value)) {
-        signals.push({
-          signalName,
-          value,
-          timestamp: timestamp / 1000000
-        });
-        console.log(`文本解析添加信号: ${signalName} = ${value}`);
-      }
-    }
-  }
-  
-  console.log('最终解析结果:', signals);
-  console.log('解析到的信号数量:', signals.length);
-  return signals;
-};
 
-// 格式化时间戳
-const formatTimestamp = (timestamp: number): string => {
-  if (!timestamp) return 'N/A';
-  return new Date(timestamp).toLocaleTimeString('zh-CN', { hour12: false });
-};
 
-// 清空调试信息
-const clearDebugInfo = () => {
-  rawWebSocketData.value = [];
-  parsedSignalData.value = [];
-  websocketMessageCount.value = 0;
-  lastWebSocketUpdate.value = '';
-  ElMessage.success('调试信息已清空');
-};
 
-// 刷新调试信息
-const refreshDebugInfo = () => {
-  console.log('刷新调试信息...');
-  console.log('原始数据数组:', rawWebSocketData.value);
-  console.log('原始数据数组:', rawWebSocketData.value);
-  console.log('解析数据数组:', parsedSignalData.value);
-  console.log('消息计数:', websocketMessageCount.value);
-  console.log('最后更新:', lastWebSocketUpdate.value);
-  
-  // 强制触发响应式更新
-  rawWebSocketData.value = [...rawWebSocketData.value];
-  parsedSignalData.value = [...parsedSignalData.value];
-  
-  ElMessage.success('调试信息已刷新');
-};
 
-// 测试数据流
-const testDataFlow = () => {
-  console.log('=== 开始测试数据流 ===');
-  
-  // 检查当前状态
-  console.log('当前选中信号:', selectedSignalName.value);
-  console.log('WebSocket 连接状态:', websocketConnected.value);
-  console.log('信号数据管理器:', !!signalDataManager.value);
-  
-  if (selectedSignalName.value && signalDataManager.value) {
-    // 检查当前数据状态
-    const currentData = signalDataManager.value.getChartData(selectedSignalName.value);
-    console.log('当前图表数据:', currentData);
-    
-    // 检查信号数据管理器的内部状态
-    const allSignals = signalDataManager.value.getAllSignalNames();
-    console.log('信号数据管理器中的所有信号:', allSignals);
-    
-    if (allSignals.includes(selectedSignalName.value)) {
-      const signalData = signalDataManager.value.getSignalData(selectedSignalName.value);
-      console.log('当前信号的详细数据:', signalData);
-    }
-    
-    // 手动添加测试数据
-    const testValue = Math.random() * 100;
-    const testTimestamp = Date.now();
-    
-    console.log('添加测试数据:', testValue, '时间戳:', testTimestamp);
-    
-    signalDataManager.value.addSignalData(selectedSignalName.value, testValue, testTimestamp);
-    
-    // 再次检查数据状态
-    const updatedData = signalDataManager.value.getChartData(selectedSignalName.value);
-    console.log('添加测试数据后的图表数据:', updatedData);
-    
-    // 更新图表
-    if (updatedData) {
-      updateChart(updatedData.times, updatedData.values);
-      ElMessage.success('测试数据流成功，图表已更新');
-      
-      // 更新实时数据
-      if (realTimeData.value) {
-        realTimeData.value.currentValue = testValue;
-        realTimeData.value.timestamp = new Date(testTimestamp).toLocaleTimeString('zh-CN', { hour12: false });
-        realTimeData.value.dataPoints = updatedData.values.length;
-      }
-      
-      // 更新最后图表更新时间
-      lastChartUpdate.value = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-    } else {
-      ElMessage.error('测试数据流失败，无法获取图表数据');
-    }
-  } else {
-    ElMessage.warning('请先选择一个信号节点');
-  }
-  
-  console.log('=== 测试数据流完成 ===');
-};
 
-// 测试WebSocket消息处理
-const testWebSocketMessage = () => {
-  console.log('=== 测试WebSocket消息处理 ===');
-  
-  if (!websocketManager.value) {
-    ElMessage.error('WebSocket管理器未初始化');
-    return;
-  }
-  
-  // 创建测试消息
-  const testMessage: RosTopicMessage = {
-    topic_name: 'test_topic',
-    topic_type: 0,
-    timestamp: Date.now() * 1000000,
-    data: {
-      raw_str: {
-        header: {
-          stamp: Date.now() * 1000000,
-          frame_id: 'test_frame',
-          seq: 1
-        },
-        raw_data: JSON.stringify({
-          AFSFaultSts: Math.random() * 100,
-          test_signal: Math.random() * 50
-        }),
-        extra_data: 'Test message'
-      }
-    },
-    extra_data: ''
-  };
-  
-  console.log('发送测试消息:', testMessage);
-  
-  // 直接调用消息处理器
-  if (signalDataManager.value) {
-    signalDataManager.value.processRosMessage(testMessage);
-  }
-  
-  // 调用调试信息处理
-  addDebugInfo(testMessage);
-  
-  ElMessage.success('测试消息已发送');
-  console.log('=== 测试WebSocket消息处理完成 ===');
-};
 
-// 获取 WebSocket 状态
-const getWebSocketState = () => {
-  if (!websocketManager.value) return '未初始化';
-  
-  try {
-    const ws = (websocketManager.value as any).ws;
-    if (!ws) return 'WebSocket 实例不存在';
-    
-    const states = {
-      0: '连接中',
-      1: '已连接',
-      2: '关闭中',
-      3: '已关闭'
-    };
-    
-    return `${states[ws.readyState] || '未知'} (${ws.readyState})`;
-  } catch (error) {
-    return '状态获取失败';
-  }
-};
+
 
 
 
@@ -1696,33 +1236,14 @@ const updateChart = (times: string[], values: number[]) => {
 
 
 
-// 生成模拟数据
-const generateMockData = (signalId) => {
-  const now = new Date()
-  const data = []
-  const times = []
-  
-  for (let i = 29; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 1000)
-    times.push(time.toLocaleTimeString('zh-CN', { hour12: false }))
-    
-    // 根据信号ID生成不同的数据模式
-    let value
-    const baseValue = parseInt(signalId) % 100 || 50
-    const variation = Math.sin(i * 0.3) * 20 + Math.random() * 10
-    
-    value = Math.max(0, baseValue + variation)
-    data.push(value.toFixed(2))
-  }
-  
-  return { times, data }
-}
 
 // 初始化图表
 const initChart = () => {
   if (!selectedNode.value || !chartRef.value) return
   
-  const { times, data } = generateMockData(selectedNode.value.id)
+  // 不生成模拟数据，只显示空图表等待真实数据
+  const times = []
+  const data = []
   
   // 获取容器尺寸
   const containerWidth = chartRef.value.clientWidth || 600
@@ -1776,6 +1297,25 @@ const initChart = () => {
   ctx.lineTo(60, canvas.height - 30)
   ctx.lineTo(canvas.width - 20, canvas.height - 30)
   ctx.stroke()
+  
+  // 如果没有数据，显示等待提示
+  if (data.length === 0) {
+    // 绘制等待提示
+    ctx.fillStyle = '#999'
+    ctx.font = '16px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('等待ROS WebSocket数据...', canvas.width / 2, canvas.height / 2)
+    ctx.fillText('请确保WebSocket连接正常', canvas.width / 2, canvas.height / 2 + 25)
+    
+    // 绘制标题
+    ctx.fillStyle = '#333'
+    ctx.font = '14px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText(`${selectedNode.value.label} (等待数据)`, canvas.width / 2, 20)
+    
+    chartInstance.value = canvas
+    return
+  }
   
   // 绘制数据点
   const maxValue = Math.max(...data.map(v => parseFloat(v)))
@@ -2255,180 +1795,6 @@ onUnmounted(() => {
           min-height: 200px;
           max-height: 300px; // 限制最大高度
             overflow: visible; // 允许内容溢出，避免被裁剪
-          }
-        }
-        
-        // 调试控制按钮样式
-        .debug-controls {
-          // margin-bottom: 16px;
-          padding: 12px;
-          // background: #f8f9fa;
-          // border: 1px solid #e9ecef;
-          // border-radius: 6px;
-          flex-shrink: 0;
-          max-height: 120px; // 限制最大高度
-          overflow-y: auto; // 添加竖向滚动条
-
-          .el-button+.el-button {
-            margin-left: 4px;
-          }
-          
-          // 自定义滚动条样式
-          &::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          &::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-          }
-          
-          &::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
-            
-            &:hover {
-              background: #a8a8a8;
-            }
-          }
-          
-          .debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start; // 改为顶部对齐，适应滚动
-            
-            h4 {
-              margin: 0;
-              color: #333;
-              font-size: 14px;
-              font-weight: 600;
-              flex-shrink: 0; // 防止标题被压缩
-            }
-            
-            .debug-buttons {
-              display: flex;
-              gap: 8px;
-              flex-wrap: wrap;
-              flex: 1; // 让按钮区域占据剩余空间
-              justify-content: flex-end; // 按钮右对齐
-            }
-          }
-        }
-        
-        // 调试信息样式
-        .debug-info {
-          margin-top: 16px;
-          border-top: 1px solid #e9ecef;
-          padding-top: 16px;
-          flex-shrink: 0; // 防止被压缩
-          min-height: 200px; // 确保有足够高度显示调试信息
-          
-          .debug-section {
-            margin-bottom: 20px;
-            
-            .section-title {
-              font-size: 13px;
-              font-weight: 600;
-              color: #666;
-              margin-bottom: 8px;
-              padding: 4px 8px;
-              background: #f8f9fa;
-              border-radius: 4px;
-            }
-            
-            .debug-content {
-              .debug-item {
-                display: flex;
-                align-items: center;
-                margin-bottom: 6px;
-                
-                .label {
-                  color: #666;
-                  font-size: 12px;
-                  min-width: 80px;
-                  font-weight: 500;
-                }
-                
-                .value {
-                  color: #333;
-                  font-size: 12px;
-                  font-weight: 600;
-                  
-                  &.connected {
-                    color: #13ce66;
-                  }
-                  
-                  &.disconnected {
-                    color: #f56c6c;
-                  }
-                }
-              }
-              
-              .no-data {
-                color: #999;
-                font-size: 12px;
-                text-align: center;
-                padding: 20px;
-                background: #f8f9fa;
-                border-radius: 4px;
-              }
-              
-              .raw-data-list,
-              .parsed-data-list {
-                .raw-data-item,
-                .parsed-data-item {
-                  margin-bottom: 12px;
-                  padding: 8px;
-                  background: #f8f9fa;
-                  border-radius: 4px;
-                  border: 1px solid #e9ecef;
-                  
-                  .data-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    margin-bottom: 6px;
-                    
-                    .timestamp {
-                      color: #666;
-                      font-size: 11px;
-                      background: #e9ecef;
-                      padding: 2px 6px;
-                      border-radius: 3px;
-                    }
-                    
-                    .topic-name,
-                    .signal-name {
-                      color: #333;
-                      font-size: 12px;
-                      font-weight: 600;
-                    }
-                    
-                    .signal-value {
-                      color: #13ce66;
-                      font-size: 12px;
-                      font-weight: 700;
-                    }
-                  }
-                  
-                  .data-content {
-                    pre {
-                      margin: 0;
-                      font-size: 11px;
-                      color: #666;
-                      background: #fff;
-                      padding: 8px;
-                      border-radius: 3px;
-                      border: 1px solid #e9ecef;
-                      max-height: 120px;
-                      overflow-y: auto;
-                      white-space: pre-wrap;
-                      word-break: break-all;
-                    }
-                  }
-                }
-              }
-            }
         }
       }
     }
