@@ -152,7 +152,7 @@
             </el-button>
           </div>
         </div>
-        <div class="chart-container" v-if="selectedNode">
+        <div class="chart-container">
           <!-- WebSocket 连接状态 -->
           <div class="websocket-status">
             <div class="status-item">
@@ -166,31 +166,32 @@
           <div class="chart-info">
             <div class="info-item">
               <span class="label">信号名称:</span>
-              <span class="value">{{ selectedNode.label }}</span>
+              <span class="value">{{ selectedNode ? selectedNode.label : '请选择信号' }}</span>
             </div>
             <div class="info-item">
               <span class="label">信号ID:</span>
-              <span class="value">{{ selectedNode.id || 'N/A' }}</span>
+              <span class="value">{{ selectedNode ? (selectedNode.id || 'N/A') : 'N/A' }}</span>
             </div>
             <div class="info-item">
               <span class="label">数据大小:</span>
-              <span class="label">{{ selectedNode.size || 'N/A' }}</span>
+              <span class="label">{{ selectedNode ? (selectedNode.size || 'N/A') : 'N/A' }}</span>
             </div>
             <!-- 实时数据显示 -->
-            <div class="info-item" v-if="realTimeData">
+            <div class="info-item">
               <span class="label">当前值:</span>
-              <span class="value real-time">{{ realTimeData.currentValue?.toFixed(6) }}</span>
-              <span class="debug-info" style="font-size: 10px; color: #666; margin-left: 10px;">
+              <span class="value real-time" v-if="realTimeData">{{ realTimeData.currentValue?.toFixed(6) }}</span>
+              <span class="value" v-else>--</span>
+              <span class="debug-info" style="font-size: 10px; color: #666; margin-left: 10px;" v-if="selectedSignalName">
                 (信号: {{ selectedSignalName }})
               </span>
             </div>
-            <div class="info-item" v-if="realTimeData">
+            <div class="info-item">
               <span class="label">更新时间:</span>
-              <span class="value">{{ realTimeData.timestamp }}</span>
+              <span class="value">{{ realTimeData ? realTimeData.timestamp : '--' }}</span>
             </div>
-            <div class="info-item" v-if="realTimeData">
+            <div class="info-item">
               <span class="label">数据点数:</span>
-              <span class="value">{{ realTimeData.dataPoints }}</span>
+              <span class="value">{{ realTimeData ? realTimeData.dataPoints : '--' }}</span>
             </div>
             <!-- 实时更新状态 -->
             <div class="info-item">
@@ -234,9 +235,6 @@
             />
           </div>
           
-        </div>
-        <div class="no-selection" v-else>
-          <el-empty description="请选择左侧信号节点查看数据图表" />
         </div>
       </div>
 
@@ -385,7 +383,7 @@ const treeProps = {
 }
 
 const selectedNode = ref(null)
-const selectedNodeTitle = ref('请选择信号节点')
+const selectedNodeTitle = ref('信号监控')
 const chartRef = ref(null)
 const chartInstance = ref(null)
 const autoRefresh = ref(false)
@@ -593,12 +591,20 @@ const loadCurrentDbcSignalTree = async () => {
             console.log('从信号合集构建的树:', signalTreeData.value)
             // 初始化信号节点颜色
             initializeSignalColors(signalTreeData.value)
+            // 自动选择第一个信号节点
+            nextTick(() => {
+              autoSelectFirstSignal(signalTreeData.value)
+            })
           } else {
             // 如果没有信号合集，使用DBC中的所有信号
             signalTreeData.value = buildSignalTreeFromDbc(dbcDetail.dbc)
             console.log('从DBC构建的树:', signalTreeData.value)
             // 初始化信号节点颜色
             initializeSignalColors(signalTreeData.value)
+            // 自动选择第一个信号节点
+            nextTick(() => {
+              autoSelectFirstSignal(signalTreeData.value)
+            })
           }
         } else {
           // 如果没有信号合集，使用DBC中的所有信号
@@ -606,6 +612,10 @@ const loadCurrentDbcSignalTree = async () => {
           console.log('从DBC构建的树:', signalTreeData.value)
           // 初始化信号节点颜色
           initializeSignalColors(signalTreeData.value)
+          // 自动选择第一个信号节点
+          nextTick(() => {
+            autoSelectFirstSignal(signalTreeData.value)
+          })
         }
       }
     } else {
@@ -917,6 +927,71 @@ const initializeSignalColors = (treeData) => {
     const stats = getColorStats();
     console.log('信号节点颜色初始化完成:', stats);
     console.log(`总共为 ${stats.totalSignals} 个信号生成了 ${stats.totalUsedColors} 种不同颜色`);
+  }
+}
+
+// 自动选择第一个信号节点
+const autoSelectFirstSignal = (treeData) => {
+  if (!treeData || treeData.length === 0) return;
+  
+  const findFirstSignalNode = (nodes) => {
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        // 递归查找子节点
+        const found = findFirstSignalNode(node.children);
+        if (found) return found;
+      } else {
+        // 找到第一个叶子节点（信号节点）
+        return node;
+      }
+    }
+    return null;
+  };
+  
+  const firstSignal = findFirstSignalNode(treeData);
+  if (firstSignal) {
+    console.log('自动选择第一个信号节点:', firstSignal);
+    
+    // 设置选中的节点
+    selectedNode.value = firstSignal;
+    selectedNodeTitle.value = firstSignal.label;
+    selectedSignalName.value = firstSignal.label;
+    
+    // 自动勾选第一个信号
+    if (treeRef.value) {
+      treeRef.value.setChecked(firstSignal.id, true);
+    }
+    
+    // 更新已选信号列表
+    selectedSignals.value = [firstSignal];
+    checkedSignals.value = [firstSignal];
+    
+    // 立即更新实时数据
+    updateCurrentSignalData(firstSignal.label);
+    
+    // 自动建立WebSocket连接
+    autoConnectWebSocket();
+    
+    console.log('第一个信号节点已自动选择并勾选');
+  }
+}
+
+// 自动建立WebSocket连接
+const autoConnectWebSocket = () => {
+  if (!websocketManager.value) {
+    console.log('WebSocket管理器未初始化，开始初始化...');
+    initWebSocket();
+  } else if (!websocketConnected.value) {
+    console.log('WebSocket未连接，开始连接...');
+    websocketManager.value.connect().catch((error) => {
+      console.error('WebSocket 连接失败:', error);
+    });
+  } else {
+    console.log('WebSocket已连接，开始信号监控...');
+    // 如果WebSocket已连接，直接开始监控选中的信号
+    if (selectedSignalName.value) {
+      startSignalMonitoring(selectedSignalName.value);
+    }
   }
 }
 
@@ -1456,6 +1531,14 @@ const initWebSocket = () => {
         // 如果已有选中的信号，开始监听
         if (selectedSignalName.value && signalDataManager.value) {
           startSignalMonitoring(selectedSignalName.value);
+        }
+        // 如果有已勾选的信号，开始监控
+        if (selectedSignals.value.length > 0) {
+          selectedSignals.value.forEach(signal => {
+            if (signalDataManager.value) {
+              startSignalMonitoring(signal.label);
+            }
+          });
         }
       } else {
         ElMessage.warning('WebSocket 连接已断开');
