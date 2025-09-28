@@ -32,6 +32,12 @@
             <el-button size="small" @click="refreshSignalTree" :loading="signalTreeLoading">
               刷新信号树
             </el-button>
+            <el-button size="small" @click="selectAllSignals" :disabled="signalTreeLoading">
+              全选
+            </el-button>
+            <el-button size="small" @click="clearAllSignals" :disabled="signalTreeLoading">
+              清空
+            </el-button>
           </div>
         </div>
         <div class="tree-container">
@@ -55,11 +61,16 @@
           <!-- 信号树 -->
           <el-tree
             v-else
+            ref="treeRef"
             :data="signalTreeData"
             :props="treeProps"
             @node-click="handleNodeClick"
+            @check="handleNodeCheck"
             :highlight-current="true"
             :expand-on-click-node="false"
+            :check-strictly="false"
+            :check-on-click-node="false"
+            show-checkbox
             node-key="id"
             default-expand-all>
             <template #default="{ node, data }">
@@ -85,6 +96,38 @@
           <!-- 空状态 -->
           <div v-if="!signalTreeLoading && signalTreeData.length === 0" class="empty-state">
             <el-empty description="暂无信号数据" />
+          </div>
+          
+          <!-- 已选信号显示区域 -->
+          <div v-if="selectedSignals.length > 0" class="selected-signals">
+            <div class="selected-header">
+              <h4>已选信号 ({{ selectedSignals.length }})</h4>
+              <div class="signal-status">
+                <span class="status-indicator" :class="{ 'monitoring': websocketConnected }"></span>
+                <span class="status-text">{{ websocketConnected ? '监控中' : '未连接' }}</span>
+              </div>
+            </div>
+            <div class="selected-list">
+              <div 
+                v-for="signal in selectedSignals" 
+                :key="signal.id"
+                class="selected-item"
+                :class="{ 
+                  'active': selectedNode && selectedNode.id === signal.id,
+                  'has-data': getSignalHasData(signal.label)
+                }"
+                @click="selectSignalForView(signal)"
+              >
+                <div class="signal-info">
+                  <span class="signal-name">{{ signal.label }}</span>
+                  <span v-if="signal.size" class="signal-size">({{ signal.size }}bit)</span>
+                </div>
+                <div class="signal-status-indicator">
+                  <span v-if="getSignalHasData(signal.label)" class="data-indicator">●</span>
+                  <span v-else class="no-data-indicator">○</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -127,7 +170,10 @@
             <!-- 实时数据显示 -->
             <div class="info-item" v-if="realTimeData">
               <span class="label">当前值:</span>
-              <span class="value real-time">{{ realTimeData.currentValue }}</span>
+              <span class="value real-time">{{ realTimeData.currentValue?.toFixed(6) }}</span>
+              <span class="debug-info" style="font-size: 10px; color: #666; margin-left: 10px;">
+                (信号: {{ selectedSignalName }})
+              </span>
             </div>
             <div class="info-item" v-if="realTimeData">
               <span class="label">更新时间:</span>
@@ -152,12 +198,30 @@
             <!-- 实时更新频率 -->
             <div class="info-item">
               <span class="label">更新频率:</span>
-              <span class="value updating">1000ms</span>
+              <span class="value updating">{{ updateThrottle }}ms</span>
+            </div>
+            <!-- 数据平滑设置 -->
+            <div class="info-item">
+              <span class="label">平滑程度:</span>
+              <el-slider
+                v-model="smoothingFactor"
+                :min="0.1"
+                :max="1"
+                :step="0.1"
+                :show-tooltip="false"
+                style="width: 100px; margin-left: 10px;"
+                @change="onSmoothingChange"
+              />
+              <span class="value" style="margin-left: 10px;">{{ (smoothingFactor * 100).toFixed(0) }}%</span>
             </div>
           </div>
           
           <div class="chart-wrapper">
-            <SimpleEcgChart />
+            <SimpleEcgChart 
+              :selectedSignals="selectedSignals" 
+              :websocketConnected="websocketConnected"
+              :signalData="ecgChartSignalData"
+            />
           </div>
           
         </div>
@@ -218,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElButton, ElMessage, ElNotification, ElTree, ElIcon, ElEmpty, ElTooltip } from 'element-plus';
+import { ElButton, ElMessage, ElNotification, ElTree, ElIcon, ElEmpty, ElTooltip, ElSlider } from 'element-plus';
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { addItem, findAll, findItem } from '@/api/jsonApi'
 // import PointView from '@/components/visualization/PointView.vue'
@@ -268,6 +332,27 @@ const signalTreeData = ref([])
 const currentDbc = ref('')
 const currentSignalCollection = ref('')
 const signalTreeLoading = ref(false)
+
+// 信号树勾选相关变量
+const checkedSignals = ref([])
+const selectedSignals = ref([])
+const treeRef = ref(null)
+
+// SimpleEcgChart数据
+const ecgChartSignalData = ref([])
+
+// 数据验证和防抖相关变量
+const lastUpdateTime = ref(0)
+const updateThrottle = 100 // 100ms防抖间隔
+const dataValidation = {
+  minValue: -10000,
+  maxValue: 10000,
+  maxChangeRate: 1000 // 每秒最大变化率
+}
+
+// 数据平滑相关变量
+const smoothedValues = ref(new Map()) // 存储平滑后的数值
+const smoothingFactor = 0.3 // 平滑因子，0-1之间，越小越平滑
 
 // WebSocket 和信号数据管理相关变量
 const websocketManager = ref<WebSocketManager | null>(null)
@@ -522,6 +607,289 @@ const refreshSignalTree = async () => {
   ElMessage.success('信号树刷新成功')
 }
 
+// 全选信号
+const selectAllSignals = () => {
+  if (treeRef.value) {
+    // 获取所有信号节点
+    const allSignalNodes = getAllSignalNodes(signalTreeData.value);
+    const signalKeys = allSignalNodes.map(node => node.id);
+    const previousSelectedSignals = [...selectedSignals.value];
+    
+    treeRef.value.setCheckedKeys(signalKeys);
+    selectedSignals.value = allSignalNodes;
+    checkedSignals.value = signalKeys;
+    
+    // 更新信号监控
+    updateSignalMonitoring(previousSelectedSignals, allSignalNodes);
+    
+    ElMessage.success(`已选择 ${allSignalNodes.length} 个信号`);
+  }
+}
+
+// 清空选择
+const clearAllSignals = () => {
+  if (treeRef.value) {
+    const previousSelectedSignals = [...selectedSignals.value];
+    
+    treeRef.value.setCheckedKeys([]);
+    selectedSignals.value = [];
+    checkedSignals.value = [];
+    selectedNode.value = null;
+    selectedNodeTitle.value = '请选择信号节点';
+    selectedSignalName.value = '';
+    realTimeData.value = null;
+    
+    // 停止所有信号监控
+    updateSignalMonitoring(previousSelectedSignals, []);
+    
+    ElMessage.success('已清空所有选择');
+  }
+}
+
+// 获取所有信号节点（递归遍历树）
+const getAllSignalNodes = (nodes) => {
+  let signalNodes = [];
+  nodes.forEach(node => {
+    if (node.type === 'signal') {
+      signalNodes.push(node);
+    }
+    if (node.children && node.children.length > 0) {
+      signalNodes = signalNodes.concat(getAllSignalNodes(node.children));
+    }
+  });
+  return signalNodes;
+}
+
+// 选择信号进行查看
+const selectSignalForView = (signal) => {
+  console.log('选择信号进行查看:', signal);
+  
+  selectedNode.value = signal;
+  selectedNodeTitle.value = signal.label;
+  selectedSignalName.value = signal.label;
+  
+  // 立即更新实时数据
+  updateCurrentSignalData(signal.label);
+  
+  nextTick(() => {
+    initChart();
+  });
+}
+
+// 更新当前信号的实时数据
+const updateCurrentSignalData = (signalName) => {
+  if (!signalDataManager.value) {
+    console.log('信号数据管理器未初始化');
+    return;
+  }
+  
+  // 验证信号名称是否与当前选中的信号一致
+  if (selectedSignalName.value !== signalName) {
+    console.warn(`信号名称不匹配: 当前选中=${selectedSignalName.value}, 更新信号=${signalName}`);
+    return;
+  }
+  
+  const signalData = signalDataManager.value.getSignalData(signalName);
+  if (signalData && signalData.dataPoints && signalData.dataPoints.length > 0) {
+    const rawValue = signalData.dataPoints[signalData.dataPoints.length - 1]?.value || 0;
+    const smoothedValue = smoothValue(signalName, rawValue);
+    
+    realTimeData.value = {
+      currentValue: smoothedValue,
+      timestamp: new Date(signalData.lastUpdateTime).toLocaleTimeString('zh-CN', { hour12: false }),
+      dataPoints: signalData.dataPoints.length
+    };
+    
+    console.log(`更新当前信号 ${signalName} 的实时数据:`, realTimeData.value);
+  } else {
+    // 如果没有数据，清空实时数据
+    realTimeData.value = null;
+    console.log(`信号 ${signalName} 暂无数据`);
+  }
+}
+
+// 验证实时数据一致性
+const validateRealTimeData = () => {
+  if (realTimeData.value && selectedSignalName.value) {
+    // 这里可以添加额外的验证逻辑
+    console.log(`实时数据验证: 信号=${selectedSignalName.value}, 值=${realTimeData.value.currentValue}`);
+  }
+}
+
+// 检查信号是否有数据
+const getSignalHasData = (signalName) => {
+  if (!signalDataManager.value) return false;
+  const signalData = signalDataManager.value.getSignalData(signalName);
+  return signalData && signalData.dataPoints && signalData.dataPoints.length > 0;
+}
+
+// 数据验证函数
+const validateSignalData = (signalName, value, timestamp) => {
+  // 检查数值范围
+  if (value < dataValidation.minValue || value > dataValidation.maxValue) {
+    console.warn(`信号 ${signalName} 数值超出范围: ${value}`);
+    return false;
+  }
+  
+  // 检查是否为有效数字
+  if (!isFinite(value) || isNaN(value)) {
+    console.warn(`信号 ${signalName} 数值无效: ${value}`);
+    return false;
+  }
+  
+  // 检查变化率（防止异常跳跃）
+  if (signalDataManager.value) {
+    const signalData = signalDataManager.value.getSignalData(signalName);
+    if (signalData && signalData.dataPoints.length > 0) {
+      const lastValue = signalData.dataPoints[signalData.dataPoints.length - 1].value;
+      const timeDiff = (timestamp - signalData.lastUpdateTime) / 1000; // 秒
+      const valueDiff = Math.abs(value - lastValue);
+      const changeRate = timeDiff > 0 ? valueDiff / timeDiff : 0;
+      
+      if (changeRate > dataValidation.maxChangeRate) {
+        console.warn(`信号 ${signalName} 变化率过大: ${changeRate.toFixed(2)}/s`);
+        return false;
+      }
+    }
+  }
+  
+  return true;
+}
+
+// 防抖更新函数
+const throttledUpdate = (callback) => {
+  const now = Date.now();
+  if (now - lastUpdateTime.value >= updateThrottle) {
+    lastUpdateTime.value = now;
+    callback();
+  } else {
+    // 延迟执行
+    setTimeout(() => {
+      if (Date.now() - lastUpdateTime.value >= updateThrottle) {
+        lastUpdateTime.value = Date.now();
+        callback();
+      }
+    }, updateThrottle - (now - lastUpdateTime.value));
+  }
+}
+
+// 数据平滑函数
+const smoothValue = (signalName, newValue) => {
+  if (!smoothedValues.value.has(signalName)) {
+    smoothedValues.value.set(signalName, newValue);
+    return newValue;
+  }
+  
+  const previousValue = smoothedValues.value.get(signalName);
+  const smoothedValue = previousValue + smoothingFactor * (newValue - previousValue);
+  smoothedValues.value.set(signalName, smoothedValue);
+  
+  return smoothedValue;
+}
+
+// 清理平滑数据
+const clearSmoothedData = (signalName) => {
+  smoothedValues.value.delete(signalName);
+}
+
+// 平滑程度变化处理
+const onSmoothingChange = (value) => {
+  console.log('平滑程度已调整为:', value);
+  // 重置所有平滑数据，让新的平滑因子生效
+  smoothedValues.value.clear();
+  ElMessage.success(`数据平滑程度已调整为 ${(value * 100).toFixed(0)}%`);
+}
+
+// 信号状态更新定时器
+let signalStatusUpdateTimer = null;
+
+// 启动信号状态更新定时器
+const startSignalStatusUpdater = () => {
+  // 每2秒更新一次信号状态显示
+  signalStatusUpdateTimer = setInterval(() => {
+    // 强制更新组件，触发getSignalHasData重新计算
+    if (selectedSignals.value.length > 0) {
+      // 这里可以添加一些状态更新逻辑
+      // Vue的响应式系统会自动处理getSignalHasData的重新计算
+    }
+  }, 2000);
+}
+
+// 停止信号状态更新定时器
+const stopSignalStatusUpdater = () => {
+  if (signalStatusUpdateTimer) {
+    clearInterval(signalStatusUpdateTimer);
+    signalStatusUpdateTimer = null;
+  }
+}
+
+// 通知SimpleEcgChart组件更新数据
+const notifySimpleEcgChart = (message: any) => {
+  // 处理CAN信号数据并更新ecgChartSignalData
+  if (message.data && message.data.can_signals && message.data.can_signals.signals) {
+    const selectedSignalNames = selectedSignals.value.map(signal => signal.label);
+    const signalDataArray = [];
+    
+    message.data.can_signals.signals.forEach((signal: any) => {
+      if (signal.signalName && typeof signal.value === 'number' && selectedSignalNames.includes(signal.signalName)) {
+        signalDataArray.push({
+          signalName: signal.signalName,
+          value: signal.value,
+          timestamp: message.timestamp
+        });
+      }
+    });
+    
+    // 传递所有勾选信号的数据
+    if (signalDataArray.length > 0) {
+      ecgChartSignalData.value = signalDataArray;
+      console.log('=== 通知SimpleEcgChart更新数据 ===');
+      console.log('信号数据数组:', signalDataArray);
+      console.log('数组长度:', signalDataArray.length);
+      signalDataArray.forEach((data, index) => {
+        console.log(`信号 ${index + 1}: ${data.signalName} = ${data.value}`);
+      });
+    }
+  }
+}
+
+// 更新信号监控 - 只监控勾选的信号
+const updateSignalMonitoring = (previousSignals, currentSignals) => {
+  if (!signalDataManager.value) return;
+  
+  const previousSignalNames = previousSignals.map(s => s.label);
+  const currentSignalNames = currentSignals.map(s => s.label);
+  
+  // 停止监控不再勾选的信号
+  previousSignalNames.forEach(signalName => {
+    if (!currentSignalNames.includes(signalName)) {
+      console.log(`停止监控信号: ${signalName}`);
+      signalDataManager.value.removeDataUpdateCallback(signalName);
+      // 清空该信号的数据
+      signalDataManager.value.clearSignalData(signalName);
+      // 清理平滑数据
+      clearSmoothedData(signalName);
+    }
+  });
+  
+  // 开始监控新勾选的信号
+  currentSignalNames.forEach(signalName => {
+    if (!previousSignalNames.includes(signalName)) {
+      console.log(`开始监控信号: ${signalName}`);
+      if (websocketConnected.value) {
+        startSignalMonitoring(signalName);
+      }
+    }
+  });
+  
+  // 如果当前查看的信号仍然在勾选列表中，继续监控
+  if (selectedSignalName.value && currentSignalNames.includes(selectedSignalName.value)) {
+    if (websocketConnected.value) {
+      startSignalMonitoring(selectedSignalName.value);
+    }
+  }
+}
+
 // 获取节点的提示内容
 const getNodeTooltipContent = (node: any, data: any) => {
   let content = `节点名称: ${node.label} `
@@ -730,6 +1098,9 @@ onMounted(() => {
   // 初始化 WebSocket 连接
   initWebSocket()
   
+  // 启动信号状态更新定时器
+  startSignalStatusUpdater()
+  
   // 建立普通警告长连接
   eventSource = new EventSource(
     `${window.server.mecPrefix}/api/logger/events/alert?channel=high`,
@@ -798,6 +1169,9 @@ const handleNodeClick = (data) => {
     
     console.log('设置选中的信号名称:', selectedSignalName.value);
     
+    // 立即更新实时数据
+    updateCurrentSignalData(data.label);
+    
     // 如果 WebSocket 已连接，开始监听该信号的数据
     if (websocketConnected.value && signalDataManager.value) {
       console.log('WebSocket 已连接，开始信号监控');
@@ -812,6 +1186,44 @@ const handleNodeClick = (data) => {
       console.log('初始化图表...');
       initChart()
     })
+  }
+}
+
+// 处理节点勾选事件
+const handleNodeCheck = (data, { checkedNodes, checkedKeys, halfCheckedKeys }) => {
+  console.log('节点勾选变化:', data);
+  console.log('已勾选节点:', checkedNodes);
+  console.log('已勾选键值:', checkedKeys);
+  
+  // 过滤出信号节点（叶子节点）
+  const signalNodes = checkedNodes.filter(node => node.type === 'signal');
+  const previousSelectedSignals = [...selectedSignals.value];
+  selectedSignals.value = signalNodes;
+  checkedSignals.value = checkedKeys;
+  
+  console.log('已选择的信号:', selectedSignals.value);
+  
+  // 更新信号监控 - 只监控勾选的信号
+  updateSignalMonitoring(previousSelectedSignals, signalNodes);
+  
+  // 如果当前选中的信号被取消勾选，清空图表
+  if (selectedNode.value && !checkedKeys.includes(selectedNode.value.id)) {
+    selectedNode.value = null;
+    selectedNodeTitle.value = '请选择信号节点';
+    selectedSignalName.value = '';
+    realTimeData.value = null;
+  }
+  
+  // 如果只有一个信号被选中，自动设置为当前查看的信号
+  if (signalNodes.length === 1) {
+    const signalNode = signalNodes[0];
+    selectedNode.value = signalNode;
+    selectedNodeTitle.value = signalNode.label;
+    selectedSignalName.value = signalNode.label;
+    
+    nextTick(() => {
+      initChart();
+    });
   }
 }
 
@@ -892,25 +1304,54 @@ const initWebSocket = () => {
         }
       }
       
-      // 处理信号数据
+      // 处理信号数据 - 只处理勾选的信号
       if (message.data && message.data.can_signals && message.data.can_signals.signals) {
+        // 获取当前勾选的信号名称列表
+        const selectedSignalNames = selectedSignals.value.map(signal => signal.label);
+        
         message.data.can_signals.signals.forEach((signal: any) => {
           if (signal.signalName && typeof signal.value === 'number') {
-            console.log(`处理信号: ${signal.signalName} = ${signal.value}`);
-            if (signalDataManager.value) {
-              signalDataManager.value.addSignalData(signal.signalName, signal.value, message.timestamp / 1000000);
+            // 只处理勾选的信号
+            if (selectedSignalNames.includes(signal.signalName)) {
+              const timestamp = message.timestamp / 1000000;
+              
+              // 数据验证
+              if (validateSignalData(signal.signalName, signal.value, timestamp)) {
+                console.log(`=== 处理勾选信号: ${signal.signalName} = ${signal.value} ===`);
+                console.log('当前选中的信号:', selectedSignalName.value);
+                console.log('信号数据管理器状态:', !!signalDataManager.value);
+                
+                if (signalDataManager.value) {
+                  signalDataManager.value.addSignalData(signal.signalName, signal.value, timestamp);
+                  console.log(`信号 ${signal.signalName} 数据已添加到管理器`);
+                } else {
+                  console.error('信号数据管理器未初始化');
+                }
+              } else {
+                console.warn(`跳过无效信号数据: ${signal.signalName} = ${signal.value}`);
+              }
+            } else {
+              console.log(`跳过未勾选信号: ${signal.signalName}`);
             }
           }
         });
       }
       
-      // 实时更新：如果有选中的信号，立即更新图表
+      // 实时更新：如果有选中的信号且该信号被勾选，使用防抖更新图表
       if (selectedSignalName.value && signalDataManager.value) {
-        console.log('接收到新数据，立即更新图表:', selectedSignalName.value);
-        setTimeout(() => {
-          updateChartWithRealData(selectedSignalName.value);
-        }, 1000);
+        const isSignalSelected = selectedSignals.value.some(signal => signal.label === selectedSignalName.value);
+        if (isSignalSelected) {
+          console.log('接收到新数据，准备更新图表:', selectedSignalName.value);
+          throttledUpdate(() => {
+            updateChartWithRealData(selectedSignalName.value);
+          });
+        } else {
+          console.log('当前查看的信号未被勾选，跳过图表更新:', selectedSignalName.value);
+        }
       }
+      
+      // 通知SimpleEcgChart组件更新数据
+      notifySimpleEcgChart(message);
     });
     
     // 测试消息处理器是否正常工作
@@ -1000,28 +1441,64 @@ const initWebSocket = () => {
 const startSignalMonitoring = (signalName: string) => {
   if (!signalDataManager.value) return;
 
+  // 检查信号是否被勾选
+  const isSignalSelected = selectedSignals.value.some(signal => signal.label === signalName);
+  if (!isSignalSelected) {
+    console.log(`信号 ${signalName} 未被勾选，跳过监控设置`);
+    return;
+  }
+
   console.log(`开始监控信号: ${signalName}`);
 
-  // 清除之前的回调
-  signalDataManager.value.removeDataUpdateCallback(selectedSignalName.value);
+  // 清除之前的回调（如果有的话）
+  if (selectedSignalName.value) {
+    signalDataManager.value.removeDataUpdateCallback(selectedSignalName.value);
+  }
 
   // 添加新的数据更新回调
   signalDataManager.value.onDataUpdate(signalName, (signalData) => {
-    console.log(`信号 ${signalName} 数据更新:`, signalData);
+    console.log(`=== 信号 ${signalName} 数据更新回调触发 ===`);
+    console.log('信号数据:', signalData);
+    console.log('当前选中的信号:', selectedSignalName.value);
+    console.log('当前选中的节点:', selectedNode.value);
+    console.log('WebSocket连接状态:', websocketConnected.value);
     
-    // 更新实时数据
-    realTimeData.value = {
-      currentValue: signalData.dataPoints[signalData.dataPoints.length - 1]?.value || 0,
-      timestamp: new Date(signalData.lastUpdateTime).toLocaleTimeString('zh-CN', { hour12: false }),
-      dataPoints: signalData.dataPoints.length
-    };
-
-    console.log('实时数据已更新:', realTimeData.value);
-
-    // 如果图表已初始化，更新图表数据
+    // 再次检查信号是否仍然被勾选
+    const isStillSelected = selectedSignals.value.some(signal => signal.label === signalName);
+    console.log(`信号 ${signalName} 是否仍被勾选:`, isStillSelected);
+    
+    if (!isStillSelected) {
+      console.log(`信号 ${signalName} 已被取消勾选，停止数据处理`);
+      return;
+    }
+    
+    // 只更新当前选中信号的实时数据
     if (selectedNode.value && selectedNode.value.label === signalName) {
-      console.log('准备更新图表数据...');
-      updateChartWithRealData(signalName);
+      console.log(`=== 更新当前选中信号 ${signalName} 的实时数据 ===`);
+      
+      // 使用防抖更新实时数据
+      throttledUpdate(() => {
+        const rawValue = signalData.dataPoints[signalData.dataPoints.length - 1]?.value || 0;
+        const smoothedValue = smoothValue(signalName, rawValue);
+        
+        // 更新实时数据（使用平滑后的数值）
+        realTimeData.value = {
+          currentValue: smoothedValue,
+          timestamp: new Date(signalData.lastUpdateTime).toLocaleTimeString('zh-CN', { hour12: false }),
+          dataPoints: signalData.dataPoints.length
+        };
+
+        console.log('=== 实时数据已更新 ===');
+        console.log('实时数据:', realTimeData.value);
+        console.log(`原始值: ${rawValue}, 平滑值: ${smoothedValue.toFixed(6)}`);
+
+        // 更新图表数据
+        console.log('准备更新图表数据...');
+        updateChartWithRealData(signalName);
+      });
+    } else {
+      console.log(`信号 ${signalName} 不是当前选中的信号，跳过实时数据更新`);
+      console.log('当前选中节点标签:', selectedNode.value?.label);
     }
   });
 
@@ -1031,6 +1508,13 @@ const startSignalMonitoring = (signalName: string) => {
 // 使用实时数据更新图表
 const updateChartWithRealData = (signalName: string) => {
   if (!signalDataManager.value) return;
+
+  // 检查信号是否被勾选
+  const isSignalSelected = selectedSignals.value.some(signal => signal.label === signalName);
+  if (!isSignalSelected) {
+    console.log(`信号 ${signalName} 未被勾选，跳过图表更新`);
+    return;
+  }
 
   console.log(`准备更新图表，信号: ${signalName}`);
   
@@ -1227,7 +1711,7 @@ const updateChart = (times: string[], values: number[]) => {
     ctx.fillStyle = '#ff4757';
     ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`当前值: ${lastValue.toFixed(2)}`, 70, canvas.height - 40);
+    ctx.fillText(`当前值: ${lastValue.toFixed(6)}`, 70, canvas.height - 40);
     ctx.fillText(`更新时间: ${lastTime}`, 70, canvas.height - 20);
   }
 
@@ -1410,7 +1894,8 @@ onUnmounted(() => {
     clearInterval(refreshInterval.value)
   }
   
-
+  // 停止信号状态更新定时器
+  stopSignalStatusUpdater();
   
   // 清理 WebSocket 连接和信号数据管理器
   if (websocketManager.value) {
@@ -1603,6 +2088,147 @@ onUnmounted(() => {
           min-width: 320px; // 增加最小宽度，确保有足够滚动空间
         }
 
+        .selected-signals {
+          margin-top: 16px;
+          padding: 12px;
+          background: #f0f9ff;
+          border: 1px solid #bae6fd;
+          border-radius: 6px;
+          min-width: 320px;
+
+          .selected-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            
+            h4 {
+              margin: 0;
+              color: #0369a1;
+              font-size: 14px;
+              font-weight: 600;
+            }
+
+            .signal-status {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+
+              .status-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #dc2626;
+                transition: background-color 0.3s ease;
+
+                &.monitoring {
+                  background: #16a34a;
+                  animation: pulse 2s infinite;
+                }
+              }
+
+              .status-text {
+                font-size: 11px;
+                color: #666;
+                font-weight: 500;
+              }
+            }
+          }
+
+          .selected-list {
+            max-height: 200px;
+            overflow-y: auto;
+            
+            .selected-item {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 6px 8px;
+              margin-bottom: 4px;
+              background: white;
+              border: 1px solid #e0f2fe;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              white-space: nowrap;
+
+              &:hover {
+                background: #e0f2fe;
+                border-color: #0369a1;
+              }
+
+              &.active {
+                background: #0369a1;
+                color: white;
+                border-color: #0369a1;
+
+                .signal-name {
+                  color: white;
+                }
+
+                .signal-size {
+                  color: #bae6fd;
+                }
+
+                .data-indicator {
+                  color: #bae6fd;
+                }
+
+                .no-data-indicator {
+                  color: #bae6fd;
+                }
+              }
+
+              &.has-data {
+                border-left: 3px solid #16a34a;
+              }
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+
+              .signal-info {
+                display: flex;
+                align-items: center;
+                flex: 1;
+                min-width: 0;
+
+                .signal-name {
+                  color: #333;
+                  font-size: 12px;
+                  font-weight: 500;
+                  flex: 1;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                }
+
+                .signal-size {
+                  color: #666;
+                  font-size: 11px;
+                  margin-left: 8px;
+                  flex-shrink: 0;
+                }
+              }
+
+              .signal-status-indicator {
+                margin-left: 8px;
+                flex-shrink: 0;
+
+                .data-indicator {
+                  color: #16a34a;
+                  font-size: 12px;
+                  font-weight: bold;
+                }
+
+                .no-data-indicator {
+                  color: #9ca3af;
+                  font-size: 12px;
+                }
+              }
+            }
+          }
+        }
+
                 // 为树形组件添加横向滚动支持
         ::v-deep .el-tree {
           min-width: 320px; // 增加最小宽度，确保有足够滚动空间
@@ -1674,9 +2300,9 @@ onUnmounted(() => {
 
   // 第二列：信号折线图
   .signal-chart-panel {
-    width: 350px;
+    width: 400px; // 增加宽度
     height: 100%;
-    min-height: 600px; // 确保有足够的最小高度
+    min-height: 700px; // 增加最小高度
 
     .chart-container {
       flex: 1;
@@ -1684,8 +2310,8 @@ onUnmounted(() => {
       display: flex;
       flex-direction: column;
       height: calc(100% - 60px); // 减去header高度
-        min-height: 500px; // 设置最小高度，确保有足够空间
-        max-height: 600px; // 增加最大高度，避免内容被压缩
+      min-height: 600px; // 增加最小高度
+      max-height: none; // 移除最大高度限制
 
         .websocket-status {
           display: flex;
@@ -1786,15 +2412,17 @@ onUnmounted(() => {
       .chart-wrapper {
         flex: 1;
         position: relative;
-        min-height: 0; // 重要：允许flex子项收缩
-          height: 300px; // 固定高度，确保图表完整显示
+        min-height: 400px; // 增加最小高度
+        height: 100%; // 使用100%高度，适应父容器
+        display: flex;
+        flex-direction: column;
 
         .chart {
           width: 100%;
           height: 100%;
-          min-height: 200px;
-          max-height: 300px; // 限制最大高度
-            overflow: visible; // 允许内容溢出，避免被裁剪
+          flex: 1;
+          min-height: 300px; // 增加最小高度
+          overflow: visible; // 允许内容溢出，避免被裁剪
         }
       }
     }

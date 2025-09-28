@@ -15,8 +15,6 @@
     <div class="chart-container">
       <canvas 
         ref="chartCanvas" 
-        width="300" 
-        height="200"
         class="chart-canvas"
       ></canvas>
     </div>
@@ -24,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted } from 'vue';
+import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { WebSocketManager, RosTopicMessage } from '@/utils/websocket-manager';
 
@@ -36,7 +34,21 @@ interface SignalData {
 
 export default defineComponent({
   name: 'SimpleEcgChart',
-  setup() {
+  props: {
+    selectedSignals: {
+      type: Array,
+      default: () => []
+    },
+    websocketConnected: {
+      type: Boolean,
+      default: false
+    },
+    signalData: {
+      type: Object,
+      default: () => ({})
+    }
+  },
+  setup(props) {
     // 响应式数据
     const websocketManager = ref<WebSocketManager | null>(null);
     const chartCanvas = ref<HTMLCanvasElement | null>(null);
@@ -51,8 +63,8 @@ export default defineComponent({
 
     // 计算属性
     const connectionStatus = computed(() => ({
-      type: isConnected.value ? 'success' : 'danger',
-      text: isConnected.value ? '已连接' : '未连接'
+      type: props.websocketConnected ? 'success' : 'danger',
+      text: props.websocketConnected ? '已连接' : '未连接'
     }));
 
     // 绘制图表
@@ -68,34 +80,51 @@ export default defineComponent({
         return;
       }
       
+      // 获取容器尺寸
+      const container = chartCanvas.value.parentElement;
+      if (!container) return;
+      
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // 设置Canvas实际尺寸
+      chartCanvas.value.width = containerWidth;
+      chartCanvas.value.height = containerHeight;
+      
       // 清空画布
-      ctx.clearRect(0, 0, 300, 200);
+      ctx.clearRect(0, 0, containerWidth, containerHeight);
       
       // 设置背景
       ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(0, 0, 300, 200);
+      ctx.fillRect(0, 0, containerWidth, containerHeight);
       
       // 绘制网格
-      ctx.strokeStyle = '#333';
+      ctx.strokeStyle = '#444';
       ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.6;
       
       // 水平网格线
-      for (let i = 0; i <= 4; i++) {
-        const y = (200 / 4) * i;
+      const horizontalLines = 6;
+      for (let i = 0; i <= horizontalLines; i++) {
+        const y = (containerHeight / horizontalLines) * i;
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(300, y);
+        ctx.lineTo(containerWidth, y);
         ctx.stroke();
       }
       
       // 垂直网格线
-      for (let i = 0; i <= 6; i++) {
-        const x = (300 / 6) * i;
+      const verticalLines = 8;
+      for (let i = 0; i <= verticalLines; i++) {
+        const x = (containerWidth / verticalLines) * i;
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, 200);
+        ctx.lineTo(x, containerHeight);
         ctx.stroke();
       }
+      
+      // 重置透明度
+      ctx.globalAlpha = 1.0;
       
       // 绘制信号
       const signalArray = Array.from(signals.value.values());
@@ -103,16 +132,20 @@ export default defineComponent({
         if (signal.values.length < 2) return;
         
         ctx.strokeStyle = signal.color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = signal.color;
+        ctx.shadowBlur = 3;
         ctx.beginPath();
         
-        const stepX = 300 / signal.values.length;
-        const centerY = 100;
-        const scaleY = 80;
+        const stepX = containerWidth / signal.values.length;
+        const centerY = containerHeight / 2;
+        const scaleY = containerHeight * 0.4; // 使用容器高度的40%作为缩放
         
         signal.values.forEach((value, i) => {
           const x = i * stepX;
-          const y = centerY - value * 2; // 简单的缩放
+          const y = centerY - (value * scaleY / 100); // 改进的缩放算法
           
           if (i === 0) {
             ctx.moveTo(x, y);
@@ -122,23 +155,29 @@ export default defineComponent({
         });
         
         ctx.stroke();
+        
+        // 重置阴影效果
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
       });
       
       // 绘制图例
-      ctx.font = '12px Arial';
+      const fontSize = Math.max(10, containerHeight / 20); // 根据容器高度调整字体大小
+      ctx.font = `${fontSize}px Arial`;
       ctx.fillStyle = '#fff';
       
       signalArray.forEach((signal, index) => {
         const x = 10;
-        const y = 20 + index * 20;
+        const y = 20 + index * (fontSize + 8);
         
         // 绘制颜色块
         ctx.fillStyle = signal.color;
-        ctx.fillRect(x, y - 10, 15, 3);
+        ctx.fillRect(x, y - fontSize/2, 15, 3);
         
         // 绘制信号名称
         ctx.fillStyle = '#fff';
-        ctx.fillText(`${signal.name}: ${signal.values[signal.values.length - 1]?.toFixed(2) || '0.00'}`, x + 20, y);
+        const displayValue = signal.values[signal.values.length - 1]?.toFixed(6) || '0.000000';
+        ctx.fillText(`${signal.name}: ${displayValue}`, x + 20, y);
       });
     };
 
@@ -148,42 +187,91 @@ export default defineComponent({
       animationId = requestAnimationFrame(animate);
     };
 
-    // 处理WebSocket消息
-    const processMessage = (message: RosTopicMessage) => {
-      console.log('SimpleEcgChart 接收到消息:', message);
+    // 处理信号数据更新
+    const processSignalData = (signalData: any) => {
+      console.log('SimpleEcgChart 接收到数据:', signalData);
       
-      // 检查CAN信号数据
-      if (message.data.can_signals && message.data.can_signals.signals) {
-        const canSignals = message.data.can_signals.signals;
-        console.log('CAN信号数据:', canSignals);
-        
-        canSignals.forEach((signal: unknown, index: number) => {
-          const signalInfo = signal as Record<string, unknown>;
-          const signalName = signalInfo.signalName as string;
-          const value = signalInfo.value as number;
-          
-          if (!signals.value.has(signalName)) {
-            signals.value.set(signalName, {
-              name: signalName,
-              values: [],
-              color: colors[index % colors.length]
-            });
-          }
-          
-          const signalData = signals.value.get(signalName);
-          if (!signalData) return;
-          
-          signalData.values.push(value);
-          
-          // 保持数据点数量限制
-          if (signalData.values.length > 100) {
-            signalData.values.shift();
+      // 处理数组格式的数据
+      if (Array.isArray(signalData)) {
+        signalData.forEach(data => {
+          if (data && data.signalName && typeof data.value === 'number') {
+            processSingleSignal(data);
           }
         });
-        
-        signalCount.value = signals.value.size;
+      } else if (signalData && signalData.signalName && typeof signalData.value === 'number') {
+        // 处理单个信号数据
+        processSingleSignal(signalData);
       }
     };
+    
+    // 处理单个信号数据
+    const processSingleSignal = (signalData: any) => {
+      const signalName = signalData.signalName;
+      const value = signalData.value;
+      
+      // 获取当前勾选的信号名称列表
+      const selectedSignalNames = props.selectedSignals.map((signal: any) => signal.label);
+      
+      // 只处理勾选的信号
+      if (!selectedSignalNames.includes(signalName)) {
+        console.log(`SimpleEcgChart 跳过未勾选信号: ${signalName}`);
+        return;
+      }
+      
+      console.log(`SimpleEcgChart 处理勾选信号: ${signalName} = ${value}`);
+      
+      if (!signals.value.has(signalName)) {
+        const colorIndex = selectedSignalNames.indexOf(signalName);
+        signals.value.set(signalName, {
+          name: signalName,
+          values: [],
+          color: colors[colorIndex % colors.length]
+        });
+        console.log(`创建新信号: ${signalName}, 颜色索引: ${colorIndex}`);
+      }
+      
+      const signal = signals.value.get(signalName);
+      if (!signal) return;
+      
+      signal.values.push(value);
+      
+      // 保持数据点数量限制
+      if (signal.values.length > 100) {
+        signal.values.shift();
+      }
+      
+      signalCount.value = signals.value.size;
+      console.log(`信号 ${signalName} 数据点数量: ${signal.values.length}, 总信号数: ${signalCount.value}`);
+    };
+
+    // 清理不再勾选的信号数据
+    const cleanupUnselectedSignals = () => {
+      const selectedSignalNames = props.selectedSignals.map((signal: any) => signal.label);
+      const currentSignalNames = Array.from(signals.value.keys());
+      
+      currentSignalNames.forEach(signalName => {
+        if (!selectedSignalNames.includes(signalName)) {
+          console.log(`清理未勾选信号数据: ${signalName}`);
+          signals.value.delete(signalName);
+        }
+      });
+      
+      signalCount.value = signals.value.size;
+    };
+
+    // 监听勾选信号变化
+    watch(() => props.selectedSignals, () => {
+      console.log('勾选信号发生变化:', props.selectedSignals);
+      cleanupUnselectedSignals();
+    }, { deep: true });
+
+    // 监听信号数据变化
+    watch(() => props.signalData, (newData) => {
+      console.log('SimpleEcgChart 接收到新的信号数据:', newData);
+      if (newData) {
+        processSignalData(newData);
+      }
+    }, { deep: true });
 
     // 初始化WebSocket
     const initWebSocket = () => {
@@ -217,6 +305,14 @@ export default defineComponent({
     };
 
 
+    // 窗口大小变化处理
+    const handleResize = () => {
+      // 重新绘制图表以适应新的容器大小
+      if (chartCanvas.value) {
+        drawChart();
+      }
+    };
+
     // 生命周期
     onMounted(() => {
       // 清空所有信号数据，确保没有测试数据残留
@@ -224,7 +320,11 @@ export default defineComponent({
       signalCount.value = 0;
       console.log('SimpleEcgChart组件初始化，清空所有信号数据');
       
-      initWebSocket();
+      // 不在这里初始化WebSocket，使用父组件的WebSocket连接
+      // initWebSocket();
+      
+      // 监听窗口大小变化
+      window.addEventListener('resize', handleResize);
       
       // 开始动画
       animationId = requestAnimationFrame(animate);
@@ -234,9 +334,12 @@ export default defineComponent({
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
-      if (websocketManager.value) {
-        websocketManager.value.destroy();
-      }
+      // 清理事件监听器
+      window.removeEventListener('resize', handleResize);
+      // 不在这里销毁WebSocket，由父组件管理
+      // if (websocketManager.value) {
+      //   websocketManager.value.destroy();
+      // }
     });
 
     return {
@@ -256,6 +359,8 @@ export default defineComponent({
   border-radius: 8px;
   color: white;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-header {
@@ -265,6 +370,7 @@ export default defineComponent({
   margin-bottom: 10px;
   padding-bottom: 5px;
   border-bottom: 1px solid #333;
+  flex-shrink: 0;
 }
 
 .chart-header h3 {
@@ -281,11 +387,16 @@ export default defineComponent({
 .chart-container {
   background: #1a1a1a;
   border-radius: 4px;
+  flex: 1;
+  min-height: 200px;
+  position: relative;
   overflow: hidden;
 }
 
 .chart-canvas {
   display: block;
   background: #1a1a1a;
+  width: 100%;
+  height: 100%;
 }
 </style>
