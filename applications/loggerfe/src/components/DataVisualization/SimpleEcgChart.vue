@@ -46,6 +46,10 @@ export default defineComponent({
     signalData: {
       type: Object,
       default: () => ({})
+    },
+    signalColors: {
+      type: Map,
+      default: () => new Map()
     }
   },
   setup(props) {
@@ -221,13 +225,21 @@ export default defineComponent({
       console.log(`SimpleEcgChart 处理勾选信号: ${signalName} = ${value}`);
       
       if (!signals.value.has(signalName)) {
-        const colorIndex = selectedSignalNames.indexOf(signalName);
+        // 优先使用父组件传递的颜色
+        let signalColor = props.signalColors.get(signalName);
+        
+        // 如果没有传递颜色，使用默认颜色
+        if (!signalColor) {
+          const colorIndex = selectedSignalNames.indexOf(signalName);
+          signalColor = colors[colorIndex % colors.length];
+        }
+        
         signals.value.set(signalName, {
           name: signalName,
           values: [],
-          color: colors[colorIndex % colors.length]
+          color: signalColor
         });
-        console.log(`创建新信号: ${signalName}, 颜色索引: ${colorIndex}`);
+        console.log(`创建新信号: ${signalName}, 使用颜色: ${signalColor}`);
       }
       
       const signal = signals.value.get(signalName);

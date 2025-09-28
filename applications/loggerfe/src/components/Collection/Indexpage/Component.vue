@@ -84,6 +84,11 @@
               <span class="custom-tree-node">
                 <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
                 <el-icon v-else><Document /></el-icon>
+                <span 
+                  v-if="!data.children || data.children.length === 0" 
+                  class="signal-color-indicator"
+                  :style="{ backgroundColor: getSignalNodeColor(data.label) }"
+                ></span>
                 <span>{{ node.label }}</span>
                 <span v-if="data.id && data.size" class="signal-info">
                     (Size: {{ data.size }})
@@ -119,6 +124,10 @@
                 @click="selectSignalForView(signal)"
               >
                 <div class="signal-info">
+                  <span 
+                    class="signal-color-indicator"
+                    :style="{ backgroundColor: getSignalNodeColor(signal.label) }"
+                  ></span>
                   <span class="signal-name">{{ signal.label }}</span>
                   <span v-if="signal.size" class="signal-size">({{ signal.size }}bit)</span>
                 </div>
@@ -217,10 +226,11 @@
           </div>
           
           <div class="chart-wrapper">
-            <SimpleEcgChart 
-              :selectedSignals="selectedSignals" 
+            <SimpleEcgChart
+              :selectedSignals="selectedSignals"
               :websocketConnected="websocketConnected"
               :signalData="ecgChartSignalData"
+              :signalColors="signalNodeColors"
             />
           </div>
           
@@ -340,6 +350,31 @@ const treeRef = ref(null)
 
 // SimpleEcgChart数据
 const ecgChartSignalData = ref([])
+
+// 信号节点颜色管理
+const signalNodeColors = ref(new Map()) // 存储每个信号节点的颜色
+const colorPalette = [
+  '#FF6B6B', // 红色
+  '#4ECDC4', // 青色
+  '#45B7D1', // 蓝色
+  '#96CEB4', // 绿色
+  '#FFEAA7', // 黄色
+  '#DDA0DD', // 紫色
+  '#FFB347', // 橙色
+  '#87CEEB', // 天蓝色
+  '#F0E68C', // 卡其色
+  '#FF69B4', // 热粉色
+  '#20B2AA', // 浅海绿色
+  '#FFA07A', // 浅鲑鱼色
+  '#98FB98', // 浅绿色
+  '#F0E68C', // 卡其色
+  '#DDA0DD', // 李子色
+  '#FFB6C1', // 浅粉色
+  '#87CEFA', // 浅天蓝色
+  '#F5DEB3', // 小麦色
+  '#FFE4E1', // 薄雾玫瑰色
+  '#E0E0E0'  // 浅灰色
+]
 
 // 数据验证和防抖相关变量
 const lastUpdateTime = ref(0)
@@ -577,15 +612,21 @@ const loadCurrentDbcSignalTree = async () => {
             // 构建信号树数据
             signalTreeData.value = buildSignalTreeFromCollection(collectionData.data, dbcDetail.dbc)
             console.log('从信号合集构建的树:', signalTreeData.value)
+            // 初始化信号节点颜色
+            initializeSignalColors(signalTreeData.value)
           } else {
             // 如果没有信号合集，使用DBC中的所有信号
             signalTreeData.value = buildSignalTreeFromDbc(dbcDetail.dbc)
             console.log('从DBC构建的树:', signalTreeData.value)
+            // 初始化信号节点颜色
+            initializeSignalColors(signalTreeData.value)
           }
         } else {
           // 如果没有信号合集，使用DBC中的所有信号
           signalTreeData.value = buildSignalTreeFromDbc(dbcDetail.dbc)
           console.log('从DBC构建的树:', signalTreeData.value)
+          // 初始化信号节点颜色
+          initializeSignalColors(signalTreeData.value)
         }
       }
     } else {
@@ -713,6 +754,80 @@ const validateRealTimeData = () => {
   if (realTimeData.value && selectedSignalName.value) {
     // 这里可以添加额外的验证逻辑
     console.log(`实时数据验证: 信号=${selectedSignalName.value}, 值=${realTimeData.value.currentValue}`);
+  }
+}
+
+// 从本地存储加载颜色
+const loadColorsFromStorage = () => {
+  try {
+    const storedColors = localStorage.getItem('signalNodeColors');
+    if (storedColors) {
+      const colorMap = new Map(JSON.parse(storedColors));
+      signalNodeColors.value = colorMap;
+      console.log('从本地存储加载颜色:', colorMap);
+    }
+  } catch (error) {
+    console.error('加载颜色失败:', error);
+  }
+}
+
+// 保存颜色到本地存储
+const saveColorsToStorage = () => {
+  try {
+    const colorArray = Array.from(signalNodeColors.value.entries());
+    localStorage.setItem('signalNodeColors', JSON.stringify(colorArray));
+    console.log('颜色已保存到本地存储');
+  } catch (error) {
+    console.error('保存颜色失败:', error);
+  }
+}
+
+// 获取或分配信号节点颜色
+const getSignalNodeColor = (signalName) => {
+  if (!signalNodeColors.value.has(signalName)) {
+    // 如果还没有颜色，分配一个随机颜色
+    const usedColors = Array.from(signalNodeColors.value.values());
+    let availableColors = colorPalette.filter(color => !usedColors.includes(color));
+    
+    // 如果所有颜色都用完了，重新开始
+    if (availableColors.length === 0) {
+      availableColors = [...colorPalette];
+    }
+    
+    // 随机选择一个颜色
+    const randomIndex = Math.floor(Math.random() * availableColors.length);
+    const selectedColor = availableColors[randomIndex];
+    
+    signalNodeColors.value.set(signalName, selectedColor);
+    console.log(`为信号 ${signalName} 分配颜色: ${selectedColor}`);
+    
+    // 保存到本地存储
+    saveColorsToStorage();
+  }
+  
+  return signalNodeColors.value.get(signalName);
+}
+
+// 初始化所有信号节点的颜色
+const initializeSignalColors = (treeData) => {
+  // 首先尝试从本地存储加载颜色
+  loadColorsFromStorage();
+  
+  const initializeNodeColors = (nodes) => {
+    nodes.forEach(node => {
+      if (node.children && node.children.length > 0) {
+        // 递归处理子节点
+        initializeNodeColors(node.children);
+      } else {
+        // 叶子节点（信号节点）
+        getSignalNodeColor(node.label);
+      }
+    });
+  };
+  
+  if (treeData && treeData.length > 0) {
+    initializeNodeColors(treeData);
+    console.log('信号节点颜色初始化完成:', signalNodeColors.value);
   }
 }
 
@@ -2192,6 +2307,16 @@ onUnmounted(() => {
                 align-items: center;
                 flex: 1;
                 min-width: 0;
+                gap: 6px;
+
+                .signal-color-indicator {
+                  width: 10px;
+                  height: 10px;
+                  border-radius: 50%;
+                  border: 1px solid #fff;
+                  box-shadow: 0 0 0 1px #ddd;
+                  flex-shrink: 0;
+                }
 
                 .signal-name {
                   color: #333;
@@ -2269,6 +2394,15 @@ onUnmounted(() => {
           min-width: 320px; // 增加最小宽度，确保有足够滚动空间
           white-space: nowrap; // 防止换行
           width: 100%; // 占满可用宽度
+
+        .signal-color-indicator {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          box-shadow: 0 0 0 1px #ddd;
+          flex-shrink: 0;
+        }
 
         .el-icon {
           font-size: 16px;
