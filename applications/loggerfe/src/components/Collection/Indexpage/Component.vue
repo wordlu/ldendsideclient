@@ -353,28 +353,7 @@ const ecgChartSignalData = ref([])
 
 // 信号节点颜色管理
 const signalNodeColors = ref(new Map()) // 存储每个信号节点的颜色
-const colorPalette = [
-  '#FF6B6B', // 红色
-  '#4ECDC4', // 青色
-  '#45B7D1', // 蓝色
-  '#96CEB4', // 绿色
-  '#FFEAA7', // 黄色
-  '#DDA0DD', // 紫色
-  '#FFB347', // 橙色
-  '#87CEEB', // 天蓝色
-  '#F0E68C', // 卡其色
-  '#FF69B4', // 热粉色
-  '#20B2AA', // 浅海绿色
-  '#FFA07A', // 浅鲑鱼色
-  '#98FB98', // 浅绿色
-  '#F0E68C', // 卡其色
-  '#DDA0DD', // 李子色
-  '#FFB6C1', // 浅粉色
-  '#87CEFA', // 浅天蓝色
-  '#F5DEB3', // 小麦色
-  '#FFE4E1', // 薄雾玫瑰色
-  '#E0E0E0'  // 浅灰色
-]
+const usedColors = ref(new Set()) // 记录已使用的颜色，避免重复
 
 // 数据验证和防抖相关变量
 const lastUpdateTime = ref(0)
@@ -757,6 +736,104 @@ const validateRealTimeData = () => {
   }
 }
 
+// 生成随机颜色
+const generateRandomColor = () => {
+  // 生成HSL颜色，确保饱和度和亮度适中，提高区分度
+  const hue = Math.floor(Math.random() * 360); // 色相 0-360
+  const saturation = Math.floor(Math.random() * 40) + 60; // 饱和度 60-100
+  const lightness = Math.floor(Math.random() * 30) + 45; // 亮度 45-75
+  
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+// 生成与现有颜色区分度足够的新颜色
+const generateDistinctColor = () => {
+  let attempts = 0;
+  const maxAttempts = 200; // 增加最大尝试次数
+  
+  while (attempts < maxAttempts) {
+    const newColor = generateRandomColor();
+    
+    // 检查是否与现有颜色过于相似
+    let isDistinct = true;
+    for (const existingColor of usedColors.value) {
+      if (isColorSimilar(newColor, existingColor)) {
+        isDistinct = false;
+        break;
+      }
+    }
+    
+    if (isDistinct) {
+      usedColors.value.add(newColor);
+      console.log(`生成新颜色成功，尝试次数: ${attempts + 1}, 颜色: ${newColor}`);
+      return newColor;
+    }
+    
+    attempts++;
+  }
+  
+  // 如果尝试次数过多，直接返回随机颜色
+  const fallbackColor = generateRandomColor();
+  usedColors.value.add(fallbackColor);
+  console.warn(`颜色生成达到最大尝试次数 ${maxAttempts}，使用备用颜色: ${fallbackColor}`);
+  return fallbackColor;
+}
+
+// 检查两个颜色是否过于相似
+const isColorSimilar = (color1, color2) => {
+  // 将HSL颜色转换为RGB进行比较
+  const rgb1 = hslToRgb(color1);
+  const rgb2 = hslToRgb(color2);
+  
+  // 计算欧几里得距离
+  const distance = Math.sqrt(
+    Math.pow(rgb1.r - rgb2.r, 2) +
+    Math.pow(rgb1.g - rgb2.g, 2) +
+    Math.pow(rgb1.b - rgb2.b, 2)
+  );
+  
+  // 使用更严格的阈值，确保颜色区分度更高
+  // 最大可能距离是 sqrt(3 * 255^2) ≈ 441
+  // 设置阈值为120，确保颜色有足够的区分度
+  return distance < 120;
+}
+
+// HSL转RGB
+const hslToRgb = (hsl) => {
+  const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+  if (!match) return { r: 0, g: 0, b: 0 };
+  
+  const h = parseInt(match[1]) / 360;
+  const s = parseInt(match[2]) / 100;
+  const l = parseInt(match[3]) / 100;
+  
+  const hue2rgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255)
+  };
+}
+
 // 从本地存储加载颜色
 const loadColorsFromStorage = () => {
   try {
@@ -764,6 +841,13 @@ const loadColorsFromStorage = () => {
     if (storedColors) {
       const colorMap = new Map(JSON.parse(storedColors));
       signalNodeColors.value = colorMap;
+      
+      // 同时加载已使用的颜色集合
+      const storedUsedColors = localStorage.getItem('usedColors');
+      if (storedUsedColors) {
+        usedColors.value = new Set(JSON.parse(storedUsedColors));
+      }
+      
       console.log('从本地存储加载颜色:', colorMap);
     }
   } catch (error) {
@@ -775,7 +859,11 @@ const loadColorsFromStorage = () => {
 const saveColorsToStorage = () => {
   try {
     const colorArray = Array.from(signalNodeColors.value.entries());
+    const usedColorsArray = Array.from(usedColors.value);
+    
     localStorage.setItem('signalNodeColors', JSON.stringify(colorArray));
+    localStorage.setItem('usedColors', JSON.stringify(usedColorsArray));
+    
     console.log('颜色已保存到本地存储');
   } catch (error) {
     console.error('保存颜色失败:', error);
@@ -785,18 +873,8 @@ const saveColorsToStorage = () => {
 // 获取或分配信号节点颜色
 const getSignalNodeColor = (signalName) => {
   if (!signalNodeColors.value.has(signalName)) {
-    // 如果还没有颜色，分配一个随机颜色
-    const usedColors = Array.from(signalNodeColors.value.values());
-    let availableColors = colorPalette.filter(color => !usedColors.includes(color));
-    
-    // 如果所有颜色都用完了，重新开始
-    if (availableColors.length === 0) {
-      availableColors = [...colorPalette];
-    }
-    
-    // 随机选择一个颜色
-    const randomIndex = Math.floor(Math.random() * availableColors.length);
-    const selectedColor = availableColors[randomIndex];
+    // 如果还没有颜色，生成一个与现有颜色区分度足够的新颜色
+    const selectedColor = generateDistinctColor();
     
     signalNodeColors.value.set(signalName, selectedColor);
     console.log(`为信号 ${signalName} 分配颜色: ${selectedColor}`);
@@ -806,6 +884,15 @@ const getSignalNodeColor = (signalName) => {
   }
   
   return signalNodeColors.value.get(signalName);
+}
+
+// 获取颜色统计信息
+const getColorStats = () => {
+  return {
+    totalSignals: signalNodeColors.value.size,
+    totalUsedColors: usedColors.value.size,
+    colors: Array.from(signalNodeColors.value.entries())
+  };
 }
 
 // 初始化所有信号节点的颜色
@@ -827,7 +914,9 @@ const initializeSignalColors = (treeData) => {
   
   if (treeData && treeData.length > 0) {
     initializeNodeColors(treeData);
-    console.log('信号节点颜色初始化完成:', signalNodeColors.value);
+    const stats = getColorStats();
+    console.log('信号节点颜色初始化完成:', stats);
+    console.log(`总共为 ${stats.totalSignals} 个信号生成了 ${stats.totalUsedColors} 种不同颜色`);
   }
 }
 
