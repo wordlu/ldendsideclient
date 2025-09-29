@@ -1,6 +1,6 @@
 <template>
-  <div class="simple-ecg-chart">
-    <div class="chart-header">
+  <div class="simple-ecg-chart" :class="{ 'fullscreen-mode': isFullscreen }">
+    <div class="chart-header" v-if="!isFullscreen">
       <h3>实时信号监控</h3>
       <div class="status-info">
         <el-tag :type="connectionStatus.type" size="small">
@@ -12,7 +12,7 @@
       </div>
     </div>
     
-    <div class="chart-container">
+    <div class="chart-container" :class="{ 'fullscreen-chart': isFullscreen }">
       <canvas 
         ref="chartCanvas" 
         class="chart-canvas"
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { defineComponent, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { WebSocketManager, RosTopicMessage } from '@/utils/websocket-manager';
 
@@ -50,6 +50,14 @@ export default defineComponent({
     signalColors: {
       type: Map,
       default: () => new Map()
+    },
+    isFullscreen: {
+      type: Boolean,
+      default: false
+    },
+    yAxisRange: {
+      type: Object,
+      default: () => null
     }
   },
   setup(props) {
@@ -88,8 +96,26 @@ export default defineComponent({
       const container = chartCanvas.value.parentElement;
       if (!container) return;
       
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
+      let containerWidth = container.clientWidth;
+      let containerHeight = container.clientHeight;
+      
+      // 全屏模式下的特殊处理
+      if (props.isFullscreen) {
+        // 使用视口尺寸，确保完全填充
+        containerWidth = window.innerWidth;
+        containerHeight = window.innerHeight - 60; // 减去头部高度
+        
+        // 确保尺寸为正数
+        if (containerWidth <= 0) containerWidth = window.innerWidth;
+        if (containerHeight <= 0) containerHeight = window.innerHeight - 60;
+        
+        // 全屏模式下确保有足够的边距
+        const margin = 20;
+        containerWidth = Math.max(containerWidth - margin * 2, 800);
+        containerHeight = Math.max(containerHeight - margin * 2, 600);
+        
+        console.log('全屏模式尺寸:', containerWidth, containerHeight);
+      }
       
       // 设置Canvas实际尺寸
       chartCanvas.value.width = containerWidth;
@@ -127,11 +153,95 @@ export default defineComponent({
         ctx.stroke();
       }
       
+      // 全屏模式下绘制中心线
+      if (props.isFullscreen) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 1.0;
+        ctx.beginPath();
+        ctx.moveTo(0, containerHeight / 2);
+        ctx.lineTo(containerWidth, containerHeight / 2);
+        ctx.stroke();
+      }
+      
       // 重置透明度
       ctx.globalAlpha = 1.0;
       
+      // 计算信号数据的范围
+      const calculateSignalRange = (signal: SignalData) => {
+        if (signal.values.length === 0) return { min: 0, max: 0, range: 0 };
+        
+        const min = Math.min(...signal.values);
+        const max = Math.max(...signal.values);
+        const range = max - min;
+        
+        return { min, max, range };
+      };
+
+      // 计算所有信号的整体范围
+      const calculateOverallRange = () => {
+        // 如果提供了手动设置的Y轴范围，使用它
+        if (props.yAxisRange && props.yAxisRange.min !== undefined && props.yAxisRange.max !== undefined) {
+          return {
+            min: props.yAxisRange.min,
+            max: props.yAxisRange.max,
+            range: props.yAxisRange.max - props.yAxisRange.min
+          };
+        }
+        
+        const signalArray = Array.from(signals.value.values());
+        if (signalArray.length === 0) return { min: -100, max: 100, range: 200 };
+        
+        let globalMin = Infinity;
+        let globalMax = -Infinity;
+        
+        signalArray.forEach(signal => {
+          const range = calculateSignalRange(signal);
+          globalMin = Math.min(globalMin, range.min);
+          globalMax = Math.max(globalMax, range.max);
+        });
+        
+        // 添加一些边距
+        const margin = Math.max((globalMax - globalMin) * 0.1, 1);
+        globalMin -= margin;
+        globalMax += margin;
+        
+        // 确保范围不为0
+        if (globalMax === globalMin) {
+          globalMin -= 1;
+          globalMax += 1;
+        }
+        
+        return {
+          min: globalMin,
+          max: globalMax,
+          range: globalMax - globalMin
+        };
+      };
+
       // 绘制信号
       const signalArray = Array.from(signals.value.values());
+      const overallRange = calculateOverallRange();
+      
+      // 全屏模式下显示范围信息
+      if (props.isFullscreen) {
+        console.log('数据范围:', overallRange);
+        console.log('信号数量:', signalArray.length);
+        
+        // 绘制Y轴标签
+        ctx.fillStyle = '#888';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        
+        // 最大值标签
+        ctx.fillText(`Max: ${overallRange.max.toFixed(2)}`, 10, 20);
+        // 最小值标签
+        ctx.fillText(`Min: ${overallRange.min.toFixed(2)}`, 10, containerHeight - 10);
+        // 中心值标签
+        const centerValue = (overallRange.max + overallRange.min) / 2;
+        ctx.fillText(`Center: ${centerValue.toFixed(2)}`, 10, containerHeight / 2);
+      }
+      
       signalArray.forEach((signal) => {
         if (signal.values.length < 2) return;
         
@@ -145,11 +255,13 @@ export default defineComponent({
         
         const stepX = containerWidth / signal.values.length;
         const centerY = containerHeight / 2;
-        const scaleY = containerHeight * 0.4; // 使用容器高度的40%作为缩放
+        const scaleY = containerHeight * 0.8; // 使用容器高度的80%作为缩放范围
         
         signal.values.forEach((value, i) => {
           const x = i * stepX;
-          const y = centerY - (value * scaleY / 100); // 改进的缩放算法
+          // 将值映射到0-1范围，然后映射到Y坐标
+          const normalizedValue = (value - overallRange.min) / overallRange.range;
+          const y = centerY - (normalizedValue - 0.5) * scaleY;
           
           if (i === 0) {
             ctx.moveTo(x, y);
@@ -166,22 +278,49 @@ export default defineComponent({
       });
       
       // 绘制图例
-      const fontSize = Math.max(10, containerHeight / 20); // 根据容器高度调整字体大小
+      let fontSize = 12; // 默认字体大小
+      if (props.isFullscreen) {
+        fontSize = 18; // 全屏模式下使用更大的字体
+      } else {
+        fontSize = Math.max(10, containerHeight / 20); // 根据容器高度调整字体大小
+      }
       ctx.font = `${fontSize}px Arial`;
       ctx.fillStyle = '#fff';
       
       signalArray.forEach((signal, index) => {
-        const x = 10;
-        const y = 20 + index * (fontSize + 8);
+        let x = 15; // 左边距
+        let y = 30 + index * (fontSize + 12); // 行间距和顶部边距
+        
+        // 全屏模式下的特殊调整
+        if (props.isFullscreen) {
+          x = 30; // 全屏模式下增加左边距
+          y = 50 + index * (fontSize + 20); // 全屏模式下增加行间距和顶部边距
+        }
+        
+        // 检查文本是否会超出Canvas边界
+        const textY = y;
+        const textHeight = fontSize;
+        const bottomMargin = props.isFullscreen ? 40 : 20; // 全屏模式下增加底部边距
+        
+        if (textY + textHeight > containerHeight - bottomMargin) {
+          console.log(`信号 ${signal.name} 的文本位置超出边界，跳过绘制`);
+          return; // 跳过超出边界的文本
+        }
         
         // 绘制颜色块
         ctx.fillStyle = signal.color;
-        ctx.fillRect(x, y - fontSize/2, 15, 3);
+        ctx.fillRect(x, y - fontSize + 2, 15, 3);
         
         // 绘制信号名称
         ctx.fillStyle = '#fff';
         const displayValue = signal.values[signal.values.length - 1]?.toFixed(6) || '0.000000';
-        ctx.fillText(`${signal.name}: ${displayValue}`, x + 20, y);
+        const text = `${signal.name}: ${displayValue}`;
+        ctx.fillText(text, x + 20, y);
+        
+        // 全屏模式下添加调试信息
+        if (props.isFullscreen) {
+          console.log(`绘制信号文本: ${text}, 位置: (${x + 20}, ${y}), 容器尺寸: ${containerWidth}x${containerHeight}`);
+        }
       });
     };
 
@@ -285,6 +424,20 @@ export default defineComponent({
       }
     }, { deep: true });
 
+    // 监听全屏模式变化
+    watch(() => props.isFullscreen, (isFullscreen) => {
+      console.log('全屏模式变化:', isFullscreen);
+      if (isFullscreen) {
+        // 全屏模式下，延迟一下再绘制，确保DOM已更新
+        nextTick(() => {
+          setTimeout(() => {
+            console.log('全屏模式重绘图表');
+            drawChart();
+          }, 200);
+        });
+      }
+    });
+
     // 初始化WebSocket
     const initWebSocket = () => {
       try {
@@ -303,7 +456,7 @@ export default defineComponent({
           }
         });
 
-        websocketManager.value.addMessageHandler(processMessage);
+        // 不需要添加消息处理器，因为数据来自父组件
 
         websocketManager.value.connect().catch((error) => {
           console.error('WebSocket 连接失败:', error);
@@ -340,6 +493,15 @@ export default defineComponent({
       
       // 开始动画
       animationId = requestAnimationFrame(animate);
+      
+      // 如果是全屏模式，延迟绘制确保尺寸正确
+      if (props.isFullscreen) {
+        nextTick(() => {
+          setTimeout(() => {
+            drawChart();
+          }, 200);
+        });
+      }
     });
 
     onUnmounted(() => {
@@ -410,5 +572,29 @@ export default defineComponent({
   background: #1a1a1a;
   width: 100%;
   height: 100%;
+}
+
+/* 全屏模式样式 */
+.fullscreen-mode {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fullscreen-mode .chart-container.fullscreen-chart {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.fullscreen-mode .chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
 }
 </style>

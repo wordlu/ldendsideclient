@@ -211,7 +211,7 @@
               <span class="value updating">{{ updateThrottle }}ms</span>
             </div>
             <!-- 数据平滑设置 -->
-            <div class="info-item">
+            <!-- <div class="info-item">
               <span class="label">平滑程度:</span>
               <el-slider
                 v-model="smoothingFactor"
@@ -223,10 +223,23 @@
                 @change="onSmoothingChange"
               />
               <span class="value" style="margin-left: 10px;">{{ (smoothingFactor * 100).toFixed(0) }}%</span>
-            </div>
+            </div> -->
           </div>
           
           <div class="chart-wrapper">
+            <div class="chart-header">
+              <h4>实时信号监控</h4>
+              <div class="chart-controls">
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click="toggleFullscreen"
+                  :icon="isFullscreen ? 'ZoomOut' : 'ZoomIn'"
+                >
+                  {{ isFullscreen ? '缩小' : '放大' }}
+                </el-button>
+              </div>
+            </div>
             <SimpleEcgChart
               :selectedSignals="selectedSignals"
               :websocketConnected="websocketConnected"
@@ -286,6 +299,39 @@
           </div>
         </template>
     </el-dialog> -->
+
+    <!-- 全屏模态框 -->
+    <div v-if="isFullscreen" class="fullscreen-overlay" @keydown="handleKeydown">
+      <div class="fullscreen-header">
+        <h3>实时信号监控 - 全屏模式</h3>
+        <div class="fullscreen-controls">
+          <el-button 
+            type="primary" 
+            @click="exitFullscreen"
+            :icon="'ZoomOut'"
+          >
+            缩小
+          </el-button>
+          <el-button 
+            type="info" 
+            @click="exitFullscreen"
+            :icon="'Close'"
+          >
+            关闭
+          </el-button>
+        </div>
+      </div>
+      
+      <div class="fullscreen-chart-container">
+        <SimpleEcgChart
+          :selectedSignals="selectedSignals"
+          :websocketConnected="websocketConnected"
+          :signalData="ecgChartSignalData"
+          :signalColors="signalNodeColors"
+          :isFullscreen="true"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -352,6 +398,9 @@ const ecgChartSignalData = ref([])
 // 信号节点颜色管理
 const signalNodeColors = ref(new Map()) // 存储每个信号节点的颜色
 const usedColors = ref(new Set()) // 记录已使用的颜色，避免重复
+
+// 全屏状态管理
+const isFullscreen = ref(false) // 是否处于全屏状态
 
 // 数据验证和防抖相关变量
 const lastUpdateTime = ref(0)
@@ -995,6 +1044,50 @@ const autoConnectWebSocket = () => {
   }
 }
 
+// 全屏切换功能
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value;
+  console.log('全屏状态切换:', isFullscreen.value ? '全屏' : '正常');
+  
+  // 全屏模式下禁用body滚动
+  if (isFullscreen.value) {
+    document.body.classList.add('fullscreen-mode');
+    document.documentElement.classList.add('fullscreen-mode');
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.height = '100vh';
+    document.documentElement.style.height = '100vh';
+  } else {
+    document.body.classList.remove('fullscreen-mode');
+    document.documentElement.classList.remove('fullscreen-mode');
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.height = '';
+    document.documentElement.style.height = '';
+  }
+}
+
+// 退出全屏
+const exitFullscreen = () => {
+  isFullscreen.value = false;
+  // 恢复body和html滚动
+  document.body.classList.remove('fullscreen-mode');
+  document.documentElement.classList.remove('fullscreen-mode');
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.body.style.height = '';
+  document.documentElement.style.height = '';
+  console.log('退出全屏');
+}
+
+// 键盘事件处理
+const handleKeydown = (event) => {
+  // ESC键退出全屏
+  if (event.key === 'Escape' && isFullscreen.value) {
+    exitFullscreen();
+  }
+}
+
 // 检查信号是否有数据
 const getSignalHasData = (signalName) => {
   if (!signalDataManager.value) return false;
@@ -1379,6 +1472,9 @@ onMounted(() => {
   
   // 启动信号状态更新定时器
   startSignalStatusUpdater()
+  
+  // 添加键盘事件监听
+  document.addEventListener('keydown', handleKeydown);
   
   // 建立普通警告长连接
   eventSource = new EventSource(
@@ -2184,6 +2280,17 @@ onUnmounted(() => {
   // 停止信号状态更新定时器
   stopSignalStatusUpdater();
   
+  // 清理键盘事件监听
+  document.removeEventListener('keydown', handleKeydown);
+  
+  // 恢复body和html滚动
+  document.body.classList.remove('fullscreen-mode');
+  document.documentElement.classList.remove('fullscreen-mode');
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.body.style.height = '';
+  document.documentElement.style.height = '';
+  
   // 清理 WebSocket 连接和信号数据管理器
   if (websocketManager.value) {
     websocketManager.value.destroy();
@@ -2723,6 +2830,27 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
 
+        .chart-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 12px;
+          background: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
+          margin-bottom: 8px;
+
+          h4 {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+          }
+
+          .chart-controls {
+            display: flex;
+            gap: 8px;
+          }
+        }
+
         .chart {
           width: 100%;
           height: 100%;
@@ -2822,5 +2950,65 @@ onUnmounted(() => {
   100% {
     opacity: 1;
   }
+}
+
+// 全屏覆盖层样式
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a1a;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+// 全屏模式下的全局样式
+:global(.fullscreen-mode) {
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 60px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  margin: 0;
+  
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .fullscreen-controls {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+.fullscreen-chart-container {
+  height: calc(100vh - 60px);
+  width: 100vw;
+  background: #1a1a1a;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  flex: 1;
 }
 </style>
