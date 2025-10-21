@@ -104,7 +104,7 @@
           </div>
           
           <!-- 已选信号显示区域 -->
-          <div v-if="selectedSignals.length > 0" class="selected-signals">
+          <!-- <div v-if="selectedSignals.length > 0" class="selected-signals">
             <div class="selected-header">
               <h4>已选信号 ({{ selectedSignals.length }})</h4>
               <div class="signal-status">
@@ -137,7 +137,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
 
@@ -311,13 +311,6 @@
             :icon="'ZoomOut'"
           >
             缩小
-          </el-button>
-          <el-button 
-            type="info" 
-            @click="exitFullscreen"
-            :icon="'Close'"
-          >
-            关闭
           </el-button>
         </div>
       </div>
@@ -2308,6 +2301,12 @@ onUnmounted(() => {
 
 </script>
 
+<style>
+.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
+  background-color: #ff790052;
+}
+</style>
+
 <style lang="scss" scoped>
 
 .index-page {
@@ -2394,6 +2393,7 @@ onUnmounted(() => {
       }
     }
   }
+
 
   // 第一列：信号树
   .signal-tree-panel {
@@ -2552,9 +2552,9 @@ onUnmounted(() => {
               }
 
               &.active {
-                background: #0369a1;
+                background: #ff790052;
                 color: white;
-                border-color: #0369a1;
+                border-color: #ff790052;
 
                 .signal-name {
                   color: white;
