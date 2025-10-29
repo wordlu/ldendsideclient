@@ -30,9 +30,15 @@ export interface CanSignal {
   value: number;
 }
 
+export interface ObjectDetectionData {
+  objects: any[];
+  stamp: number;
+}
+
 export interface TopicData {
   raw_str?: RawStrData;
   can_signals?: CanSignalData;
+  object_detection?: ObjectDetectionData;
   // 后续可以扩展更多类型
 }
 
@@ -407,7 +413,7 @@ export class FlatBuffersParser {
       topic_type: (data.topic_type as TopicDataType) || TopicDataType.RawStr,
       timestamp: (data.timestamp as number) || Date.now() * 1000000,
       data: {
-        raw_str: (data.data as Record<string, unknown>)?.raw_str || {
+        raw_str: ((data.data as Record<string, unknown>)?.raw_str as RawStrData) || {
           header: {
             stamp: (data.timestamp as number) || Date.now() * 1000000,
             frame_id: (data.frame_id as string) || 'unknown',

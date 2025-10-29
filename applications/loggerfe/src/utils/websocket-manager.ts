@@ -1,6 +1,9 @@
 // WebSocket 连接管理器
 import { FlatBuffersParser, RosTopicMessage } from './flatbuffers-parser';
 
+// 导出 RosTopicMessage 类型
+export { RosTopicMessage } from './flatbuffers-parser';
+
 export interface WebSocketConfig {
   url: string;
   protocols?: string | string[];

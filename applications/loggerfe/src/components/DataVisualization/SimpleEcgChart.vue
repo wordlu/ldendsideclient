@@ -365,7 +365,7 @@ export default defineComponent({
       
       if (!signals.value.has(signalName)) {
         // 优先使用父组件传递的颜色
-        let signalColor = props.signalColors.get(signalName);
+        let signalColor: string = props.signalColors.get(signalName) as string;
         
         // 如果没有传递颜色，使用默认颜色
         if (!signalColor) {
